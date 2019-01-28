@@ -1,0 +1,16 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+env:
+  global:
+    - DOCKERBUILDER=greenaddress/ci
+    - DOCKERHASH=62f35f4b138a1b0cad32c6854465128acf9b4ee8098dc426512ae1c1ca166a43
+  matrix:
+    - UNUSED=true
+    - DOCKERBUILDER=greenaddress/fedora_ci DOCKERHASH=3d710f476b3d44376acc9fca6e26129e954053834f09ad4327756d67a232bd47
+
+
+script:
+  - docker run -v $PWD:/green_cli $DOCKERBUILDER@sha256:$DOCKERHASH /bin/bash -c "cd /green_cli && virtualenv -p python3 venv && source venv/bin/activate && pip install -r requirements.txt && pip install ."
