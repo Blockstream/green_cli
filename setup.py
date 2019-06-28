@@ -8,6 +8,10 @@ setup(
     ],
     install_requires=[
         'Click',
+        'click-repl',
+        'greenaddress',
+        'hwi',
+        'wallycore',
     ],
     entry_points='''
         [console_scripts]
