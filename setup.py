@@ -8,6 +8,9 @@ setup(
     ],
     install_requires=[
         'Click',
+        'click-repl',
+        'greenaddress',
+        'hwi',
     ],
     entry_points='''
         [console_scripts]
