@@ -31,8 +31,9 @@ json.loads = ordered_json_loads
 class Context:
     """Holds global context related to the invocation of the tool"""
 
-    def __init__(self, session, twofac_resolver, authenticator, compact):
+    def __init__(self, session, network, twofac_resolver, authenticator, compact):
         self.session = session
+        self.network = network
         self.twofac_resolver = twofac_resolver
         self.authenticator = authenticator
         self.compact = compact
@@ -188,12 +189,18 @@ def green(debug, network, auth, config_dir, compact):
     session = gdk.Session({'name': network})
     atexit.register(session.destroy)
 
-    context = Context(session, TwoFactorResolver(), get_authenticator(auth, config_dir), compact)
+    authenticator = get_authenticator(auth, config_dir)
+    context = Context(session, network, TwoFactorResolver(), authenticator, compact)
 
 @green.command()
 @print_result
 def getnetworks():
     return gdk.get_networks()
+
+@green.command()
+@print_result
+def getnetwork():
+    return gdk.get_networks()[context.network]
 
 @green.command()
 @with_session
