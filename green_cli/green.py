@@ -261,10 +261,12 @@ def details_json(ctx, param, value):
     to the gdk method. Adding this method as a click.argument callback appends a details json to
     make this convenient.
     """
-    details = ctx.params.setdefault('details', collections.OrderedDict())
-    # hyphens are idiomatic for command line args, so allow some_option to be passed as some-option
-    name = param.name.replace("-", "_")
-    details[name] = value
+    if value is not None:
+        details = ctx.params.setdefault('details', collections.OrderedDict())
+        # hyphens are idiomatic for command line args, so allow some_option to be passed as
+        # some-option
+        name = param.name.replace("-", "_")
+        details[name] = value
     return value
 
 @green.command()
@@ -383,8 +385,9 @@ def gettransactions(session, details):
     return session.get_transactions(details)
 
 @green.command()
-@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--addressee', '-a', type=(str, int), multiple=True)
+@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
+@click.option('--fee-rate', '-f', type=int, expose_value=False, callback=details_json)
 @with_login
 @print_result
 def createtransaction(session, addressee, details):
