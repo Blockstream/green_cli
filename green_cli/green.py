@@ -334,11 +334,12 @@ def getsettings(session):
     return session.get_settings()
 
 @green.command()
-@click.argument('settings')
+@click.argument('settings', type=click.File('rb'))
 @with_login
 @gdk_resolve
 def changesettings(session, settings):
     """Change wallet settings"""
+    settings = settings.read().decode('utf-8')
     return gdk.change_settings(session.session_obj, settings)
 
 @green.command()
