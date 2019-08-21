@@ -2,13 +2,13 @@ click==7.0 --hash=sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925
 
 https://github.com/bitcoin-core/HWI/archive/0d88d076384d64029ae238cd007a651bf0c60f46.tar.gz --hash=sha256:1d5dbe02758ed5c1ff73defe97707ae8f1f4d2b98ca84ae3d3b4109f6a5aeb40
 
-https://github.com/Blockstream/gdk/releases/download/release_0.0.11/greenaddress-0.0.11-cp35-cp35m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.5' --hash=sha256:951a269ca780dc44fe10385c2d83a4dc2f1dcd3a3f4629153b0c482b615bf2f4
-https://github.com/Blockstream/gdk/releases/download/release_0.0.11/greenaddress-0.0.11-cp37-cp37m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.7' --hash=sha256:61be381168bff99b9b254579223ac0d2a6bf7a91cc9b7bc916268a0b8b11973c
-https://github.com/Blockstream/gdk/releases/download/release_0.0.11/greenaddress-0.0.11-cp37-cp37m-macosx_10_13_x86_64.whl; 'darwin' in sys_platform and python_version == '3.7' --hash=sha256:6a5a02c3409d5ab1269c12ed61c279867dbf8642802c0fe9d989dc5def22084a
+https://github.com/Blockstream/gdk/releases/download/release_0.0.19/greenaddress-0.0.19-cp36-cp36m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.6' --hash=sha256:b3b2ebeed0e21628e4e8bcc50c5d3720bd490e145f754adcf6504f69ba95e254
+https://github.com/Blockstream/gdk/releases/download/release_0.0.19/greenaddress-0.0.19-cp37-cp37m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.7' --hash=sha256:c0dfb1d42e6d016175de6827510fc912282dbe2a22825030675b4da25aad337a
+https://github.com/Blockstream/gdk/releases/download/release_0.0.19/greenaddress-0.0.19-cp37-cp37m-macosx_10_13_x86_64.whl; 'darwin' in sys_platform and python_version == '3.7' --hash=sha256:548e80a65ea4a1fd5e4c78b881fae61ccba2dd30d1c267755eb3dd1c70ac0a7f
 # FIXME: This fallback doesn't work
-#https://github.com/Blockstream/gdk/archive/release_0.0.11.tar.gz --hash=sha256:1961f2e3e77edc76fcbfe11f574f965cd2fd8465c85b3b7ea98d52a8015ab979
+#https://github.com/Blockstream/gdk/archive/release_0.0.19.tar.gz --hash=sha256:64ae7336b4047c77dd24c0fb7bf90f443191285fca489336915e6f729788a476
 
-https://github.com/ElementsProject/libwally-core/archive/release_0.6.9.tar.gz --hash=sha256:73fc8b8b4e5a6f9b015b3e938dbe0d568a6e02260a1fb3602af1d63ce5138229
+https://github.com/ElementsProject/libwally-core/archive/release_0.7.4.tar.gz --hash=sha256:d1ec3085d8b12ec5e4f604f747850ef77eb734c61c23e79d6c8a3b6c69c6c699
 hidapi==0.7.99.post21 \
     --hash=sha256:1ac170f4d601c340f2cd52fd06e85c5e77bad7ceac811a7bb54b529f7dc28c24 \
     --hash=sha256:6424ad75da0021ce8c1bcd78056a04adada303eff3c561f8d132b85d0a914cb3 \

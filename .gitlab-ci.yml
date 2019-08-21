@@ -1,6 +1,6 @@
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip-cache"
-image: greenaddress/ci@sha256:62f35f4b138a1b0cad32c6854465128acf9b4ee8098dc426512ae1c1ca166a43
+image: greenaddress/ci@sha256:bcf7f422c79b40127cf56f93184c7f8350aafe5de2ca2cfe7977c9b23c46f15c
 
 .smoke_test:
   cache:

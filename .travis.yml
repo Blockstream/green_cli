@@ -6,7 +6,7 @@ services:
 env:
   global:
     - DOCKERBUILDER=greenaddress/ci
-    - DOCKERHASH=62f35f4b138a1b0cad32c6854465128acf9b4ee8098dc426512ae1c1ca166a43
+    - DOCKERHASH=bcf7f422c79b40127cf56f93184c7f8350aafe5de2ca2cfe7977c9b23c46f15c
   matrix:
     - UNUSED=true
     - DOCKERBUILDER=greenaddress/fedora_ci DOCKERHASH=3d710f476b3d44376acc9fca6e26129e954053834f09ad4327756d67a232bd47
