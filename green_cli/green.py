@@ -255,7 +255,9 @@ def details_json(ctx, param, value):
     make this convenient.
     """
     details = ctx.params.setdefault('details', collections.OrderedDict())
-    details[param.name] = value
+    # hyphens are idiomatic for command line args, so allow some_option to be passed as some-option
+    name = param.name.replace("-", "_")
+    details[name] = value
     return value
 
 @green.command()
@@ -348,7 +350,7 @@ def getfeeestimates(session):
 
 @green.command()
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
-@click.option('--num_confs', default=0, expose_value=False, callback=details_json)
+@click.option('--num-confs', default=0, expose_value=False, callback=details_json)
 @with_login
 @print_result
 def getbalance(session, details):
@@ -357,7 +359,7 @@ def getbalance(session, details):
 
 @green.command()
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
-@click.option('--num_confs', default=0, expose_value=False, callback=details_json)
+@click.option('--num-confs', default=0, expose_value=False, callback=details_json)
 @with_login
 @print_result
 def getunspentoutputs(session, details):
