@@ -562,6 +562,17 @@ def mnemonic(file_, mnemonic):
         mnemonic = fileinput.input(mnemonic).readline()
     DefaultAuthenticator(context.config_dir).set_mnemonic(mnemonic)
 
+@green.command()
+@click.argument('email_address')
+@with_login
+@gdk_resolve
+def setemail(session, email_address):
+    details = session.get_twofactor_config()['email']
+    if details['enabled']:
+        raise click.ClickException("Cannot set an enabled email address - disable first")
+    details = {'confirmed': True, 'data': email_address, 'enabled': False}
+    return gdk.change_settings_twofactor(session.session_obj, "email", json.dumps(details))
+
 @green.group(name="2fa")
 def twofa():
     """Two-factor authentication"""
