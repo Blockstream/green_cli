@@ -38,9 +38,9 @@ ckcc-protocol[cli]==0.7.2 \
     --hash=sha256:498db4ccdda018cd9f40210f5bd02ddcc98e7df583170b2eab4035c86c3cc03b
 pyaes==1.6.1 \
     --hash=sha256:02c1b1405c38d3c370b085fb952dd8bea3fadcee6411ad99f312cc129c536d8f
-ecdsa==0.13 \
-    --hash=sha256:40d002cf360d0e035cf2cb985e1308d41aaa087cbfc135b2dc2d844296ea546c \
-    --hash=sha256:64cf1ee26d1cde3c73c6d7d107f835fed7c6a2904aef9eac223d57ad800c43fa
+ecdsa==0.13.3 \
+    --hash=sha256:9814e700890991abeceeb2242586024d4758c8fc18445b194a49bd62d85861db \
+    --hash=sha256:163c80b064a763ea733870feb96f9dd9b92216cfcacd374837af18e4e8ec3d4d
 construct==2.9.45 \
     --hash=sha256:2271a0efd0798679dea825ff47e22a4c550456a5db0ba8baa82f7eae0af0118c
 libusb1==1.7 \
