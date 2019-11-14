@@ -343,6 +343,13 @@ def changesettings(session, settings):
     return gdk.change_settings(session.session_obj, settings)
 
 @green.command()
+@with_login
+@print_result
+def getavailablecurrencies(session):
+    """Get available currencies"""
+    return session.get_available_currencies()
+
+@green.command()
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--address_type', default="", expose_value=False, callback=details_json)
 @with_login
