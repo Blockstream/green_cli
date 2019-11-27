@@ -282,15 +282,17 @@ def createsubaccount(session, name, type, details):
 @green.command()
 @with_login
 @print_result
+@gdk_resolve
 def getsubaccounts(session):
-    return session.get_subaccounts()
+    return gdk.get_subaccounts(session.session_obj)
 
 @green.command()
 @click.argument('pointer', type=int)
 @with_login
 @print_result
+@gdk_resolve
 def getsubaccount(session, pointer):
-    return session.get_subaccount(pointer)
+    return gdk.get_subaccount(session.session_obj, pointer)
 
 @green.command()
 @click.argument('pointer', type=int)
@@ -356,7 +358,8 @@ def getavailablecurrencies(session):
 @print_result
 def getnewaddress(session, details):
     """Get a new receive address"""
-    return session.get_receive_address(details)["address"]
+    auth_handler = gdk.get_receive_address(session.session_obj, json.dumps(details))
+    return _gdk_resolve(auth_handler)["address"]
 
 @green.command()
 @with_login
@@ -370,18 +373,20 @@ def getfeeestimates(session):
 @click.option('--num-confs', default=0, expose_value=False, callback=details_json)
 @with_login
 @print_result
+@gdk_resolve
 def getbalance(session, details):
     """Get balance"""
-    return session.get_balance(details)
+    return gdk.get_balance(session.session_obj, json.dumps(details))
 
 @green.command()
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--num-confs', default=0, expose_value=False, callback=details_json)
 @with_login
 @print_result
+@gdk_resolve
 def getunspentoutputs(session, details):
     """Get unspent outputs"""
-    return session.get_unspent_outputs(details)
+    return gdk.get_unspent_outputs(session.session_obj, json.dumps(details))
 
 @green.command()
 @click.option('--subaccount', type=int, default=0, expose_value=False, callback=details_json)
@@ -389,8 +394,9 @@ def getunspentoutputs(session, details):
 @click.option('--count', type=int, default=30, expose_value=False, callback=details_json)
 @with_login
 @print_result
+@gdk_resolve
 def gettransactions(session, details):
-    return session.get_transactions(details)
+    return gdk.get_transactions(session.session_obj, json.dumps(details))
 
 @green.command()
 @click.option('--addressee', '-a', type=(str, int), multiple=True)
@@ -401,7 +407,7 @@ def gettransactions(session, details):
 def createtransaction(session, addressee, details):
     """Create an outgoing transaction"""
     details['addressees'] = [{'address': addr, 'satoshi': satoshi} for addr, satoshi in addressee]
-    return session.create_transaction(details)
+    return _gdk_resolve(gdk.create_transaction(session.session_obj, json.dumps(details)))
 
 @green.command()
 @click.argument('details', type=click.File('rb'))
@@ -436,7 +442,7 @@ def sendtransaction(session, details):
     return gdk.send_transaction(session.session_obj, details)
 
 def _send_transaction(session, details):
-    details = session.create_transaction(details)
+    details = _gdk_resolve(gdk.create_transaction(session.session_obj, json.dumps(details)))
     details = _gdk_resolve(gdk.sign_transaction(session.session_obj, json.dumps(details)))
     details = _gdk_resolve(gdk.send_transaction(session.session_obj, json.dumps(details)))
     return details['txhash']
