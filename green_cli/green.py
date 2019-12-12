@@ -461,7 +461,10 @@ def sendtoaddress(session, address, amount, details):
 
 def _get_transaction(session, txid):
     # TODO: Iterate all pages
-    transactions = session.get_transactions()
+    # 900 is slightly arbitrary but currently the backend is limited to 30 pages of 30
+    details = {'subaccount': 0, 'first': 0, 'count': 900}
+    transactions = _gdk_resolve(gdk.get_transactions(session.session_obj, json.dumps(details)))
+    transactions = transactions['transactions']
     for transaction in transactions:
         if transaction['txhash'] == txid:
             return transaction
