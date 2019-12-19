@@ -10,13 +10,19 @@ import queue
 import sys
 
 from typing import Dict, List
+from getpass import getpass
 
 import click
 from click_repl import register_repl
 
 import greenaddress as gdk
 
-from green_cli.authenticator import (DefaultAuthenticator, WallyAuthenticator, HWIDevice)
+from green_cli.authenticator import (
+    DefaultAuthenticator,
+    WallyAuthenticator,
+    WatchOnlyAuthenticator,
+    HWIDevice,
+    )
 
 
 # In older verions of python (<3.6?) json.loads does not respect the order of the input
@@ -32,7 +38,8 @@ json.loads = ordered_json_loads
 class Context:
     """Holds global context related to the invocation of the tool"""
 
-    def __init__(self, session, network, twofac_resolver, authenticator, compact):
+    def __init__(self, config_dir, session, network, twofac_resolver, authenticator, compact):
+        self.config_dir = config_dir
         self.session = session
         self.network = network
         self.twofac_resolver = twofac_resolver
@@ -141,9 +148,8 @@ def with_login(fn):
         if not context.logged_in:
             result = context.authenticator.login(session.session_obj)
             # authenticator.login attempts to abstract the actual login method, it may call
-            # GA_login or GA_login_with_pin
-            # Unfortunately GA_login returns an auth_handler but GA_login_with_pin does not, so both
-            # cases must be handled
+            # GA_login, GA_login_with_pin or GA_login_watch_only
+            # Unfortunately only GA_login returns an auth_handler, so both cases must be handled
             if result:
                 _gdk_resolve(result)
             context.logged_in = True
@@ -158,16 +164,20 @@ def get_authenticator(auth, config_dir):
     if auth == 'wally':
         logging.debug('using libwally for external authentication')
         return WallyAuthenticator(config_dir)
+    if auth == 'watch-only':
+        logging.debug('using watch-only authenticator')
+        return WatchOnlyAuthenticator(config_dir)
     logging.debug('using standard gdk authentication')
     return DefaultAuthenticator(config_dir)
 
 @click.group()
 @click.option('--debug', is_flag=True, help='Verbose debug logging.')
 @click.option('--network', default='localtest', help='Network: localtest|testnet|mainnet.')
-@click.option('--auth', type=click.Choice(['hardware', 'wally']))
+@click.option('--auth', type=click.Choice(['hardware', 'wally', 'watch-only']))
 @click.option('--config-dir', '-C', default=None, help='Override config directory.')
 @click.option('--compact', '-c', is_flag=True, help='Compact json output (no pretty printing)')
-def green(debug, network, auth, config_dir, compact):
+@click.option('--watch-only', is_flag=True, help='Use watch-only login')
+def green(debug, network, auth, config_dir, compact, watch_only):
     """Command line interface for green gdk"""
     global context
     if context is not None:
@@ -190,8 +200,12 @@ def green(debug, network, auth, config_dir, compact):
     session = gdk.Session({'name': network})
     atexit.register(session.destroy)
 
+    if watch_only:
+        auth = 'watch-only'
+
     authenticator = get_authenticator(auth, config_dir)
-    context = Context(session, network, TwoFactorResolver(), authenticator, compact)
+
+    context = Context(config_dir, session, network, TwoFactorResolver(), authenticator, compact)
 
 @green.command()
 @print_result
@@ -216,13 +230,6 @@ def create(session):
 def register(session):
     """Register an existing wallet"""
     return context.authenticator.register(session.session_obj)
-
-@green.command()
-@click.argument('mnemonic')
-def setmnemonic(mnemonic):
-    """Set the mnemonic"""
-    mnemonic = fileinput.input(mnemonic).readline()
-    return context.authenticator.setmnemonic(mnemonic)
 
 @green.command()
 @with_login
@@ -491,6 +498,28 @@ def encrypt(session, details):
 def decrypt(session, data):
     data = data.read().decode('utf-8')
     return session.decrypt(data)["plaintext"]
+
+@green.group()
+def set():
+    """Set local options"""
+
+@set.command()
+@click.argument('username', type=str)
+def username(username):
+    WatchOnlyAuthenticator(context.config_dir).set_username(username)
+
+@set.command()
+@click.argument('password', type=str)
+def password(password):
+    WatchOnlyAuthenticator(context.config_dir).set_password(password)
+
+@set.command()
+@click.option('--file', '-f', 'file_', is_flag=True, help='Read mnemonic from file')
+@click.argument('mnemonic', type=str)
+def mnemonic(file_, mnemonic):
+    if file_:
+        mnemonic = fileinput.input(mnemonic).readline()
+    DefaultAuthenticator(context.config_dir).set_mnemonic(mnemonic)
 
 @green.group(name="2fa")
 def twofa():

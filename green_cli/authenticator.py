@@ -5,6 +5,7 @@ import os
 import stat
 
 from typing import Dict, List
+from getpass import getpass
 
 import hwilib.commands
 import click
@@ -29,31 +30,68 @@ class Authenticator:
         return gdk.register_user(session, self.hw_device, self.mnemonic)
 
 
+class ConfigProperty:
+    """A piece of data that is stored in a file in the config directory"""
+
+    def __init__(self, config_dir, filename, prompt_fn, file_perms=stat.S_IRUSR | stat.S_IWUSR):
+        self.filename = os.path.join(config_dir, filename)
+        self.prompt_fn = prompt_fn
+        self.file_perms = file_perms
+
+    def get(self):
+        """Read the value from the config file, or failing that prompt the user"""
+        try:
+            return open(self.filename).read()
+        except IOError:
+            value = self.prompt_fn()
+            self.set(value)
+            return value
+
+    def set(self, value):
+        open(self.filename, 'w').write(value)
+        os.chmod(self.filename, self.file_perms)
+
+
+class WatchOnlyAuthenticator:
+    """Watch-only logins"""
+
+    def __init__(self, config_dir):
+        self._username = ConfigProperty(config_dir, 'username', lambda: input('Username: '))
+        self._password = ConfigProperty(config_dir, 'password', getpass)
+
+    def set_username(self, username):
+        self._username.set(username)
+
+    def set_password(self, password):
+        self._password.set(password)
+
+    def login(self, session_obj):
+        return gdk.login_watch_only(session_obj, self._username.get(), self._password.get())
+
+
 class MnemonicOnDisk:
     """Persist a mnemonic using the filesystem"""
 
     def __init__(self, config_dir):
-        self.mnemonic_filename = os.path.join(config_dir, 'mnemonic')
+        # mnemonic file has read-only permissions to prevent accidental deletion
+        prompt_fn = lambda: getpass('Mnemonic: ')
+        self.mnemonic_prop = ConfigProperty(config_dir, 'mnemonic', prompt_fn, stat.S_IRUSR)
 
     @property
     def _mnemonic(self):
-        return open(self.mnemonic_filename).read()
+        return self.mnemonic_prop.get()
 
     @_mnemonic.setter
     def _mnemonic(self, mnemonic):
         """Write mnemonic to config file"""
         try:
-            logging.debug('opening mnemonic file: %s', self.mnemonic_filename)
-            open(self.mnemonic_filename, 'w').write(mnemonic)
+            self.mnemonic_prop.set(mnemonic)
         except PermissionError:
             message = (
                 "Refusing to overwrite mnemonic file {}\n"
                 "First backup and then delete or change file permissions"
-                .format(self.mnemonic_filename))
+                .format(self.mnemonic_prop.filename))
             raise click.ClickException(message)
-
-        # Set permissions on the mnemonic file to avoid accidental deletion
-        os.chmod(self.mnemonic_filename, stat.S_IRUSR)
 
 
 class SoftwareAuthenticator(Authenticator, MnemonicOnDisk):
@@ -77,7 +115,7 @@ class SoftwareAuthenticator(Authenticator, MnemonicOnDisk):
         self._mnemonic = gdk.generate_mnemonic()
         return self.register(session_obj)
 
-    def setmnemonic(self, mnemonic):
+    def set_mnemonic(self, mnemonic):
         mnemonic = ' '.join(mnemonic.split())
         logging.debug("mnemonic: '{}'".format(mnemonic))
         if not gdk.validate_mnemonic(mnemonic):
@@ -95,25 +133,18 @@ class DefaultAuthenticator(SoftwareAuthenticator):
     def login(self, session_obj):
         """Perform login with either mnemonic or pin data from local storage"""
         try:
-            return super().login(session_obj)
-        except IOError:
-            try:
-                pin_data = open(self.pin_data_filename).read()
-            except IOError:
-                print("Login failed, please call create")
-                raise
+            pin_data = open(self.pin_data_filename).read()
             pin = input("PIN: ")
             return gdk.login_with_pin(session_obj, pin, pin_data)
+        except IOError:
+            return super().login(session_obj)
 
     def setpin(self, session, pin, device_id):
         # session.set_pin converts the pin_data string into a dict, which is not what we want, so
         # use the underlying call instead
-        print("mnemnic: {}".format(self.mnemonic))
-        print("pin: {}".format(pin))
-        print("device_id: {}".format(device_id))
         pin_data = gdk.set_pin(session.session_obj, self.mnemonic, pin, device_id)
         open(self.pin_data_filename, 'w').write(pin_data)
-        os.remove(self.mnemonic_filename)
+        os.remove(self.mnemonic_prop.filename)
         return pin_data
 
 
