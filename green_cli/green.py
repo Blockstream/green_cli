@@ -2,6 +2,7 @@
 import atexit
 import collections
 import functools
+import fileinput
 import json
 import logging
 import os
@@ -220,15 +221,7 @@ def register(session):
 @click.argument('mnemonic')
 def setmnemonic(mnemonic):
     """Set the mnemonic"""
-    if mnemonic == '-':
-        mnemonic = sys.stdin.read()
-    else:
-        try:
-            mnemonic = open(mnemonic).read()
-        except IOError:
-            pass
-
-    # Not all authenticators support setmnemonic
+    mnemonic = fileinput.input(mnemonic).readline()
     return context.authenticator.setmnemonic(mnemonic)
 
 @green.command()
