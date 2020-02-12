@@ -454,9 +454,15 @@ def _send_transaction(session, details):
 @with_login
 @print_result
 def sendtoaddress(session, address, amount, details):
-    # Amount is in BTC consistent with bitcoin-cli, but gdk interface requires satoshi
-    satoshi = session.convert_amount({'btc': amount})['satoshi']
-    details['addressees'] = [{'address': address, 'satoshi': satoshi}]
+    addressee = {'address': address}
+    if amount == "all":
+        details['send_all'] = True
+        addressee['satoshi'] = 0
+    else:
+        # Amount is in BTC consistent with bitcoin-cli, but gdk interface requires satoshi
+        satoshi = session.convert_amount({'btc': amount})['satoshi']
+        addressee['satoshi'] = satoshi
+    details['addressees'] = [addressee]
     return _send_transaction(session, details)
 
 def _get_transaction(session, txid):
