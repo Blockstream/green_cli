@@ -8,6 +8,9 @@ https://github.com/Blockstream/gdk/releases/download/release_0.0.27/greenaddress
 # FIXME: This fallback doesn't work
 #https://github.com/Blockstream/gdk/archive/release_0.0.27.tar.gz --hash=sha256:fe32947f1d444d11e24fc4429da0b3468133c6722f6b12addd76bf5c2ff09c19
 
+https://github.com/ElementsProject/libwally-core/releases/download/release_0.7.5/wallycore-0.7.5-cp36-cp36m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.6' --hash=sha256:f83118d5f4dcff8fa5cd3fbf669a0eac86a0f17fa310c7fe4dde3adbfe80465d
+https://github.com/ElementsProject/libwally-core/releases/download/release_0.7.5/wallycore-0.7.5-cp37-cp37m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.7' --hash=sha256:23d33c37127a981b2d309bd49a57bfae9abfc19202ae87fa7c5b4a30954b02e2
+https://github.com/ElementsProject/libwally-core/releases/download/release_0.7.5/wallycore-0.7.5-cp37-cp37m-macosx_10_14_x86_64.whl; 'darwin' in sys_platform and python_version == '3.7' --hash=sha256:db1cc706e9bcf042f180951ad6d8d586372a4f1578dba06151fbc9cc0cf14e54
 https://github.com/ElementsProject/libwally-core/archive/release_0.7.5.tar.gz --hash=sha256:e37b30be66dff973ad979d176f0d8e87331304769214522a0782bbbb79c18ec6
 hidapi==0.7.99.post21 \
     --hash=sha256:1ac170f4d601c340f2cd52fd06e85c5e77bad7ceac811a7bb54b529f7dc28c24 \
