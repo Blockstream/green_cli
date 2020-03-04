@@ -6,11 +6,11 @@ services:
 env:
   global:
     - DOCKERBUILDER=greenaddress/ci
-    - DOCKERHASH=62f35f4b138a1b0cad32c6854465128acf9b4ee8098dc426512ae1c1ca166a43
+    - DOCKERHASH=56a4a9eb519e8728244e389b942a3f9d4825d526509ee85b99613c6c1d54b1c5
     - UPDATE="apt-get update -qq && apt-get install --no-install-recommends -y -qq libusb-1.0-0-dev libudev-dev"
   matrix:
     - UNUSED=true
-    - DOCKERBUILDER=greenaddress/fedora_ci DOCKERHASH=3d710f476b3d44376acc9fca6e26129e954053834f09ad4327756d67a232bd47 UPDATE="dnf -y install libusb-devel libudev-devel"
+    - DOCKERBUILDER=greenaddress/fedora_ci DOCKERHASH=120c1da342ed28f6b03d87e27d407407f6533d6836a0c3342634a6a46e15fc41 UPDATE="dnf -y install libusb-devel libudev-devel virtualenv"
 
 script:
   - docker run -v $PWD:/green_cli $DOCKERBUILDER@sha256:$DOCKERHASH /bin/bash -c "$UPDATE && cd /green_cli && virtualenv -p python3 venv && source venv/bin/activate && pip install -r requirements.txt && pip install . && python setup.py sdist"
