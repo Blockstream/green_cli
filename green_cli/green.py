@@ -187,9 +187,6 @@ def green(debug, network, auth, config_dir, compact, watch_only):
     if debug:
         logging.basicConfig(level=logging.DEBUG)
 
-    if network == 'mainnet':
-        raise click.ClickException("This tool is not currently suitable for use on mainnet")
-
     config_dir = config_dir or os.path.expanduser(os.path.join('~', '.green-cli', network))
     try:
         os.makedirs(config_dir)
@@ -222,6 +219,11 @@ def getnetwork():
 @gdk_resolve
 def create(session):
     """Create a new wallet"""
+    if context.network == 'mainnet':
+        # Disable create on mainnet
+        # To make this safe clients usually implement some mechanism to check that the user has
+        # correctly stored their mnemonic before proceeding.
+        raise click.ClickException("Wallet creation on mainnet disabled")
     return context.authenticator.create(session.session_obj)
 
 @green.command()
