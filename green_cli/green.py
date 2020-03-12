@@ -467,6 +467,45 @@ def sendtoaddress(session, address, amount, details):
     details['addressees'] = [addressee]
     return _send_transaction(session, details)
 
+@green.command()
+@click.argument('address')
+@click.option('-n')
+@with_login
+def emptywallet(session, address, n):
+    """Send all funds from all subaccounts to a single address"""
+    subaccounts = _gdk_resolve(gdk.get_subaccounts(session.session_obj))['subaccounts']
+    logging.debug("subaccounts: {}".format(subaccounts))
+    balance = sum([s['satoshi']['btc'] for s in subaccounts])
+    subaccounts_with_txs = [s for s in subaccounts if s['has_transactions'] == True]
+    balance_with_txs = sum([s['satoshi']['btc'] for s in subaccounts])
+    assert(balance == balance_with_txs)
+    click.echo("Wallet has {} subaccounts".format(len(subaccounts)))
+    click.echo("{} subaccounts have transactions".format(len(subaccounts_with_txs)))
+    click.echo("Total balance: {} satoshi".format(balance))
+    click.echo("WARNING: If you proceed all funds from all subaccounts will be sent to {}".format(address))
+    click.confirm("Are you sure?", abort=True)
+    progress = 0
+    for subaccount in subaccounts_with_txs:
+        logging.debug("subaccount: {}".format(subaccount))
+        details = {'subaccount': subaccount['pointer']}
+        addressee = {'address': address}
+        details['send_all'] = True
+        addressee['satoshi'] = 0 # gdk requires this set even though 'send_all' overrides it
+        details['addressees'] = [addressee]
+        try:
+            click.echo("{}/{} ".format(progress, len(subaccounts_with_txs)), nl=False)
+            tx = _send_transaction(session, details)
+            click.echo(tx)
+            logging.debug("Sent all funds from subaccount {} '{}' to {}, tx = {}".format(
+                subaccount['pointer'], subaccount['name'], address, tx))
+        except Exception as e:
+            click.echo("failed")
+            logging.warning(str(e))
+
+        progress += 1
+        if n is not None and progress >= n:
+            break
+
 def _get_transaction(session, txid):
     # TODO: Iterate all pages
     # 900 is slightly arbitrary but currently the backend is limited to 30 pages of 30
