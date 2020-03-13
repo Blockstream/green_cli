@@ -64,8 +64,12 @@ class TwoFactorResolver:
     @staticmethod
     def resolve(details: Dict[str, str]):
         """Prompt the user for a 2fa code"""
-        return input("Enter 2fa code for action '{}' sent by {} ({} attempts remaining): "
-                     .format(details['action'], details['method'], details['attempts_remaining']))
+        if details['method'] == 'gauth':
+            msg = "Enter Google Authenticator 2fa code for action '{}': ".format(details['action'])
+        else:
+            msg = "Enter 2fa code for action '{}' sent by {} ({} attempts remaining): ".format(
+                details['action'], details['method'], details['attempts_remaining'])
+        return input(msg)
 
 
 def _gdk_resolve(auth_handler):
@@ -540,18 +544,51 @@ def getconfig(session):
     """Print two-factor authentication configuration"""
     return session.get_twofactor_config()
 
-@twofa.command()
-@click.argument('factor')
-@click.argument('data')
-@with_login
-@gdk_resolve
-def enable(session, factor, data):
+@twofa.group(name="enable")
+def enabletwofa():
     """Enable an authentication factor"""
+
+def _enable_2fa(session, factor, data):
     details = {'confirmed': True, 'enabled': True, 'data': data}
+    logging.debug("_enable_2fa factor='{}', details={}".format(factor, details))
     return gdk.change_settings_twofactor(session.session_obj, factor, json.dumps(details))
 
+@enabletwofa.command()
+@click.argument('email_address')
+@with_login
+@gdk_resolve
+def email(session, email_address):
+    """Enable email 2fa"""
+    return _enable_2fa(session, 'email', email_address)
+
+@enabletwofa.command()
+@click.argument('number')
+@with_login
+@gdk_resolve
+def sms(session, number):
+    """Enabled SMS 2fa"""
+    return _enable_2fa(session, 'sms', number)
+
+@enabletwofa.command()
+@click.argument('number')
+@with_login
+@gdk_resolve
+def phone(session, number):
+    """Enable phone 2fa"""
+    return _enable_2fa(session, 'phone', number)
+
+@enabletwofa.command()
+@with_login
+@gdk_resolve
+def gauth(session):
+    """Enable gauth 2fa"""
+    data = session.get_twofactor_config()['gauth']['data']
+    key = data.partition('secret=')[2]
+    click.echo('Google Authenticator key: {}'.format(key))
+    return _enable_2fa(session, 'gauth', data)
+
 @twofa.command()
-@click.argument('factor')
+@click.argument('factor', type=click.Choice(['email', 'sms', 'phone', 'gauth']))
 @with_login
 @gdk_resolve
 def disable(session, factor):
