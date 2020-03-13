@@ -469,7 +469,7 @@ def sendtoaddress(session, address, amount, details):
 
 @green.command()
 @click.argument('address')
-@click.option('-n')
+@click.option('-n', type=int)
 @with_login
 def emptywallet(session, address, n):
     """Send all funds from all subaccounts to a single address"""
