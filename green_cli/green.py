@@ -65,7 +65,8 @@ class TwoFactorResolver:
     def resolve(details: Dict[str, str]):
         """Prompt the user for a 2fa code"""
         return input("Enter 2fa code for action '{}' sent by {} ({} attempts remaining): "
-                     .format(details['action'], details['method'], details['attempts_remaining']))
+                     .format(details['action'], details['method'], details.get('attempts_remaining',
+                         None)))
 
 
 def _gdk_resolve(auth_handler):
