@@ -471,8 +471,9 @@ def sendtoaddress(session, address, amount, details):
 @green.command()
 @click.argument('address')
 @click.option('-n', type=int)
+@click.option('-start', type=int)
 @with_login
-def emptywallet(session, address, n):
+def emptywallet(session, address, n, start):
     """Send all funds from all subaccounts to a single address"""
     subaccounts = _gdk_resolve(gdk.get_subaccounts(session.session_obj))['subaccounts']
     logging.debug("subaccounts: {}".format(subaccounts))
@@ -485,8 +486,8 @@ def emptywallet(session, address, n):
     click.echo("Total balance: {} satoshi".format(balance))
     click.echo("WARNING: If you proceed all funds from all subaccounts will be sent to {}".format(address))
     click.confirm("Are you sure?", abort=True)
-    progress = 0
-    for subaccount in subaccounts_with_txs:
+    progress = start
+    for subaccount in subaccounts_with_txs[start:]:
         logging.debug("subaccount: {}".format(subaccount))
         details = {'subaccount': subaccount['pointer']}
         addressee = {'address': address}
@@ -504,7 +505,7 @@ def emptywallet(session, address, n):
             logging.warning(str(e))
 
         progress += 1
-        if n is not None and progress >= n:
+        if n is not None and progress >= (start + n):
             break
 
 def _get_transaction(session, txid):
