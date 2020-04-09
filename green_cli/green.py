@@ -248,7 +248,11 @@ def listen(session):
         try:
             click.echo(_format_output(session.notifications.get(block=True, timeout=1)))
         except queue.Empty:
+            logging.debug("queue.Empty, passing")
             pass
+        except KeyboardInterrupt:
+            logging.debug("KeyboardInterrupt during listen, returning")
+            break
 
 @green.command()
 @with_login
