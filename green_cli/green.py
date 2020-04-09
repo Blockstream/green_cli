@@ -150,6 +150,7 @@ def with_login(fn):
     @functools.wraps(fn)
     def inner(session, *args, **kwargs):
         if not context.logged_in:
+            logging.info("Logging in")
             result = context.authenticator.login(session.session_obj)
             # authenticator.login attempts to abstract the actual login method, it may call
             # GA_login, GA_login_with_pin or GA_login_watch_only
@@ -173,6 +174,22 @@ def get_authenticator(auth, config_dir):
         return WatchOnlyAuthenticator(config_dir)
     logging.debug('using standard gdk authentication')
     return DefaultAuthenticator(config_dir)
+
+class Session(gdk.Session):
+
+    def __init__(self, net_params):
+        super().__init__( net_params)
+
+    def callback_handler(self, event):
+        logging.debug("Callback received event: {}".format(event))
+        try:
+            if event['event'] == 'network' and event['network'].get('login_required', False):
+                logging.debug("Setting logged_in to false after network event")
+                context.logged_in = False
+        except Exception as e:
+            logging.error("Error processing event: {}".format(str(e)))
+
+        super().callback_handler(event)
 
 @click.group()
 @click.option('--debug', is_flag=True, help='Verbose debug logging.')
@@ -198,7 +215,7 @@ def green(debug, network, auth, config_dir, compact, watch_only):
         pass
 
     gdk.init({})
-    session = gdk.Session({'name': network})
+    session = Session({'name': network})
     atexit.register(session.destroy)
 
     if watch_only:
