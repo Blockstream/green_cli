@@ -666,5 +666,9 @@ def cancel(session):
     """Cancel a 2fa reset"""
     return gdk.twofactor_cancel_reset(session.session_obj)
 
-register_repl(green)
-green()
+def main():
+    register_repl(green)
+    green()
+
+if __name__ == "__main__":
+    main()
