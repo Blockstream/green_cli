@@ -486,22 +486,31 @@ def _send_transaction(session, details):
     details = _gdk_resolve(gdk.send_transaction(session.session_obj, json.dumps(details)))
     return details['txhash']
 
+class Address(click.ParamType):
+    name = 'address'
+
+class Amount(click.ParamType):
+    name = 'amount'
+
+    def convert(self, value, param, ctx):
+        if value == 'all':
+            return value
+        # Amount is in BTC consistent with bitcoin-cli, but gdk interface requires satoshi
+        # FIXME: assets
+        return context.session.convert_amount({'btc': value})['satoshi']
+
+
 @green.command()
-@click.argument('address')
-@click.argument('amount', type=str)
+@click.argument('address', type=Address())
+@click.argument('amount', type=Amount())
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @with_login
 @print_result
 def sendtoaddress(session, address, amount, details):
-    addressee = {'address': address}
     if amount == "all":
         details['send_all'] = True
-        addressee['satoshi'] = 0
-    else:
-        # Amount is in BTC consistent with bitcoin-cli, but gdk interface requires satoshi
-        satoshi = session.convert_amount({'btc': amount})['satoshi']
-        addressee['satoshi'] = satoshi
-    details['addressees'] = [addressee]
+        amount = 0
+    details['addressees'] = [{'address': address, 'satoshi': amount}]
     return _send_transaction(session, details)
 
 def _get_transaction(session, txid):
@@ -669,5 +678,9 @@ def cancel(session):
     """Cancel a 2fa reset"""
     return gdk.twofactor_cancel_reset(session.session_obj)
 
-register_repl(green)
-green()
+def main():
+    register_repl(green)
+    green()
+
+if __name__ == "__main__":
+    main()
