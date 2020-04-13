@@ -29,11 +29,16 @@ from green_cli.authenticator import (
 # unless specifically passed object_pairs_hook=collections.OrderedDict
 # Monkey patch here to force consistent ordering on all python versions (otherwise for example every
 # time you call getbalance the keys will be in an arbitrarily different order in the output).
-_json_loads = json.loads
-def ordered_json_loads(*args, **kwargs):
-    kwargs['object_pairs_hook'] = collections.OrderedDict
-    return _json_loads(*args, **kwargs)
-json.loads = ordered_json_loads
+if sys.version_info.major <= 3 and sys.version_info.minor < 7:
+    _ordered_dict = collections.OrderedDict
+    _json_loads = json.loads
+    def ordered_json_loads(*args, **kwargs):
+        kwargs['object_pairs_hook'] = _ordered_dict
+        return _json_loads(*args, **kwargs)
+    json.loads = ordered_json_loads
+else:
+    _ordered_dict = dict
+
 
 class Context:
     """Holds global context related to the invocation of the tool"""
@@ -289,7 +294,7 @@ def details_json(ctx, param, value):
     make this convenient.
     """
     if value is not None:
-        details = ctx.params.setdefault('details', collections.OrderedDict())
+        details = ctx.params.setdefault('details', _ordered_dict())
         # hyphens are idiomatic for command line args, so allow some_option to be passed as
         # some-option
         name = param.name.replace("-", "_")
