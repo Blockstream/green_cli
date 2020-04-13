@@ -485,6 +485,10 @@ def _send_transaction(session, details):
 @with_login
 @print_result
 def sendtoaddress(session, address, amount, details):
+    _prepare_send_json(session, address, amount, details)
+    return _send_transaction(session, details)
+
+def _prepare_send_json(session, address, amount, details):
     addressee = {'address': address}
     if amount == "all":
         details['send_all'] = True
@@ -494,7 +498,6 @@ def sendtoaddress(session, address, amount, details):
         satoshi = session.convert_amount({'btc': amount})['satoshi']
         addressee['satoshi'] = satoshi
     details['addressees'] = [addressee]
-    return _send_transaction(session, details)
 
 def _get_transaction(session, txid):
     # TODO: Iterate all pages
@@ -661,5 +664,9 @@ def cancel(session):
     """Cancel a 2fa reset"""
     return gdk.twofactor_cancel_reset(session.session_obj)
 
-register_repl(green)
-green()
+def main():
+    register_repl(green)
+    green()
+
+if __name__ == "__main__":
+    main()
