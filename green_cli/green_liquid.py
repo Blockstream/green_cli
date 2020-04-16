@@ -48,12 +48,64 @@ class TransactionOutput(basecli.TransactionOutput):
     def get_metavar(self, param):
         return "ADDRESS ASSET AMOUNT"
 
-_tx_output_arg = click.Argument(('output',), type=TransactionOutput())
-_dp_option = click.Option(('--amount-dp',), type=int, help='Number of decimal places of amount')
-basecli.sendtoaddress.params = [_tx_output_arg, _dp_option] + basecli.sendtoaddress.params[1:]
+_tx_output_arg = click.Argument(
+    ('output',),
+    type=TransactionOutput()
+)
+
+_tx_output_opt = click.Option(
+    ('--output', '-o'),
+    type=TransactionOutput(),
+    multiple=True,
+)
+
+_fractional_opt = click.Option(
+    ('--fractional-amounts',),
+    is_flag=True,
+    help='Amounts are specified in fractional units (e.g. satoshis)'
+)
+
+def _adjust_asset_amount(assets, asset, amount):
+    if asset == 'btc':
+        amount_dp = 8
+    else:
+        amount_dp = None
+        found = False
+        for tag, info in assets.items():
+            if tag == asset or _match_asset(info, asset):
+                if found:
+                    raise click.ClickException("Ambiguous asset")
+                found = True
+                if 'precision' in info:
+                    amount_dp = info['precision']
+
+    if amount_dp is None:
+        raise click.ClickException("Cannot determine asset precision, use --fractional-amounts?")
+
+    return _apply_dp(amount, amount_dp)
+
+def _addressee(session, output):
+    address, asset, amount = output
+    return {'address': address, 'asset_tag': asset, 'satoshi': int(amount)}
+
+basecli.sendmany.params = [_tx_output_opt, _fractional_opt] + basecli.sendtoaddress.params[1:]
 @with_login
 @print_result
-def sendtoaddress(session, output, amount_dp, details):
+def sendmany(session, output, fractional_amounts, details):
+    if not fractional_amounts:
+        refresh_asset_details = {'assets': True, 'icons': False, 'refresh': True}
+        assets = basecli.context.session.refresh_assets(refresh_asset_details)['assets']
+        output = [(address, asset, _adjust_asset_amount(assets, asset, amount)) for address,
+                asset, amount in output]
+    details['addressees'] = [_addressee(session, o) for o in output]
+    return basecli._send_transaction(session, details)
+
+basecli.sendmany.callback = sendmany
+
+basecli.sendtoaddress.params = [_tx_output_arg, _fractional_opt] + basecli.sendtoaddress.params[1:]
+@with_login
+@print_result
+def sendtoaddress(session, output, fractional_amounts, details):
     address, asset, amount = output
     if amount == 'all':
         details['send_all'] = True
@@ -69,25 +121,12 @@ def sendtoaddress(session, output, amount_dp, details):
     # set refresh=True, this is going to be a bit slower but it's important that the most
     # up to date asset info is used to determine the "precision" (number of decimal places to
     # use when interpreting the value provided by the user)
-    refresh_asset_details = {'assets': True, 'icons': False, 'refresh': True}
-    assets = basecli.context.session.refresh_assets(refresh_asset_details)['assets']
-    registry_dp = None
-    found = False
-    for tag, info in assets.items():
-        if tag == asset or _match_asset(info, asset):
-            if found:
-                raise click.ClickException("Ambiguous asset")
-            found = True
-            if 'precision' in info:
-                if amount_dp is not None and amount_dp != info['precision']:
-                    raise click.ClickException("Cannot override --amount-dp for registered asset")
-                amount_dp = info['precision']
+    if not fractional_amounts:
+        refresh_asset_details = {'assets': True, 'icons': False, 'refresh': True}
+        assets = basecli.context.session.refresh_assets(refresh_asset_details)['assets']
+        amount = _adjust_asset_amount(assets, asset, amount)
 
-    if amount_dp is None:
-        raise click.ClickException("Cannot determine asset precision, pass --amount-dp?")
-
-    amount = _apply_dp(amount, amount_dp)
-    details['addressees'] = [{'address': address, 'asset_tag': asset, 'satoshi': amount}]
+    details['addressees'] = [_addressee(session, (address, asset, amount))]
     return basecli._send_transaction(session, details)
 
 basecli.sendtoaddress.callback = sendtoaddress

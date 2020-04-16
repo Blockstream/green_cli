@@ -501,6 +501,12 @@ class TransactionOutput(click.Tuple):
     def get_metavar(self, param):
         return "ADDRESS AMOUNT"
 
+def _addressee(session, output):
+    address, amount = output
+    # Amount is in BTC consistent with bitcoin-cli, but gdk interface requires satoshi
+    amount = context.session.convert_amount({'btc': amount})['satoshi']
+    return {'address': address, 'satoshi': amount}
+
 @green.command()
 @click.argument('output', type=TransactionOutput())
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
@@ -511,9 +517,16 @@ def sendtoaddress(session, output, details):
     if amount == "all":
         details['send_all'] = True
         amount = 0
-    # Amount is in BTC consistent with bitcoin-cli, but gdk interface requires satoshi
-    amount = context.session.convert_amount({'btc': amount})['satoshi']
-    details['addressees'] = [{'address': address, 'satoshi': amount}]
+    details['addressees'] = [_addressee(session, (address, amount))]
+    return _send_transaction(session, details)
+
+@green.command()
+@click.option('-o', '--output', multiple=True, type=TransactionOutput())
+@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
+@with_login
+@print_result
+def sendmany(session, output, details):
+    details['addressees'] = [_addressee(session, o) for o in output]
     return _send_transaction(session, details)
 
 def _get_transaction(session, txid):
