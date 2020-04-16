@@ -492,24 +492,27 @@ class Address(click.ParamType):
 class Amount(click.ParamType):
     name = 'amount'
 
-    def convert(self, value, param, ctx):
-        if value == 'all':
-            return value
-        # Amount is in BTC consistent with bitcoin-cli, but gdk interface requires satoshi
-        # FIXME: assets
-        return context.session.convert_amount({'btc': value})['satoshi']
+class TransactionOutput(click.Tuple):
+    name = 'transactionoutput'
 
+    def __init__(self):
+        click.Tuple.__init__(self, types=(Address(), Amount()))
+
+    def get_metavar(self, param):
+        return "ADDRESS AMOUNT"
 
 @green.command()
-@click.argument('address', type=Address())
-@click.argument('amount', type=Amount())
+@click.argument('output', type=TransactionOutput())
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @with_login
 @print_result
-def sendtoaddress(session, address, amount, details):
+def sendtoaddress(session, output, details):
+    address, amount = output
     if amount == "all":
         details['send_all'] = True
         amount = 0
+    # Amount is in BTC consistent with bitcoin-cli, but gdk interface requires satoshi
+    amount = context.session.convert_amount({'btc': amount})['satoshi']
     details['addressees'] = [{'address': address, 'satoshi': amount}]
     return _send_transaction(session, details)
 
