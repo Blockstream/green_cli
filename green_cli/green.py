@@ -349,6 +349,14 @@ def setwatchonly(session, username, password):
     return session.set_watch_only(username, password)
 
 @green.command()
+@click.argument('value', type=int, expose_value=False, callback=details_json)
+@with_login
+@gdk_resolve
+def setnlocktime(session, details):
+    """Set number of blocks for nlocktime"""
+    return gdk.set_nlocktime(session.session_obj, json.dumps(details))
+
+@green.command()
 @with_login
 @print_result
 def getwatchonly(session):
