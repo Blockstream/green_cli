@@ -198,7 +198,8 @@ class Session(gdk.Session):
 @click.option('--config-dir', '-C', default=None, help='Override config directory.')
 @click.option('--compact', '-c', is_flag=True, help='Compact json output (no pretty printing)')
 @click.option('--watch-only', is_flag=True, help='Use watch-only login')
-def green(debug, network, auth, config_dir, compact, watch_only):
+@click.option('--tor', is_flag=True, help='Use tor for external connections')
+def green(debug, network, auth, config_dir, compact, watch_only, tor):
     """Command line interface for green gdk"""
     global context
     if context is not None:
@@ -215,7 +216,7 @@ def green(debug, network, auth, config_dir, compact, watch_only):
         pass
 
     gdk.init({})
-    session = Session({'name': network})
+    session = Session({'name': network, 'use_tor': tor})
     atexit.register(session.destroy)
 
     if watch_only:
