@@ -12,11 +12,11 @@ params['network'].default = 'localtest-liquid'
 
 @green.command()
 @click.option('--refresh', is_flag=True, default=False, expose_value=False, callback=details_json)
+@click.option('--icons', is_flag=True, default=False, expose_value=False, callback=details_json)
 @with_login
 @print_result
 def getassetinfo(session, details):
     details['assets'] = True
-    details['icons'] = False
     return session.refresh_assets(details)
 
 if __name__ == "__main__":
