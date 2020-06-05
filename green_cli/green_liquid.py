@@ -10,6 +10,10 @@ params['network'].type = click.Choice(['liquid', 'localtest-liquid'])
 params['network'].help = None
 params['network'].default = 'localtest-liquid'
 
+# Add 2of2_no_recovery as a subaccount type to createsubaccount
+params = {p.name: p for p in basecli.createsubaccount.params}
+params['type'].type.choices.append('2of2_no_recovery')
+
 @green.command()
 @click.option('--refresh', is_flag=True, default=False, expose_value=False, callback=details_json)
 @click.option('--icons', is_flag=True, default=False, expose_value=False, callback=details_json)
