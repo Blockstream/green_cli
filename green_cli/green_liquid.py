@@ -1,6 +1,7 @@
 """Modifies base green_cli with liquid specific changes.
 """
 from green_cli.green import main, green, with_login, print_result, details_json
+from green_cli.liquid_authenticator import WallyAuthenticatorLiquid
 import green_cli.green as basecli
 import click
 
@@ -22,6 +23,8 @@ params['type'].type.choices.append('2of2_no_recovery')
 def getassetinfo(session, details):
     details['assets'] = True
     return session.refresh_assets(details)
+
+basecli.WallyAuthenticator = WallyAuthenticatorLiquid
 
 if __name__ == "__main__":
     main()

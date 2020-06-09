@@ -157,7 +157,8 @@ class HardwareDevice(Authenticator):
 
     @property
     def hw_device(self):
-        return json.dumps({'device': {'name': self.name}})
+        return json.dumps({'device': {'name': self.name, 'supports_liquid': 1,
+            'supports_low_r': True, 'supports_arbitrary_scripts': True}})
 
     @property
     def mnemonic(self):
@@ -193,7 +194,31 @@ class HardwareDevice(Authenticator):
             return result
         if details['action'] == 'sign_tx':
             return self.sign_tx(details)
-        raise NotImplementedError("action = \"{}\"".format(details['action']))
+        if details['action'] == 'get_receive_address':
+            blinding_script_hash = bytes.fromhex(details['address']['blinding_script_hash'])
+            public_blinding_key = self.get_public_blinding_key(blinding_script_hash)
+            return json.dumps({'blinding_key': public_blinding_key.hex()})
+
+        retval = {}
+        if details['action'] == 'create_transaction':
+            blinding_keys = {}
+            change_addresses = details['transaction'].get('change_address', {})
+            for asset, addr in change_addresses.items():
+                blinding_script_hash = bytes.fromhex(addr['blinding_script_hash'])
+                blinding_keys[asset] = self.get_public_blinding_key(blinding_script_hash).hex()
+            retval['blinding_keys'] = blinding_keys
+        if 'blinded_scripts' in details:
+            nonces = []
+            for elem in details['blinded_scripts']:
+                pubkey = bytes.fromhex(elem['pubkey'])
+                script = bytes.fromhex(elem['script'])
+                nonces.append(self.get_shared_nonce(pubkey, script).hex())
+            retval['nonces'] = nonces
+
+        if not retval:
+            raise NotImplementedError("action = \"{}\"".format(details['action']))
+
+        return json.dumps(retval)
 
 
 class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
@@ -215,9 +240,13 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
         return self.register(session_obj)
 
     @property
-    def master_key(self):
+    def seed(self):
         _, seed = wally.bip39_mnemonic_to_seed512(self._mnemonic, None)
-        return wally.bip32_key_from_seed(seed, wally.BIP32_VER_TEST_PRIVATE,
+        return seed
+
+    @property
+    def master_key(self):
+        return wally.bip32_key_from_seed(self.seed, wally.BIP32_VER_TEST_PRIVATE,
                                          wally.BIP32_FLAG_KEY_PRIVATE)
 
     def derive_key(self, path: List[int]):
@@ -241,21 +270,25 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
                                             wally.EC_FLAG_ECDSA | wally.EC_FLAG_GRIND_R)
         return wally.ec_sig_to_der(signature)
 
-    def sign_tx(self, details):
-        txdetails = details['transaction']
+    def _get_sighash(self, wally_tx, index, utxo):
+        flags = wally.WALLY_TX_FLAG_USE_WITNESS
+        prevout_script = wally.hex_to_bytes(utxo['prevout_script'])
+        return wally.tx_get_btc_signature_hash(
+                wally_tx, index, prevout_script, utxo['satoshi'], wally.WALLY_SIGHASH_ALL, flags)
 
+    def _sign_tx(self, details, wally_tx):
+        txdetails = details['transaction']
         utxos = txdetails['used_utxos'] or txdetails['old_used_utxos']
+
         signatures = []
         for index, utxo in enumerate(utxos):
-            wally_tx = wally.tx_from_hex(txdetails['transaction'], wally.WALLY_TX_FLAG_USE_WITNESS)
+
             is_segwit = utxo['script_type'] in [14, 15, 159, 162] # FIXME!!
             if not is_segwit:
                 # FIXME
                 raise NotImplementedError("Non-segwit input")
-            flags = wally.WALLY_TX_FLAG_USE_WITNESS if is_segwit else 0
-            prevout_script = wally.hex_to_bytes(utxo['prevout_script'])
-            txhash = wally.tx_get_btc_signature_hash(
-                wally_tx, index, prevout_script, utxo['satoshi'], wally.WALLY_SIGHASH_ALL, flags)
+
+            txhash = self._get_sighash(wally_tx, index, utxo)
 
             path = utxo['user_path']
             privkey = self.get_privkey(path)
@@ -266,8 +299,12 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
             signatures.append(wally.hex_from_bytes(signature))
             logging.debug('Signature (der) input %s path %s: %s', index, path, signature)
 
-        return json.dumps({'signatures': signatures})
+        return {'signatures': signatures}
 
+    def sign_tx(self, details):
+        tx_flags = wally.WALLY_TX_FLAG_USE_WITNESS
+        wally_tx = wally.tx_from_hex(details['transaction']['transaction'], tx_flags)
+        return json.dumps(self._sign_tx(details, wally_tx))
 
 class HWIDevice(HardwareDevice):
 
