@@ -298,12 +298,14 @@ def details_json(ctx, param, value):
     return value
 
 @green.command()
-@click.argument('name', callback=details_json)
-@click.argument('type', type=click.Choice(['2of2', '2of3']), callback=details_json)
+@click.argument('name', expose_value=False, callback=details_json)
+@click.argument('type', type=click.Choice(['2of2', '2of3']), expose_value=False, callback=details_json)
+@click.option('--recovery-mnemonic', type=str, expose_value=False, callback=details_json)
+@click.option('--recovery-xpub', type=str, expose_value=False, callback=details_json)
 @with_login
 @print_result
 @gdk_resolve
-def createsubaccount(session, name, type, details):
+def createsubaccount(session, details):
     """Create a subaccount"""
     return gdk.create_subaccount(session.session_obj, json.dumps(details))
 
