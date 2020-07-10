@@ -2,11 +2,11 @@ click==7.0 --hash=sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925
 
 https://github.com/bitcoin-core/HWI/archive/0d88d076384d64029ae238cd007a651bf0c60f46.tar.gz --hash=sha256:1d5dbe02758ed5c1ff73defe97707ae8f1f4d2b98ca84ae3d3b4109f6a5aeb40
 
-https://github.com/Blockstream/gdk/releases/download/release_0.0.28/greenaddress-0.0.28-cp36-cp36m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.6' --hash=sha256:a9d1f6da8faad1f1695b5fd219941ed927b8e128ecfa7f213014f122f0cc344e
-https://github.com/Blockstream/gdk/releases/download/release_0.0.28/greenaddress-0.0.28-cp37-cp37m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.7' --hash=sha256:988a566a0de0896c06260ad1d4ff23f2e5a26a69d63cf52826fb04376e311531
-https://github.com/Blockstream/gdk/releases/download/release_0.0.28/greenaddress-0.0.28-cp37-cp37m-macosx_10_13_x86_64.whl; 'darwin' in sys_platform and python_version == '3.7' --hash=sha256:6bc3255d8e6eae616b668d501294a77761b16b3422da2bf7e46393f7742cd5e1
+https://github.com/Blockstream/gdk/releases/download/release_0.0.33/greenaddress-0.0.33-cp36-cp36m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.6' --hash=sha256:c35a15cbbbfedda785cf019bd0691e582219f6a1a491a8d979551dd1a7b0fb6a
+https://github.com/Blockstream/gdk/releases/download/release_0.0.33/greenaddress-0.0.33-cp37-cp37m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.7' --hash=sha256:cd15e21699cd2ffe4229af4b400ac78fa06e93356e5055d94e83a449ceab1a92
+https://github.com/Blockstream/gdk/releases/download/release_0.0.33/greenaddress-0.0.33-cp37-cp37m-macosx_10_14_x86_64.whl; 'darwin' in sys_platform and python_version == '3.7' --hash=sha256:e58be5b848f7a5c71b7872f3cd8588d5e89128473b022a71210da5f095208d8e
 # FIXME: This fallback doesn't work
-#https://github.com/Blockstream/gdk/archive/release_0.0.28.tar.gz --hash=sha256:e62b854528a9ac99c6b84e60f6adf0d1a4ae99c096623c3351779513e0539f25
+#https://github.com/Blockstream/gdk/archive/release_0.0.33.tar.gz --hash=sha256:189a2afaf4b089abefe94e6437e0ee9e9f661e3843f63868f6a0bc4d53df38be
 
 https://github.com/ElementsProject/libwally-core/releases/download/release_0.7.5/wallycore-0.7.5-cp36-cp36m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.6' --hash=sha256:f83118d5f4dcff8fa5cd3fbf669a0eac86a0f17fa310c7fe4dde3adbfe80465d
 https://github.com/ElementsProject/libwally-core/releases/download/release_0.7.5/wallycore-0.7.5-cp37-cp37m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.7' --hash=sha256:23d33c37127a981b2d309bd49a57bfae9abfc19202ae87fa7c5b4a30954b02e2
