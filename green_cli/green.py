@@ -23,6 +23,10 @@ from green_cli.authenticator import (
     WatchOnlyAuthenticator,
     HWIDevice,
     )
+from green_cli.param_types import (
+    Address,
+    Amount
+)
 
 
 # In older verions of python (<3.6?) json.loads does not respect the order of the input
@@ -451,14 +455,13 @@ def gettransactions(session, details):
     return gdk.get_transactions(session.session_obj, json.dumps(details))
 
 @green.command()
-@click.option('--addressee', '-a', type=(str, int), multiple=True)
+@click.option('--addressee', '-a', type=(Address(), Amount()), expose_value=False, multiple=True)
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--fee-rate', '-f', type=int, expose_value=False, callback=details_json)
 @with_login
 @print_result
-def createtransaction(session, addressee, details):
+def createtransaction(session, details):
     """Create an outgoing transaction"""
-    details['addressees'] = [{'address': addr, 'satoshi': satoshi} for addr, satoshi in addressee]
     return _gdk_resolve(gdk.create_transaction(session.session_obj, json.dumps(details)))
 
 @green.command()
@@ -500,21 +503,12 @@ def _send_transaction(session, details):
     return details['txhash']
 
 @green.command()
-@click.argument('address')
-@click.argument('amount', type=str)
+@click.argument('address', type=Address(), expose_value=False)
+@click.argument('amount', type=Amount(precision=8), expose_value=False)
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @with_login
 @print_result
-def sendtoaddress(session, address, amount, details):
-    addressee = {'address': address}
-    if amount == "all":
-        details['send_all'] = True
-        addressee['satoshi'] = 0
-    else:
-        # Amount is in BTC consistent with bitcoin-cli, but gdk interface requires satoshi
-        satoshi = session.convert_amount({'btc': amount})['satoshi']
-        addressee['satoshi'] = satoshi
-    details['addressees'] = [addressee]
+def sendtoaddress(session, details):
     return _send_transaction(session, details)
 
 def _get_transaction(session, txid):
