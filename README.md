@@ -17,6 +17,7 @@ $ pip install .
 3) [Optional] Enable bash completion
 ```
 $ eval "$(_GREEN_CLI_COMPLETE=source green-cli)"
+$ eval "$(_GREEN_LIQUID_CLI_COMPLETE=source green-liquid-cli)"
 ```
 
 Example usage (testnet):
@@ -25,4 +26,4 @@ $ green-cli --network testnet setmnemonic /file/containing/testnet/mnemonics
 $ green-cli --network testnet getbalance
 ```
 
-For now use on mainnet is disabled
+For now wallet creation is disabled on use on mainnet/liquid mainnet
