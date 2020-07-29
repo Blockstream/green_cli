@@ -231,17 +231,20 @@ def green(debug, network, auth, config_dir, compact, watch_only, tor):
 def getnetworks():
     return gdk.get_networks()
 
+def _get_network():
+    return gdk.get_networks()[context.network]
+
 @green.command()
 @print_result
 def getnetwork():
-    return gdk.get_networks()[context.network]
+    return _get_network()
 
 @green.command()
 @with_session
 @gdk_resolve
 def create(session):
     """Create a new wallet"""
-    if context.network == 'mainnet':
+    if _get_network()['mainnet']:
         # Disable create on mainnet
         # To make this safe clients usually implement some mechanism to check that the user has
         # correctly stored their mnemonic before proceeding.
