@@ -10,7 +10,6 @@ import queue
 import sys
 
 from typing import Dict, List
-from getpass import getpass
 
 import click
 from click_repl import register_repl
