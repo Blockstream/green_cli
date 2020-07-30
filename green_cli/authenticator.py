@@ -134,7 +134,7 @@ class DefaultAuthenticator(SoftwareAuthenticator):
         """Perform login with either mnemonic or pin data from local storage"""
         try:
             pin_data = open(self.pin_data_filename).read()
-            pin = input("PIN: ")
+            pin = getpass("PIN: ")
             return gdk.login_with_pin(session_obj, pin, pin_data)
         except IOError:
             return super().login(session_obj)
