@@ -22,7 +22,7 @@ $ eval "$(_GREEN_LIQUID_CLI_COMPLETE=source green-liquid-cli)"
 
 Example usage (testnet):
 ```
-$ green-cli --network testnet setmnemonic /file/containing/testnet/mnemonics
+$ green-cli --network testnet set mnemonic /file/containing/testnet/mnemonics
 $ green-cli --network testnet getbalance
 ```
 
