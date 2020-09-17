@@ -377,6 +377,14 @@ def setnlocktime(session, details):
     return gdk.set_nlocktime(session.session_obj, json.dumps(details))
 
 @green.command()
+@click.argument('value', type=int, expose_value=False, callback=details_json)
+@with_login
+@gdk_resolve
+def setcsvtime(session, details):
+    """Set number of blocks for csvtime"""
+    return gdk.set_csvtime(session.session_obj, json.dumps(details))
+
+@green.command()
 @with_login
 @print_result
 def getwatchonly(session):
