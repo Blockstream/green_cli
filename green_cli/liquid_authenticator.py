@@ -1,4 +1,4 @@
-from green_cli.authenticator import WallyAuthenticator
+from green_cli.authenticators.wally import WallyAuthenticator
 
 import wallycore as wally
 

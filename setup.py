@@ -4,7 +4,8 @@ setup(
     name='green_cli',
     version='0.1',
     packages=[
-        'green_cli'
+        'green_cli',
+        'green_cli/authenticators',
     ],
     install_requires=[
         'Click',

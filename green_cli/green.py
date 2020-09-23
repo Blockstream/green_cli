@@ -3,6 +3,7 @@ import atexit
 import collections
 import functools
 import fileinput
+import importlib
 import json
 import logging
 import os
@@ -16,12 +17,8 @@ from click_repl import register_repl
 
 import greenaddress as gdk
 
-from green_cli.authenticator import (
-    DefaultAuthenticator,
-    WallyAuthenticator,
-    WatchOnlyAuthenticator,
-    HWIDevice,
-    )
+from green_cli.authenticators.default import DefaultAuthenticator
+from green_cli.authenticators.watchonly import WatchOnlyAuthenticator
 from green_cli.param_types import (
     Address,
     Amount
@@ -164,19 +161,11 @@ def with_login(fn):
         return fn(session, *args, **kwargs)
     return with_session(inner)
 
-def get_authenticator(auth, config_dir):
+def get_authenticator(auth, network, config_dir):
     """Return an object that implements the authentication interface"""
-    if auth == 'hardware':
-        logging.debug('using hwi for hardware wallet authentication')
-        return HWIDevice.get_device()
-    if auth == 'wally':
-        logging.debug('using libwally for external authentication')
-        return WallyAuthenticator(config_dir)
-    if auth == 'watch-only':
-        logging.debug('using watch-only authenticator')
-        return WatchOnlyAuthenticator(config_dir)
-    logging.debug('using standard gdk authentication')
-    return DefaultAuthenticator(config_dir)
+    auth_module = importlib.import_module('green_cli.authenticators.{}'.format(auth))
+    logging.debug("using auth module {}".format(auth_module))
+    return auth_module.get_authenticator(network, config_dir)
 
 class Session(gdk.Session):
 
@@ -197,7 +186,7 @@ class Session(gdk.Session):
 @click.group()
 @click.option('--debug', is_flag=True, help='Verbose debug logging.')
 @click.option('--network', default='localtest', help='Network: localtest|testnet|mainnet.')
-@click.option('--auth', type=click.Choice(['hardware', 'wally', 'watch-only']))
+@click.option('--auth', default='default', type=click.Choice(['default', 'hardware', 'wally', 'watchonly']))
 @click.option('--config-dir', '-C', default=None, help='Override config directory.')
 @click.option('--compact', '-c', is_flag=True, help='Compact json output (no pretty printing)')
 @click.option('--watch-only', is_flag=True, help='Use watch-only login')
@@ -223,9 +212,9 @@ def green(debug, network, auth, config_dir, compact, watch_only, tor):
     atexit.register(session.destroy)
 
     if watch_only:
-        auth = 'watch-only'
+        auth = 'watchonly'
 
-    authenticator = get_authenticator(auth, config_dir)
+    authenticator = get_authenticator(auth, network, config_dir)
 
     context = Context(config_dir, session, network, TwoFactorResolver(), authenticator, compact)
 

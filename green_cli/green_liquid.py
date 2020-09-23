@@ -1,7 +1,6 @@
 """Modifies base green_cli with liquid specific changes.
 """
 from green_cli.green import main, green, with_login, print_result, details_json, _get_network
-from green_cli.liquid_authenticator import WallyAuthenticatorLiquid
 from green_cli.param_types import Address, Amount
 import green_cli.green as basecli
 import click
@@ -57,8 +56,6 @@ def sendtoaddress(session, details):
 params = {p.name: p for p in basecli.createtransaction.params}
 params['addressee'].type = click.Tuple((Address(), Asset(), Amount()))
 params['addressee'].nargs = 3
-
-basecli.WallyAuthenticator = WallyAuthenticatorLiquid
 
 if __name__ == "__main__":
     main()
