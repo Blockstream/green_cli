@@ -374,6 +374,16 @@ def setcsvtime(session, details):
     return gdk.set_csvtime(session.session_obj, json.dumps(details))
 
 @green.command()
+@click.argument('txid', type=str)
+@click.argument('memo', type=str)
+@click.option('--bip70', is_flag=True, help='Set a bip70 memo')
+@with_login
+def settransactionmemo(session, txid, memo, bip70):
+    """Set a memo on a wallet transaction"""
+    memo_type = gdk.GA_MEMO_BIP70 if bip70 else gdk.GA_MEMO_USER
+    return gdk.set_transaction_memo(session.session_obj, txid, memo, memo_type)
+
+@green.command()
 @with_login
 @print_result
 def getwatchonly(session):
