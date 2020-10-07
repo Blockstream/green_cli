@@ -38,3 +38,15 @@ class Amount(click.ParamType):
         assert 'amount' not in ctx.params['details']['addressees'][-1]
         ctx.params['details']['addressees'][-1]['satoshi'] = value
         return value
+
+class UtxoUserStatus(click.ParamType):
+    name = 'utxostatus'
+
+    def convert(self, value, param, ctx):
+        # Append a new UTXO status to the list of UTXOs to update
+        # UTXO status is passed as txhash:pt_idx:status
+        ctx.params.setdefault("details", {})
+        ctx.params['details'].setdefault("list", [])
+        txhash, pt_idx, status = value.split(':')
+        ctx.params['details']['list'].append({'txhash': txhash, 'pt_idx': int(pt_idx), 'user_status': status})
+        return value

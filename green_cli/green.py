@@ -21,7 +21,8 @@ from green_cli.authenticators.default import DefaultAuthenticator
 from green_cli.authenticators.watchonly import WatchOnlyAuthenticator
 from green_cli.param_types import (
     Address,
-    Amount
+    Amount,
+    UtxoUserStatus
 )
 
 
@@ -512,12 +513,22 @@ def getbalance(session, details):
 @green.command()
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--num-confs', default=0, expose_value=False, callback=details_json)
+@click.option('--all-coins', type=bool, default=False, expose_value=False, callback=details_json)
 @with_login
 @print_result
 @gdk_resolve
 def getunspentoutputs(session, details):
     """Get unspent outputs"""
     return gdk.get_unspent_outputs(session.session_obj, json.dumps(details))
+
+@green.command()
+@click.argument('status', type=(UtxoUserStatus()), expose_value=False, nargs=-1)
+@with_login
+@print_result
+@gdk_resolve
+def setunspentoutputsstatus(session, details):
+    """Set unspent outputs status. Status format is <txid>:<vout>:[default|frozen]"""
+    return gdk.set_unspent_outputs_status(session.session_obj, json.dumps(details))
 
 @green.command()
 @click.option('--subaccount', type=int, default=0, expose_value=False, callback=details_json)
