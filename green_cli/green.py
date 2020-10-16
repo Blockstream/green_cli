@@ -185,13 +185,14 @@ class Session(gdk.Session):
 
 @click.group()
 @click.option('--debug', is_flag=True, help='Verbose debug logging.')
+@click.option('--gdk-log', default='none', help='GDK logging level: none|debug|warn|info|fatal.')
 @click.option('--network', default='localtest', help='Network: localtest|testnet|mainnet.')
 @click.option('--auth', default='default', type=click.Choice(['default', 'hardware', 'wally', 'watchonly']))
 @click.option('--config-dir', '-C', default=None, help='Override config directory.')
 @click.option('--compact', '-c', is_flag=True, help='Compact json output (no pretty printing)')
 @click.option('--watch-only', is_flag=True, help='Use watch-only login')
 @click.option('--tor', is_flag=True, help='Use tor for external connections')
-def green(debug, network, auth, config_dir, compact, watch_only, tor):
+def green(debug, gdk_log, network, auth, config_dir, compact, watch_only, tor):
     """Command line interface for green gdk"""
     global context
     if context is not None:
@@ -208,7 +209,7 @@ def green(debug, network, auth, config_dir, compact, watch_only, tor):
         pass
 
     gdk.init({})
-    session = Session({'name': network, 'use_tor': tor})
+    session = Session({'name': network, 'use_tor': tor, 'log_level': gdk_log})
     atexit.register(session.destroy)
 
     if watch_only:
