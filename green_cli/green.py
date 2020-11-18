@@ -185,7 +185,7 @@ class Session(gdk.Session):
 
 @click.group()
 @click.option('--log-level', type=click.Choice(['error', 'warning', 'info', 'debug']))
-@click.option('--gdk-log', default='none', help='GDK logging level: none|debug|warn|info|fatal.')
+@click.option('--gdk-log', default='none', type=click.Choice(['none', 'debug', 'warn', 'info', 'fatal']))
 @click.option('--network', default='localtest', help='Network: localtest|testnet|mainnet.')
 @click.option('--auth', default='default', type=click.Choice(['default', 'hardware', 'wally', 'watchonly']))
 @click.option('--config-dir', '-C', default=None, help='Override config directory.')
