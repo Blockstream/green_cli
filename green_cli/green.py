@@ -145,6 +145,14 @@ def with_session(fn):
         return fn(context.session, *args, **kwargs)
     return inner
 
+def no_warn_sysmsg(fn):
+    """Suppress system message warnings on login"""
+    @functools.wraps(fn)
+    def inner(*args, **kwargs):
+        context.no_warn_sysmsg = True
+        return fn(*args, **kwargs)
+    return inner
+
 def with_login(fn):
     """Pass a logged in session to a function"""
     @functools.wraps(fn)
@@ -158,6 +166,13 @@ def with_login(fn):
             if result:
                 _gdk_resolve(result)
             context.logged_in = True
+
+            if not context.no_warn_sysmsg:
+                # Show the user a prompt to read and acknowledge outstanding system messages
+                system_message = gdk.get_system_message(session.session_obj)
+                if system_message:
+                    click.echo("You have unread system messages, please call getsystemmessages")
+
         return fn(session, *args, **kwargs)
     return with_session(inner)
 
@@ -196,6 +211,7 @@ def _get_config_dir(options):
 @click.option('--compact', '-c', is_flag=True, help='Compact json output (no pretty printing)')
 @click.option('--watch-only', is_flag=True, help='Use watch-only login')
 @click.option('--tor', is_flag=True, help='Use tor for external connections')
+@click.option('--no-warn-sysmsg', is_flag=True, help='Suppress warning about unread system messages')
 def green(**options):
     """Command line interface for green gdk"""
     global context
@@ -269,6 +285,24 @@ def create(session):
 def register(session):
     """Register an existing wallet"""
     return context.authenticator.register(session.session_obj)
+
+@green.command()
+@no_warn_sysmsg
+@with_login
+def getsystemmessages(session):
+    """Get unread system messages"""
+    while True:
+        message = gdk.get_system_message(session.session_obj)
+        if not message:
+            break
+
+        click.echo("--- MESSAGE STARTS ---")
+        click.echo(message)
+        click.echo("--- MESSAGE ENDS ---")
+        if not click.confirm("Mark message as read (sign and send acknowledgement to the server)?"):
+            break
+
+        _gdk_resolve(gdk.ack_system_message(session.session_obj, message))
 
 @green.command()
 @with_login
