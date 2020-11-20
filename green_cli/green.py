@@ -38,13 +38,13 @@ json.loads = ordered_json_loads
 class Context:
     """Holds global context related to the invocation of the tool"""
 
-    def __init__(self, config_dir, session, network, twofac_resolver, authenticator, compact):
-        self.config_dir = config_dir
+    def __init__(self, session, twofac_resolver, authenticator, options):
         self.session = session
-        self.network = network
         self.twofac_resolver = twofac_resolver
         self.authenticator = authenticator
-        self.compact = compact
+
+        self.__dict__.update(options)
+
         self.logged_in = False
 
 context = None
@@ -161,11 +161,11 @@ def with_login(fn):
         return fn(session, *args, **kwargs)
     return with_session(inner)
 
-def get_authenticator(auth, network, config_dir):
+def get_authenticator(options):
     """Return an object that implements the authentication interface"""
-    auth_module = importlib.import_module('green_cli.authenticators.{}'.format(auth))
+    auth_module = importlib.import_module('green_cli.authenticators.{}'.format(options['auth']))
     logging.debug("using auth module {}".format(auth_module))
-    return auth_module.get_authenticator(network, config_dir)
+    return auth_module.get_authenticator(options['network'], options['config_dir'])
 
 class Session(gdk.Session):
 
@@ -183,6 +183,10 @@ class Session(gdk.Session):
 
         super().callback_handler(event)
 
+def _get_config_dir(options):
+    """Return the default config dir for network"""
+    return os.path.expanduser(os.path.join('~', '.green-cli', options['network']))
+
 @click.group()
 @click.option('--log-level', type=click.Choice(['error', 'warning', 'info', 'debug']))
 @click.option('--gdk-log', default='none', type=click.Choice(['none', 'debug', 'warn', 'info', 'fatal']))
@@ -192,28 +196,33 @@ class Session(gdk.Session):
 @click.option('--compact', '-c', is_flag=True, help='Compact json output (no pretty printing)')
 @click.option('--watch-only', is_flag=True, help='Use watch-only login')
 @click.option('--tor', is_flag=True, help='Use tor for external connections')
-def green(log_level, gdk_log, network, auth, config_dir, compact, watch_only, tor):
+def green(**options):
     """Command line interface for green gdk"""
     global context
     if context is not None:
         # Retain context over multiple commands in repl mode
         return
 
-    session_params = {'name': network, 'use_tor': tor, 'log_level': gdk_log}
+    session_params = {
+        'name': options['network'],
+        'use_tor': options['tor'],
+        'log_level': options['gdk_log'],
+    }
 
-    if log_level:
+    if options['log_level']:
         py_log_level = {
             'error': logging.ERROR,
             'warning': logging.WARNING,
             'info': logging.INFO,
             'debug': logging.DEBUG,
-        }[log_level]
+        }[options['log_level']]
 
         logging.basicConfig(level=py_log_level)
 
-    config_dir = config_dir or os.path.expanduser(os.path.join('~', '.green-cli', network))
+    if options['config_dir'] is None:
+        options['config_dir'] = _get_config_dir(options)
     try:
-        os.makedirs(config_dir)
+        os.makedirs(options['config_dir'])
     except FileExistsError:
         pass
 
@@ -221,12 +230,13 @@ def green(log_level, gdk_log, network, auth, config_dir, compact, watch_only, to
     session = Session(session_params)
     atexit.register(session.destroy)
 
-    if watch_only:
-        auth = 'watchonly'
+    if options['watch_only']:
+        options['auth'] = 'watchonly'
 
-    authenticator = get_authenticator(auth, network, config_dir)
+    authenticator = get_authenticator(options)
 
-    context = Context(config_dir, session, network, TwoFactorResolver(), authenticator, compact)
+    authenticator = get_authenticator(options)
+    context = Context(session, TwoFactorResolver(), authenticator, options)
 
 @green.command()
 @print_result
