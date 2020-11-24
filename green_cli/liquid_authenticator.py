@@ -32,19 +32,20 @@ class WallyAuthenticatorLiquid(WallyAuthenticator):
         blinded_outputs = [o for o in txdetails['transaction_outputs'] if not o['is_fee']]
         for output in blinded_outputs:
             # TODO: the derivation dance
-            output['abf'] = os.urandom(32).hex()
-            output['vbf'] = os.urandom(32).hex()
+            # the following values are in display order, reverse them when converting to bytes
+            output['assetblinder'] = os.urandom(32).hex()
+            output['amountblinder'] = os.urandom(32).hex()
 
         endpoints = utxos + blinded_outputs
         values = [endpoint['satoshi'] for endpoint in endpoints]
-        abfs = ''.join([endpoint['abf'] for endpoint in endpoints])
-        vbfs = ''.join([endpoint['vbf'] for endpoint in endpoints[:-1]])
-        final_vbf = wally.asset_final_vbf(values, len(utxos), bytes.fromhex(abfs), bytes.fromhex(vbfs))
-        blinded_outputs[-1]['vbf'] = final_vbf.hex()
+        abfs = b''.join(bytes.fromhex(endpoint['assetblinder'])[::-1] for endpoint in endpoints)
+        vbfs = b''.join(bytes.fromhex(endpoint['amountblinder'])[::-1] for endpoint in endpoints[:-1])
+        final_vbf = wally.asset_final_vbf(values, len(utxos), abfs, vbfs)
+        blinded_outputs[-1]['amountblinder'] = final_vbf.hex()
 
         for o in blinded_outputs:
-            asset_commitment = wally.asset_generator_from_bytes(bytes.fromhex(o['asset_id'])[::-1], bytes.fromhex(o['abf']))
-            value_commitment = wally.asset_value_commitment(o['satoshi'], bytes.fromhex(o['vbf']), asset_commitment)
+            asset_commitment = wally.asset_generator_from_bytes(bytes.fromhex(o['asset_id'])[::-1], bytes.fromhex(o['assetblinder'])[::-1])
+            value_commitment = wally.asset_value_commitment(o['satoshi'], bytes.fromhex(o['amountblinder'])[::-1], asset_commitment)
 
             o['asset_commitment'] = asset_commitment.hex()
             o['value_commitment'] = value_commitment.hex()
@@ -54,7 +55,7 @@ class WallyAuthenticatorLiquid(WallyAuthenticator):
             wally.tx_set_output_value(wally_tx, o['wally_index'], value_commitment)
 
         retval = {}
-        for key in ['abfs', 'vbfs', 'asset_commitments', 'value_commitments']:
+        for key in ['assetblinders', 'amountblinders', 'asset_commitments', 'value_commitments']:
             # gdk expects to get an empty entry for the fee output too, hence this is over the
             # transaction outputs, not just the blinded outputs (fee will just have empty
             # strings)
