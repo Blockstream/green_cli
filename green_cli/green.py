@@ -596,21 +596,6 @@ def bumpfee(session, previous_txid, fee_multiplier):
     details['fee_rate'] = int(previous_transaction['fee_rate'] * fee_multiplier)
     return _send_transaction(session, details)
 
-@green.command()
-@click.argument('plaintext', type=str, expose_value=False, callback=details_json)
-@with_login
-@print_result
-def encrypt(session, details):
-    return session.encrypt(details)
-
-@green.command()
-@click.argument('data', type=click.File('rb'))
-@with_login
-@print_result
-def decrypt(session, data):
-    data = data.read().decode('utf-8')
-    return session.decrypt(data)["plaintext"]
-
 @green.group()
 def set():
     """Set local options"""
