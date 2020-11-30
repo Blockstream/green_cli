@@ -467,6 +467,19 @@ def getavailablecurrencies(session):
     """Get available currencies"""
     return session.get_available_currencies()
 
+def _get_receive_address(session, details):
+    auth_handler = gdk.get_receive_address(session.session_obj, json.dumps(details))
+    return _gdk_resolve(auth_handler)
+
+@green.command()
+@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
+@click.option('--address_type', default="", expose_value=False, callback=details_json)
+@with_login
+@print_result
+def getreceiveaddress(session, details):
+    """Get new receive address details json"""
+    return _get_receive_address(session, details)
+
 @green.command()
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--address_type', default="", expose_value=False, callback=details_json)
@@ -474,8 +487,7 @@ def getavailablecurrencies(session):
 @print_result
 def getnewaddress(session, details):
     """Get a new receive address"""
-    auth_handler = gdk.get_receive_address(session.session_obj, json.dumps(details))
-    return _gdk_resolve(auth_handler)["address"]
+    return _get_receive_address(session, details)['address']
 
 @green.command()
 @with_login
