@@ -6,7 +6,7 @@ services:
 env:
   global:
     - DOCKERBUILDER=greenaddress/ci
-    - DOCKERHASH=bcf7f422c79b40127cf56f93184c7f8350aafe5de2ca2cfe7977c9b23c46f15c
+    - DOCKERHASH=8e5e60d4be4736718a9392cea0f2d9ded2b81a339fc41f9c2bfa1e34496ffae7
     - UPDATE="apt-get update -qq && apt-get install --no-install-recommends -y -qq libusb-1.0-0-dev libudev-dev"
   matrix:
     - UNUSED=true
