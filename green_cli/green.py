@@ -212,6 +212,7 @@ def _get_config_dir(options):
 @click.option('--watch-only', is_flag=True, help='Use watch-only login')
 @click.option('--tor', is_flag=True, help='Use tor for external connections')
 @click.option('--no-warn-sysmsg', is_flag=True, help='Suppress warning about unread system messages')
+@click.option('--expert', is_flag=True, hidden=True)
 def green(**options):
     """Command line interface for green gdk"""
     global context
@@ -272,7 +273,7 @@ def getnetwork():
 @gdk_resolve
 def create(session):
     """Create a new wallet"""
-    if _get_network()['mainnet']:
+    if _get_network()['mainnet'] and not context.expert:
         # Disable create on mainnet
         # To make this safe clients usually implement some mechanism to check that the user has
         # correctly stored their mnemonic before proceeding.
