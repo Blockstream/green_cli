@@ -43,7 +43,8 @@ class Asset(click.ParamType):
 @print_result
 def sendtoaddress(session, details):
     assets = set([a['asset_tag'] for a in details['addressees']])
-    if _get_network()['mainnet'] and 'send_all' not in details and assets != {'btc'}:
+    precision_risk = _get_network()['mainnet'] and 'send_all' not in details and assets != {'btc'}
+    if precision_risk and not basecli.context.expert:
         # Disable sendtoaddress for non btc assets with amounts on mainnet
         # The interface is considered unsafe due to the ambiguity of the amount field. For btc the
         # amount passed to sendtoaddress is interpreted as btc (satoshi x10^8), however assets may
