@@ -1,8 +1,8 @@
-https://github.com/Blockstream/gdk/releases/download/release_0.0.33/greenaddress-0.0.33-cp36-cp36m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.6' --hash=sha256:c35a15cbbbfedda785cf019bd0691e582219f6a1a491a8d979551dd1a7b0fb6a
-https://github.com/Blockstream/gdk/releases/download/release_0.0.33/greenaddress-0.0.33-cp37-cp37m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.7' --hash=sha256:cd15e21699cd2ffe4229af4b400ac78fa06e93356e5055d94e83a449ceab1a92
-https://github.com/Blockstream/gdk/releases/download/release_0.0.33/greenaddress-0.0.33-cp37-cp37m-macosx_10_14_x86_64.whl; 'darwin' in sys_platform and python_version == '3.7' --hash=sha256:e58be5b848f7a5c71b7872f3cd8588d5e89128473b022a71210da5f095208d8e
+https://github.com/Blockstream/gdk/releases/download/release_0.0.36/greenaddress-0.0.36-cp36-cp36m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.6' --hash=sha256:e44a80042755b52a3b0544a1c2067ef2a61a83108e8380a48661bd442ceb81d5
+https://github.com/Blockstream/gdk/releases/download/release_0.0.36/greenaddress-0.0.36-cp37-cp37m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.7' --hash=sha256:5a29feb5da167c1486c83a727a79e883fa7da039ec7f9c9113b340e548acff13
+https://github.com/Blockstream/gdk/releases/download/release_0.0.36/greenaddress-0.0.36-cp37-cp37m-macosx_10_14_x86_64.whl; 'darwin' in sys_platform and python_version == '3.7' --hash=sha256:2047e64beffd3f8f472f0125dcb652016c5bbff598aa6f96794f329065b4a2ed
 # FIXME: This fallback doesn't work
-#https://github.com/Blockstream/gdk/archive/release_0.0.33.tar.gz --hash=sha256:189a2afaf4b089abefe94e6437e0ee9e9f661e3843f63868f6a0bc4d53df38be
+#https://github.com/Blockstream/gdk/archive/release_0.0.36.tar.gz --hash=sha256:07098424850868192c7c719d01a8c16c9a0858afcecc276315e02c829f14133c
 
 click==7.0 --hash=sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13
 click-repl==0.1.6 \
