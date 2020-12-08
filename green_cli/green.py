@@ -251,8 +251,6 @@ def green(**options):
         options['auth'] = 'watchonly'
 
     authenticator = get_authenticator(options)
-
-    authenticator = get_authenticator(options)
     context = Context(session, TwoFactorResolver(), authenticator, options)
 
 @green.command()
