@@ -38,14 +38,28 @@ json.loads = ordered_json_loads
 class Context:
     """Holds global context related to the invocation of the tool"""
 
-    def __init__(self, session, twofac_resolver, authenticator, options):
-        self.session = session
+    def __init__(self, twofac_resolver, authenticator, options):
+        self._session = None
         self.twofac_resolver = twofac_resolver
         self.authenticator = authenticator
 
         self.__dict__.update(options)
+        self.options = options
 
         self.logged_in = False
+
+    @property
+    def session(self):
+        if self._session is None:
+            session_params = {
+                'name': self.options['network'],
+                'use_tor': self.options['tor'],
+                'log_level': self.options['gdk_log'],
+            }
+
+            self._session = Session(session_params)
+            atexit.register(self._session.destroy)
+        return self._session
 
 context = None
 
@@ -220,12 +234,6 @@ def green(**options):
         # Retain context over multiple commands in repl mode
         return
 
-    session_params = {
-        'name': options['network'],
-        'use_tor': options['tor'],
-        'log_level': options['gdk_log'],
-    }
-
     if options['log_level']:
         py_log_level = {
             'error': logging.ERROR,
@@ -244,14 +252,12 @@ def green(**options):
         pass
 
     gdk.init({})
-    session = Session(session_params)
-    atexit.register(session.destroy)
 
     if options['watch_only']:
         options['auth'] = 'watchonly'
 
     authenticator = get_authenticator(options)
-    context = Context(session, TwoFactorResolver(), authenticator, options)
+    context = Context(TwoFactorResolver(), authenticator, options)
 
 @green.command()
 @print_result
