@@ -2,6 +2,8 @@ import wallycore as wally
 
 from green_cli.authenticators import *
 
+import secrets
+
 class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
     """Stores mnemonic on disk but does not pass it to the gdk
 
@@ -16,8 +18,11 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
 
     def create(self, session_obj):
         """Create and register a new wallet"""
-        logging.warning("Generating mnemonic using gdk")
-        self._mnemonic = gdk.generate_mnemonic()
+        entropy = secrets.token_bytes(wally.BIP39_ENTROPY_LEN_256)
+        wordlist = wally.bip39_get_wordlist('en')
+        mnemonic = wally.bip39_mnemonic_from_bytes(wordlist, entropy)
+        assert len(mnemonic.split()) == 24
+        self._mnemonic = mnemonic
         return self.register(session_obj)
 
     @property
