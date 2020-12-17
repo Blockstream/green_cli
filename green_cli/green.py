@@ -59,7 +59,6 @@ class Context:
             }
 
             self._session = Session(session_params)
-            atexit.register(self._session.destroy)
         return self._session
 
 context = None
