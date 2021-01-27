@@ -1,8 +1,9 @@
 from setuptools import setup
+import green_cli
 
 setup(
     name='green_cli',
-    version='0.1',
+    version=green_cli.version,
     packages=[
         'green_cli',
         'green_cli/authenticators',

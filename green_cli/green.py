@@ -17,6 +17,7 @@ from click_repl import register_repl
 
 import greenaddress as gdk
 
+import green_cli
 from green_cli.authenticators.default import DefaultAuthenticator
 from green_cli.authenticators.watchonly import WatchOnlyAuthenticator
 from green_cli.param_types import (
@@ -56,6 +57,7 @@ class Context:
                 'name': self.options['network'],
                 'use_tor': self.options['tor'],
                 'log_level': self.options['gdk_log'],
+                'user_agent': 'green_cli_{}'.format(green_cli.version),
             }
 
             self._session = Session(session_params)
