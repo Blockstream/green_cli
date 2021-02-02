@@ -31,7 +31,29 @@ for green-liquid-cli:
 $ eval "$(_GREEN_LIQUID_CLI_COMPLETE=source green-liquid-cli)"
 ```
 
-# Hardware wallet support (via hwi) [BETA]
+# Blockstream Jade hardware wallet support
+
+To enable support for the Blockstream Jade hardware wallet (via
+the `--auth jade` option) additional dependencies must be installed
+from requirements-wally.txt and requirements-jade.txt.
+
+1) Install libudev and libusb. This is platform specific but for
+debian-based systems:
+```
+$ sudo apt-get install libudev-dev libusb-1.0-0-dev
+```
+
+2) Install extra requirements
+```
+$ pip install -r requirements-wally.txt
+$ pip install -r requirements-jade.txt
+```
+NOTE: this must be two separate invocations, as the jade python api is installed from github sources, and does not have a sha hash.
+
+You can now run green-cli (or green-liquid-cli) passing the `--auth
+jade` option.
+
+# Generic hardware wallet support (via hwi) [BETA]
 
 To enable hardware wallet support (via the `--auth hardware` option)
 additional dependencies must be installed from requirements-hwi.txt.
