@@ -36,7 +36,7 @@ def _get_authenticator(options):
 @click.option('--log-level', type=click.Choice(['error', 'warn', 'info', 'debug']))
 @click.option('--gdk-log', default='none', type=click.Choice(['none', 'debug', 'warn', 'info', 'error']))
 @click.option('--network', default='localtest', help='Network: localtest|testnet|mainnet.')
-@click.option('--auth', default='default', type=click.Choice(['default', 'hardware', 'wally', 'watchonly']))
+@click.option('--auth', default='default', type=click.Choice(['default', 'hardware', 'jade', 'wally', 'watchonly']))
 @click.option('--auth-config', default=None, help='Additional json config passed to the authenticator')
 @click.option('--config-dir', '-C', default=None, help='Override config directory.')
 @click.option('--compact', '-c', is_flag=True, help='Compact json output (no pretty printing)')

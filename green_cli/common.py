@@ -26,6 +26,7 @@ from green_cli.decorators import (
     with_session,
 )
 from green_cli.authenticators.default import DefaultAuthenticator
+from green_cli.authenticators.jade import JadeAuthenticator
 from green_cli.authenticators.watchonly import WatchOnlyAuthenticator
 from green_cli.param_types import (
     Address,
@@ -521,6 +522,16 @@ def username(username):
 def password(password):
     """Set password to use for watch-only login."""
     WatchOnlyAuthenticator(context.options).set_password(password)
+
+@set.command()
+@click.argument('jade_serial_device', type=str)
+def jadeusbserialdevice(jade_serial_device):
+    JadeAuthenticator(context.options).set_usb_serial_device(jade_serial_device)
+
+@set.command()
+@click.argument('jade_ble_serial_number', type=str)
+def jadebleserialnumber(jade_ble_serial_number):
+    JadeAuthenticator(context.options).set_ble_serial_number(jade_ble_serial_number)
 
 @set.command()
 @click.option('--file', '-f', 'file_', is_flag=True, help='Read mnemonic from file')
