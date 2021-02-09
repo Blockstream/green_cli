@@ -203,6 +203,7 @@ class Session(gdk.Session):
 
     def __init__(self, net_params):
         super().__init__( net_params)
+        self.current_block_height = None
 
     def callback_handler(self, event):
         logging.debug("Callback received event: {}".format(event))
@@ -210,6 +211,10 @@ class Session(gdk.Session):
             if event['event'] == 'network' and event['network'].get('login_required', False):
                 logging.debug("Setting logged_in to false after network event")
                 context.logged_in = False
+
+            if event['event'] == 'block':
+                self.current_block_height = event['block']['block_height']
+                logging.debug(f"Updated current block height to {self.current_block_height}")
         except Exception as e:
             logging.error("Error processing event: {}".format(str(e)))
 
@@ -532,15 +537,46 @@ def setunspentoutputsstatus(session, details):
     """Set unspent outputs status. Status format is <txid>:<vout>:[default|frozen]"""
     return gdk.set_unspent_outputs_status(session.session_obj, json.dumps(details))
 
+def confs_str(txn_block_height):
+    current_block_height = context.session.current_block_height
+    if current_block_height is None:
+        # Not yet received block notification, current block height unknown
+        return '?'
+    else:
+        if txn_block_height == 0:
+            return 'unconfirmed'
+        else:
+            confs = current_block_height - txn_block_height + 1
+            trailer = 'confs' if confs > 1 else 'conf'
+            return f'{confs} {trailer}'
+
+def _txlist_summary(txlist):
+    txns = sorted(txlist['transactions'], key=lambda tx: tx['created_at'])
+    balance = collections.defaultdict(int)
+    lines = []
+    for tx in txns:
+        confs = confs_str(tx['block_height'])
+        fee_rate = tx['fee'] / tx['transaction_vsize']
+        if tx['type'] == 'outgoing':
+            # Currently only supports txs which are all one-way
+            tx['satoshi'] = {asset: -tx['satoshi'][asset] for asset in tx['satoshi']}
+        for asset, amount in tx['satoshi'].items():
+            balance[asset] += amount
+            lines.append(f"{tx['txhash']} {tx['created_at']} ({confs}) {amount:+} "\
+                f"{balance[asset]} {asset} fee={tx['fee']}@{fee_rate:.2f}")
+    return '\n'.join(lines)
+
 @green.command()
 @click.option('--subaccount', type=int, default=0, expose_value=False, callback=details_json)
 @click.option('--first', type=int, default=0, expose_value=False, callback=details_json)
 @click.option('--count', type=int, default=30, expose_value=False, callback=details_json)
+@click.option('--summary', is_flag=True, help='Print human-readable summary')
 @with_login
-@print_result
-@gdk_resolve
-def gettransactions(session, details):
-    return gdk.get_transactions(session.session_obj, json.dumps(details))
+def gettransactions(session, summary, details):
+    result = gdk.get_transactions(session.session_obj, json.dumps(details))
+    result = _gdk_resolve(result)
+    result = _txlist_summary(result) if summary else _format_output(result)
+    click.echo(result)
 
 @green.command()
 @click.option('--addressee', '-a', type=(Address(), Amount()), expose_value=False, multiple=True)
