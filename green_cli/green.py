@@ -241,6 +241,13 @@ def create(session):
     return context.authenticator.create(session.session_obj)
 
 @green.command()
+@with_login
+@gdk_resolve
+def removeaccount(session):
+    """Remove the wallet/account completely. Wallet must be empty"""
+    return gdk.remove_account(session.session_obj)
+
+@green.command()
 @with_session
 @gdk_resolve
 def register(session):
