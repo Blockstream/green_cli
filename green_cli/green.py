@@ -40,9 +40,8 @@ json.loads = ordered_json_loads
 class Context:
     """Holds global context related to the invocation of the tool"""
 
-    def __init__(self, twofac_resolver, authenticator, options):
+    def __init__(self, authenticator, options):
         self._session = None
-        self.twofac_resolver = twofac_resolver
         self.authenticator = authenticator
 
         self.__dict__.update(options)
@@ -109,7 +108,7 @@ def _gdk_resolve(auth_handler):
             return status['result']
         if state == 'request_code':
             # request_code only applies to 2fa requests
-            authentication_factor = context.twofac_resolver.select_auth_factor(status['methods'])
+            authentication_factor = TwoFactorResolver.select_auth_factor(status['methods'])
             logging.debug('requesting code for %s', authentication_factor)
             gdk.auth_handler_request_code(auth_handler, authentication_factor)
         elif state == 'resolve_code':
@@ -121,7 +120,7 @@ def _gdk_resolve(auth_handler):
                 resolution = context.authenticator.resolve(status)
             else:
                 logging.debug('resolving two factor authentication')
-                resolution = context.twofac_resolver.resolve(status)
+                resolution = TwoFactorResolver.resolve(status)
             logging.debug('auth handler resolved: %s', resolution)
             gdk.auth_handler_resolve_code(auth_handler, resolution)
         elif state == 'call':
@@ -265,7 +264,7 @@ def green(**options):
         options['auth'] = 'watchonly'
 
     authenticator = get_authenticator(options)
-    context = Context(TwoFactorResolver(), authenticator, options)
+    context = Context(authenticator, options)
 
 @green.command()
 @print_result
