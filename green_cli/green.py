@@ -18,6 +18,7 @@ from click_repl import register_repl
 import greenaddress as gdk
 
 import green_cli
+from . import context
 from green_cli.authenticators.default import DefaultAuthenticator
 from green_cli.authenticators.watchonly import WatchOnlyAuthenticator
 from green_cli.param_types import (
@@ -36,34 +37,6 @@ def ordered_json_loads(*args, **kwargs):
     kwargs['object_pairs_hook'] = collections.OrderedDict
     return _json_loads(*args, **kwargs)
 json.loads = ordered_json_loads
-
-class Context:
-    """Holds global context related to the invocation of the tool"""
-
-    def __init__(self, authenticator, options):
-        self._session = None
-        self.authenticator = authenticator
-
-        self.__dict__.update(options)
-        self.options = options
-
-        self.logged_in = False
-
-    @property
-    def session(self):
-        if self._session is None:
-            session_params = {
-                'name': self.options['network'],
-                'use_tor': self.options['tor'],
-                'log_level': self.options['gdk_log'],
-                'user_agent': 'green_cli_{}'.format(green_cli.version),
-            }
-
-            self._session = Session(session_params)
-            atexit.register(self._session.destroy)
-        return self._session
-
-context = None
 
 class TwoFactorResolver:
     """Resolves two factor authentication via the console"""
@@ -198,26 +171,6 @@ def get_authenticator(options):
     logging.debug("using auth module {}".format(auth_module))
     return auth_module.get_authenticator(options['network'], options['config_dir'])
 
-class Session(gdk.Session):
-
-    def __init__(self, net_params):
-        super().__init__( net_params)
-        self.current_block_height = None
-
-    def callback_handler(self, event):
-        logging.debug("Callback received event: {}".format(event))
-        try:
-            if event['event'] == 'network' and event['network'].get('login_required', False):
-                logging.debug("Setting logged_in to false after network event")
-                context.logged_in = False
-
-            if event['event'] == 'block':
-                self.current_block_height = event['block']['block_height']
-                logging.debug(f"Updated current block height to {self.current_block_height}")
-        except Exception as e:
-            logging.error("Error processing event: {}".format(str(e)))
-
-        super().callback_handler(event)
 
 def _get_config_dir(options):
     """Return the default config dir for network"""
@@ -236,10 +189,6 @@ def _get_config_dir(options):
 @click.option('--expert', is_flag=True, hidden=True)
 def green(**options):
     """Command line interface for green gdk"""
-    global context
-    if context is not None:
-        # Retain context over multiple commands in repl mode
-        return
 
     if options['log_level']:
         py_log_level = {
@@ -264,7 +213,7 @@ def green(**options):
         options['auth'] = 'watchonly'
 
     authenticator = get_authenticator(options)
-    context = Context(authenticator, options)
+    context.configure(authenticator, options)
 
 @green.command()
 @print_result
