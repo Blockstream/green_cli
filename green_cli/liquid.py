@@ -1,18 +1,34 @@
 """Modifies base green_cli with liquid specific changes.
 """
-from green_cli.green import main, green, with_login, print_result, details_json, _get_network
-from green_cli.param_types import Address, Amount
-import green_cli.green as basecli
+from green_cli import context
+from green_cli.green import green
+from green_cli.decorators import (
+    details_json,
+    with_login,
+    print_result,
+    with_gdk_resolve,
+)
+from green_cli.btc import (
+    main,
+    _get_network,
+)
+from green_cli.param_types import (
+    Address,
+    Amount,
+)
+
+import green_cli.btc
+
 import click
 
 # Restrict networks to liquid networks and default to localtest-liquid
-params = {p.name: p for p in basecli.green.params}
+params = {p.name: p for p in green.params}
 params['network'].type = click.Choice(['liquid', 'localtest-liquid'])
 params['network'].help = None
 params['network'].default = 'localtest-liquid'
 
 # Add 2of2_no_recovery as a subaccount type to createsubaccount
-params = {p.name: p for p in basecli.createsubaccount.params}
+params = {p.name: p for p in green_cli.btc.createsubaccount.params}
 params['type'].type.choices.append('2of2_no_recovery')
 
 # Add getassetinfo command
@@ -44,17 +60,17 @@ class Asset(click.ParamType):
 def sendtoaddress(session, details):
     assets = set([a['asset_tag'] for a in details['addressees']])
     precision_risk = _get_network()['mainnet'] and 'send_all' not in details and assets != {'btc'}
-    if precision_risk and not basecli.context.expert:
+    if precision_risk and not context.expert:
         # Disable sendtoaddress for non btc assets with amounts on mainnet
         # The interface is considered unsafe due to the ambiguity of the amount field. For btc the
         # amount passed to sendtoaddress is interpreted as btc (satoshi x10^8), however assets may
         # have different 'precision' specified and it's not currently clear how best to handle that.
         # Leave functionality on for testnet/dev environments as it is convenient
         raise click.ClickException("Unsafe asset amount conversion disabled")
-    return basecli._send_transaction(session, details)
+    return green_cli.btc._send_transaction(session, details)
 
 # Insert asset into addressee option for createtransaction
-params = {p.name: p for p in basecli.createtransaction.params}
+params = {p.name: p for p in green_cli.btc.createtransaction.params}
 params['addressee'].type = click.Tuple((Address(), Asset(), Amount()))
 params['addressee'].nargs = 3
 

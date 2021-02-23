@@ -15,7 +15,7 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        green-cli=green_cli.green:main
-        green-liquid-cli=green_cli.green_liquid:main
+        green-cli=green_cli.btc:main
+        green-liquid-cli=green_cli.liquid:main
     ''',
 )

@@ -7,7 +7,7 @@ from . import context
 class Session(gdk.Session):
 
     def __init__(self, net_params):
-        super().__init__( net_params)
+        super().__init__(net_params)
         self.current_block_height = None
 
     def callback_handler(self, event):
