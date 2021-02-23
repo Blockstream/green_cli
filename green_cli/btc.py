@@ -18,6 +18,7 @@ import green_cli
 from . import context
 
 from green_cli.green import green
+from green_cli.utils import get_transaction
 
 from green_cli.gdk_resolve import gdk_resolve
 from green_cli.decorators import (
@@ -39,6 +40,7 @@ from green_cli.param_types import (
 )
 
 import green_cli.twofa
+import green_cli.tx
 
 # In older verions of python (<3.6?) json.loads does not respect the order of the input
 # unless specifically passed object_pairs_hook=collections.OrderedDict
@@ -397,17 +399,6 @@ def _send_transaction(session, details):
 def sendtoaddress(session, details):
     return _send_transaction(session, details)
 
-def _get_transaction(session, txid):
-    # TODO: Iterate all pages
-    # 900 is slightly arbitrary but currently the backend is limited to 30 pages of 30
-    details = {'subaccount': 0, 'first': 0, 'count': 900}
-    transactions = gdk_resolve(gdk.get_transactions(session.session_obj, json.dumps(details)))
-    transactions = transactions['transactions']
-    for transaction in transactions:
-        if transaction['txhash'] == txid:
-            return transaction
-    raise click.ClickException("Previous transaction not found")
-
 @green.command()
 @click.argument('previous_txid', type=str)
 @click.argument('fee_multiplier', default=2, type=float)
@@ -415,7 +406,7 @@ def _get_transaction(session, txid):
 @print_result
 def bumpfee(session, previous_txid, fee_multiplier):
     """Increase the fee of an unconfirmed transaction (RBF)"""
-    previous_transaction = _get_transaction(session, previous_txid)
+    previous_transaction = get_transaction(session, previous_txid)
     if not previous_transaction['can_rbf']:
         raise click.ClickException("Previous transaction not replaceable")
     details = {'previous_transaction': previous_transaction}
