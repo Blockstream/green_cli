@@ -2,6 +2,8 @@ import json
 import logging
 from typing import Dict, List
 
+import click
+
 import greenaddress as gdk
 
 from green_cli import context
@@ -14,21 +16,29 @@ class TwoFactorResolver:
         """Given a list of auth factors prompt the user to select one and return it"""
         if len(factors) > 1:
             for i, factor in enumerate(factors):
-                print("{}) {}".format(i, factor))
-            return factors[int(input("Select factor: "))]
+                click.echo("{}) {}".format(i, factor))
+            return factors[click.prompt("Select factor: ", type=int)]
         return factors[0]
 
     @staticmethod
     def resolve(details: Dict[str, str]):
         """Prompt the user for a 2fa code"""
-        if details['method'] == 'gauth':
-            msg = "Enter Google Authenticator 2fa code for action '{}': ".format(details['action'])
+        if details['method'] == 'telegram':
+            if details['action'] == 'enable_telegram':
+                telegram_url = details['auth_data']['telegram_url']
+                botname, _, secret = telegram_url.partition('?start=')
+                botname = botname.split('/')[-1]
+                click.echo(f'To enable telegram please visit {telegram_url}, or search for the '
+                           f'telegram bot {botname} and say "/start {secret}" to get a code')
+            msg = "Enter Telegram 2fa code for action '{}'".format(details['action'])
+        elif details['method'] == 'gauth':
+            msg = "Enter Google Authenticator 2fa code for action '{}'".format(details['action'])
         else:
             attempts_remaining = details['attempts_remaining']
             attempts_str = "attempt" if attempts_remaining == 1 else "attempts"
-            msg = "Enter 2fa code for action '{}' sent by {} ({} {} remaining): ".format(
+            msg = "Enter 2fa code for action '{}' sent by {} ({} {} remaining)".format(
                 details['action'], details['method'], attempts_remaining, attempts_str)
-        return input(msg)
+        return click.prompt(msg)
 
 
 def gdk_resolve(auth_handler):
