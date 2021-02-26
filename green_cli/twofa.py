@@ -66,8 +66,18 @@ def gauth(session):
     click.echo('Google Authenticator key: {}'.format(key))
     return _enable_2fa(session, 'gauth', data)
 
+@enabletwofa.command()
+@with_login
+@with_gdk_resolve
+def telegram(session):
+    """Enable telegram 2fa"""
+    config = session.get_twofactor_config()
+    if 'telegram' not in config:
+        raise click.ClickException("Telegram not available")
+    return _enable_2fa(session, 'telegram', '')
+
 @twofa.command()
-@click.argument('factor', type=click.Choice(['email', 'sms', 'phone', 'gauth']))
+@click.argument('factor', type=click.Choice(['email', 'sms', 'phone', 'gauth', 'telegram']))
 @with_login
 @with_gdk_resolve
 def disable(session, factor):
