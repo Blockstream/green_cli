@@ -56,8 +56,10 @@ class TwoFactorResolver:
         if details['method'] == 'gauth':
             msg = "Enter Google Authenticator 2fa code for action '{}': ".format(details['action'])
         else:
-            msg = "Enter 2fa code for action '{}' sent by {} ({} attempts remaining): ".format(
-                details['action'], details['method'], details['attempts_remaining'])
+            attempts_remaining = details['attempts_remaining']
+            attempts_str = "attempt" if attempts_remaining == 1 else "attempts"
+            msg = "Enter 2fa code for action '{}' sent by {} ({} {} remaining): ".format(
+                details['action'], details['method'], attempts_remaining, attempts_str)
         return input(msg)
 
 
