@@ -16,12 +16,15 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
     def name(self):
         return 'libwally software signer'
 
+    # By default prefer to use Anti-Exfil signatures
+    # (sacrifices low-r guarantee)
     @property
     def default_hw_device_info(self):
         return {'device': {
                   'name': self.name,
-                  'supports_low_r': True,
+                  'supports_low_r': False,
                   'supports_liquid': 0,
+                  'ae_protocol_support_level': 1,
                   'supports_arbitrary_scripts': True}
                }
 
@@ -60,13 +63,37 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
     def get_privkey(self, path: List[int]) -> bytearray:
         return wally.bip32_key_get_priv_key(self.derive_key(path))
 
-    def sign_message(self, path: List[int], message: str) -> bytearray:
-        message = message.encode('utf-8')
+    def _make_ae_signature(self, privkey, signing_hash, details):
+        # NOTE: with actual hw these two steps would be separate calls to the hww, as the host does
+        #       not reveal 'host_entropy' to the signer until it has received the 'signer_commitment'.
+
+        # 1. Provide host_commitment, receive signer_commitment
+        host_commitment = bytes.fromhex(details['ae_host_commitment'])
+        signer_commitment = wally.ae_signer_commit_from_bytes(privkey, signing_hash, host_commitment, wally.EC_FLAG_ECDSA)
+
+        # 2. Provide host_entropy, receive signature
+        host_entropy = bytes.fromhex(details['ae_host_entropy'])
+        signature = wally.ae_sig_from_bytes(privkey, signing_hash, host_entropy, wally.EC_FLAG_ECDSA)
+
+        return signer_commitment, signature
+
+    def sign_message(self, details: Dict) -> Dict:
+        message = details['message'].encode('utf-8')
         formatted = wally.format_bitcoin_message(message, wally.BITCOIN_MESSAGE_FLAG_HASH)
-        privkey = self.get_privkey(path)
-        signature = wally.ec_sig_from_bytes(privkey, formatted,
-                                            wally.EC_FLAG_ECDSA | wally.EC_FLAG_GRIND_R)
-        return wally.ec_sig_to_der(signature)
+        privkey = self.get_privkey(details['path'])
+
+        result = {}
+        if details['use_ae_protocol']:
+            signer_commitment, signature = self._make_ae_signature(privkey, formatted, details)
+            signer_commitment = signer_commitment.hex()
+            logging.debug('Signer commitment: %s', signer_commitment)
+            result['signer_commitment'] = signer_commitment
+        else:
+            signature = wally.ec_sig_from_bytes(privkey, formatted,
+                                                wally.EC_FLAG_ECDSA | wally.EC_FLAG_GRIND_R)
+
+        result['signature'] = wally.ec_sig_to_der(signature).hex()
+        return result
 
     def _get_sighash(self, wally_tx, index, utxo):
         flags = wally.WALLY_TX_FLAG_USE_WITNESS
@@ -76,30 +103,43 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
 
     def _sign_tx(self, details, wally_tx):
         txdetails = details['transaction']
-        utxos = txdetails['used_utxos'] or txdetails['old_used_utxos']
+        utxos = details['signing_inputs']
+        use_ae_protocol = details['use_ae_protocol']
 
         signatures = []
+        signer_commitments = []
         for index, utxo in enumerate(utxos):
-
             is_segwit = utxo['script_type'] in [14, 15, 159, 162] # FIXME!!
             if not is_segwit:
                 # FIXME
                 raise NotImplementedError("Non-segwit input")
 
             txhash = self._get_sighash(wally_tx, index, utxo)
-
             path = utxo['user_path']
             privkey = self.get_privkey(path)
-            signature = wally.ec_sig_from_bytes(privkey, txhash,
-                                                wally.EC_FLAG_ECDSA | wally.EC_FLAG_GRIND_R)
+            logging.debug('Processing input %s, path %s', index, path)
+
+            if use_ae_protocol:
+                signer_commitment, signature = self._make_ae_signature(privkey, txhash, utxo)
+
+                signer_commitment = signer_commitment.hex()
+                logging.debug('Signer commitment: %s', signer_commitment)
+                signer_commitments.append(signer_commitment)
+            else:
+                signature = wally.ec_sig_from_bytes(privkey, txhash,
+                                                    wally.EC_FLAG_ECDSA | wally.EC_FLAG_GRIND_R)
+
             signature = wally.ec_sig_to_der(signature)
             signature.append(wally.WALLY_SIGHASH_ALL)
-            signatures.append(wally.hex_from_bytes(signature))
-            logging.debug('Signature (der) input %s path %s: %s', index, path, signature)
+            signature = signature.hex()
+            logging.debug('Signature (der): %s', signature)
+            signatures.append(signature)
 
-        return {'signatures': signatures}
+        result = {'signer_commitments': signer_commitments} if use_ae_protocol else {}
+        result['signatures'] = signatures
+        return result
 
-    def sign_tx(self, details):
+    def sign_tx(self, details: Dict):
         tx_flags = wally.WALLY_TX_FLAG_USE_WITNESS
         wally_tx = wally.tx_from_hex(details['transaction']['transaction'], tx_flags)
         return json.dumps(self._sign_tx(details, wally_tx))
@@ -107,12 +147,15 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
 
 class WallyAuthenticatorLiquid(WallyAuthenticator):
 
+    # By default prefer to use Anti-Exfil signatures
+    # (sacrifices low-r guarantee)
     @property
     def default_hw_device_info(self):
         return {'device': {
                   'name': self.name,
-                  'supports_low_r': True,
+                  'supports_low_r': False,
                   'supports_liquid': 1,
+                  'ae_protocol_support_level': 1,
                   'supports_arbitrary_scripts': True}
                }
 

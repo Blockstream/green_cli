@@ -165,12 +165,10 @@ class HardwareDevice(Authenticator):
             return response
         if details['action'] == 'sign_message':
             logging.debug('sign message path = %s', details['path'])
-            message = details['message']
-            logging.debug('signing message "%s"', message)
-            signature = self.sign_message(details['path'], message)
-            result = json.dumps({'signature': signature.hex()})
-            logging.debug('resolving %s', result)
-            return result
+            logging.debug('signing message "%s"', details['message'])
+            response = json.dumps(self.sign_message(details))
+            logging.debug('resolving: %s', response)
+            return response
         if details['action'] == 'sign_tx':
             return self.sign_tx(details)
         if details['action'] == 'get_receive_address':
