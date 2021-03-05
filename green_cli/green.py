@@ -30,7 +30,7 @@ def _get_authenticator(options):
 @click.option('--no-warn-sysmsg', is_flag=True, help='Suppress warning about unread system messages')
 @click.option('--expert', is_flag=True, hidden=True)
 def green(**options):
-    """Command line interface for green gdk"""
+    """Command line interface for Blockstream Green."""
     if context.configured:
         # In repl mode run configuration once only
         return

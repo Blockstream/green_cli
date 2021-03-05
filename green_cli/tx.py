@@ -77,7 +77,7 @@ def _print_tx_summary(tx):
 @green.group(invoke_without_command=True)
 @click.pass_context
 def tx(ctx):
-    """Create transactions"""
+    """Create transactions."""
     if ctx.invoked_subcommand:
         return
 
@@ -92,12 +92,12 @@ def tx(ctx):
 
 @tx.command()
 def raw():
-    """Get the raw transaction hex"""
+    """Get the raw transaction hex."""
     click.echo(_load_tx(allow_errors=False)['transaction'])
 
 @tx.command()
 def dump():
-    """Dump the full transaction json representation"""
+    """Dump the full transaction json representation."""
     click.echo(json.dumps(_load_tx(allow_errors=True)))
 
 @tx.command()
@@ -114,7 +114,7 @@ def load(session, tx_json):
     _save_tx(_create_tx(tx))
 
 class Tx:
-    """Provides context manager for loading a tx, modifying it and then saving it again"""
+    """Provides context manager for loading a tx, modifying it and then saving it again."""
 
     def __init__(self, allow_errors=False, recreate=True):
         self.allow_errors = allow_errors

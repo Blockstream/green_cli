@@ -45,6 +45,7 @@ json.loads = ordered_json_loads
 @green.command()
 @print_result
 def getnetworks():
+    """Show all available networks."""
     return gdk.get_networks()
 
 def _get_network():
@@ -53,13 +54,17 @@ def _get_network():
 @green.command()
 @print_result
 def getnetwork():
+    """Show details of current network.
+
+    As determined by the --network option.
+    """
     return _get_network()
 
 @green.command()
 @with_session
 @with_gdk_resolve
 def create(session):
-    """Create a new wallet"""
+    """Create a new wallet."""
     if _get_network()['mainnet'] and not context.expert:
         # Disable create on mainnet
         # To make this safe clients usually implement some mechanism to check that the user has
@@ -71,21 +76,23 @@ def create(session):
 @with_login
 @with_gdk_resolve
 def removeaccount(session):
-    """Remove the wallet/account completely. Wallet must be empty"""
+    """Remove the wallet/account completely.
+
+    Wallet must be empty."""
     return gdk.remove_account(session.session_obj)
 
 @green.command()
 @with_session
 @with_gdk_resolve
 def register(session):
-    """Register an existing wallet"""
+    """Register an existing wallet."""
     return context.authenticator.register(session.session_obj)
 
 @green.command()
 @no_warn_sysmsg
 @with_login
 def getsystemmessages(session):
-    """Get unread system messages"""
+    """Get unread system messages."""
     while True:
         message = gdk.get_system_message(session.session_obj)
         if not message:
@@ -102,9 +109,9 @@ def getsystemmessages(session):
 @green.command()
 @with_login
 def listen(session):
-    """Listen for notifications
+    """Listen for notifications.
 
-    Wait indefinitely for notifications from the gdk and print then to the console. ctrl-c to stop
+    Wait indefinitely for notifications from the gdk and print then to the console. ctrl-c to stop.
     """
     while True:
         try:
@@ -122,6 +129,7 @@ def listen(session):
 @click.argument('unit', type=click.Choice(['bits', 'btc', 'mbtc', 'ubtc', 'satoshi', 'sats']))
 @print_result
 def convertamount(session, amount, unit):
+    """Show an amount in different units."""
     # satoshi is unfortunately different from the others as it is an int, not a str
     amount = int(amount) if unit == 'satoshi' else amount
     return session.convert_amount({unit: amount})
@@ -135,7 +143,7 @@ def convertamount(session, amount, unit):
 @print_result
 @with_gdk_resolve
 def createsubaccount(session, details):
-    """Create a subaccount"""
+    """Create a subaccount."""
     return gdk.create_subaccount(session.session_obj, json.dumps(details))
 
 @green.command()
@@ -143,6 +151,7 @@ def createsubaccount(session, details):
 @print_result
 @with_gdk_resolve
 def getsubaccounts(session):
+    """Show all subaccounts for the wallet."""
     return gdk.get_subaccounts(session.session_obj)
 
 @green.command()
@@ -151,6 +160,7 @@ def getsubaccounts(session):
 @print_result
 @with_gdk_resolve
 def getsubaccount(session, pointer):
+    """Show details of specific subaccount."""
     return gdk.get_subaccount(session.session_obj, pointer)
 
 @green.command()
@@ -158,6 +168,7 @@ def getsubaccount(session, pointer):
 @click.argument('name', type=str)
 @with_login
 def renamesubaccount(session, pointer, name):
+    """Rename a subaccount."""
     return session.rename_subaccount(pointer, name)
 
 @green.command()
@@ -165,7 +176,9 @@ def renamesubaccount(session, pointer, name):
 @click.argument('device_id')
 @with_login
 def setpin(session, pin, device_id):
-    """Replace the locally stored plaintext mnemonic with one encrypted with a PIN
+    """Set a PIN for logging in.
+
+    Replace the locally stored plaintext mnemonic with one encrypted with a PIN.
 
     The key to decrypt the mnemonic is stored on the server and will be permanently deleted after
     too many PIN attempts.
@@ -177,7 +190,7 @@ def setpin(session, pin, device_id):
 @with_login
 @print_result
 def getmnemonic(session, password):
-    """Get the wallet mnemonic
+    """Get the wallet mnemonic.
 
     If password is not empty, it is used to bip38-encrypt the mnemonic.
     """
@@ -188,7 +201,7 @@ def getmnemonic(session, password):
 @click.argument('password')
 @with_login
 def setwatchonly(session, username, password):
-    """Set watch-only login details"""
+    """Set watch-only login details."""
     return session.set_watch_only(username, password)
 
 @green.command()
@@ -196,7 +209,7 @@ def setwatchonly(session, username, password):
 @with_login
 @with_gdk_resolve
 def setnlocktime(session, details):
-    """Set number of blocks for nlocktime"""
+    """Set number of blocks for nlocktime."""
     return gdk.set_nlocktime(session.session_obj, json.dumps(details))
 
 @green.command()
@@ -204,7 +217,7 @@ def setnlocktime(session, details):
 @with_login
 @with_gdk_resolve
 def setcsvtime(session, details):
-    """Set number of blocks for csvtime"""
+    """Set number of blocks for csvtime."""
     return gdk.set_csvtime(session.session_obj, json.dumps(details))
 
 @green.command()
@@ -213,7 +226,7 @@ def setcsvtime(session, details):
 @click.option('--bip70', is_flag=True, help='Set a bip70 memo')
 @with_login
 def settransactionmemo(session, txid, memo, bip70):
-    """Set a memo on a wallet transaction"""
+    """Set a memo on a wallet transaction."""
     memo_type = gdk.GA_MEMO_BIP70 if bip70 else gdk.GA_MEMO_USER
     return gdk.set_transaction_memo(session.session_obj, txid, memo, memo_type)
 
@@ -221,14 +234,14 @@ def settransactionmemo(session, txid, memo, bip70):
 @with_login
 @print_result
 def getwatchonly(session):
-    """Get watch-only login details"""
+    """Get watch-only login details."""
     return session.get_watch_only_username()
 
 @green.command()
 @with_login
 @print_result
 def getsettings(session):
-    """Print wallet settings"""
+    """Print wallet settings."""
     return session.get_settings()
 
 @green.command()
@@ -236,7 +249,7 @@ def getsettings(session):
 @with_login
 @with_gdk_resolve
 def changesettings(session, settings):
-    """Change wallet settings"""
+    """Change wallet settings."""
     settings = settings.read().decode('utf-8')
     return gdk.change_settings(session.session_obj, settings)
 
@@ -244,7 +257,7 @@ def changesettings(session, settings):
 @with_login
 @print_result
 def getavailablecurrencies(session):
-    """Get available currencies"""
+    """Get available currencies."""
     return session.get_available_currencies()
 
 @green.command()
@@ -253,7 +266,7 @@ def getavailablecurrencies(session):
 @with_login
 @print_result
 def getnewaddress(session, details):
-    """Get a new receive address"""
+    """Get a new receive address."""
     auth_handler = gdk.get_receive_address(session.session_obj, json.dumps(details))
     return gdk_resolve(auth_handler)["address"]
 
@@ -264,14 +277,14 @@ def getnewaddress(session, details):
 @print_result
 @with_gdk_resolve
 def getreceiveaddress(session, details):
-    """Get a new receive address"""
+    """Get a new receive address."""
     return gdk.get_receive_address(session.session_obj, json.dumps(details))
 
 @green.command()
 @with_login
 @print_result
 def getfeeestimates(session):
-    """Get fee estimates"""
+    """Get fee estimates."""
     return session.get_fee_estimates()
 
 @green.command()
@@ -281,7 +294,7 @@ def getfeeestimates(session):
 @print_result
 @with_gdk_resolve
 def getbalance(session, details):
-    """Get balance"""
+    """Get balance."""
     return gdk.get_balance(context.session.session_obj, json.dumps(details))
 
 @green.command()
@@ -292,7 +305,7 @@ def getbalance(session, details):
 @print_result
 @with_gdk_resolve
 def getunspentoutputs(session, details):
-    """Get unspent outputs"""
+    """Get unspent outputs."""
     return gdk.get_unspent_outputs(session.session_obj, json.dumps(details))
 
 @green.command()
@@ -301,7 +314,10 @@ def getunspentoutputs(session, details):
 @print_result
 @with_gdk_resolve
 def setunspentoutputsstatus(session, details):
-    """Set unspent outputs status. Status format is <txid>:<vout>:[default|frozen]"""
+    """Set unspent outputs status.
+
+    Status format is <txid>:<vout>:[default|frozen]
+    """
     return gdk.set_unspent_outputs_status(session.session_obj, json.dumps(details))
 
 def _txlist_summary(txlist):
@@ -327,6 +343,7 @@ def _txlist_summary(txlist):
 @click.option('--summary', is_flag=True, help='Print human-readable summary')
 @with_login
 def gettransactions(session, summary, details):
+    """Get transactions associated with the wallet."""
     result = gdk.get_transactions(session.session_obj, json.dumps(details))
     result = gdk_resolve(result)
     result = _txlist_summary(result) if summary else format_output(result)
@@ -339,7 +356,7 @@ def gettransactions(session, summary, details):
 @with_login
 @print_result
 def createtransaction(session, details):
-    """Create an outgoing transaction"""
+    """Create an outgoing transaction."""
     return gdk_resolve(gdk.create_transaction(session.session_obj, json.dumps(details)))
 
 @green.command()
@@ -348,7 +365,7 @@ def createtransaction(session, details):
 @print_result
 @with_gdk_resolve
 def signtransaction(session, details):
-    """Sign a transaction
+    """Sign a transaction.
 
     Pass in the transaction details json from createtransaction. TXDETAILS can be a filename or - to
     read from standard input, e.g.
@@ -364,7 +381,7 @@ def signtransaction(session, details):
 @print_result
 @with_gdk_resolve
 def sendtransaction(session, details):
-    """Send a transaction
+    """Send a transaction.
 
     Send a transaction previously returned by signtransaction. TXDETAILS can be a filename or - to
     read from standard input, e.g.
@@ -387,6 +404,7 @@ def _send_transaction(session, details):
 @with_login
 @print_result
 def sendtoaddress(session, details):
+    """Send funds to an address."""
     return _send_transaction(session, details)
 
 @green.command()
@@ -395,7 +413,7 @@ def sendtoaddress(session, details):
 @with_login
 @print_result
 def bumpfee(session, previous_txid, fee_multiplier):
-    """Increase the fee of an unconfirmed transaction (RBF)"""
+    """Increase the fee of an unconfirmed transaction."""
     previous_transaction = get_transaction(session, previous_txid)
     if not previous_transaction['can_rbf']:
         raise click.ClickException("Previous transaction not replaceable")
@@ -406,22 +424,28 @@ def bumpfee(session, previous_txid, fee_multiplier):
 
 @green.group()
 def set():
-    """Set local options"""
+    """Set local options."""
 
 @set.command()
 @click.argument('username', type=str)
 def username(username):
+    """Set username to use for watch-only login."""
     WatchOnlyAuthenticator(context.config_dir).set_username(username)
 
 @set.command()
 @click.argument('password', type=str)
 def password(password):
+    """Set password to use for watch-only login."""
     WatchOnlyAuthenticator(context.config_dir).set_password(password)
 
 @set.command()
 @click.option('--file', '-f', 'file_', is_flag=True, help='Read mnemonic from file')
 @click.argument('mnemonic', type=str)
 def mnemonic(file_, mnemonic):
+    """Set the mnemonic for the wallet.
+
+    This command will store the mnemonic locally and use it to log in to Green.
+    """
     if file_:
         mnemonic = fileinput.input(mnemonic).readline()
     DefaultAuthenticator(context.config_dir).set_mnemonic(mnemonic)
