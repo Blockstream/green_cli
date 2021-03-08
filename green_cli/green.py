@@ -31,6 +31,9 @@ def _get_authenticator(options):
 @click.option('--expert', is_flag=True, hidden=True)
 def green(**options):
     """Command line interface for green gdk"""
+    if context.configured:
+        # In repl mode run configuration once only
+        return
 
     if options['log_level']:
         py_log_level = {
