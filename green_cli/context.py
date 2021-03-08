@@ -12,11 +12,13 @@ class Context:
         self.authenticator = None
         self.options = None
         self.logged_in = False
+        self.configured = False
 
     def configure(self, authenticator, options):
         self.authenticator = authenticator
         self.options = options
         self.__dict__.update(options)
+        self.configured = True
 
     @property
     def session(self):
