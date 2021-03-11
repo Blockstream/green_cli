@@ -57,7 +57,8 @@ def _add_input_addresses(tx):
         _add_input_address(utxo)
 
 def _create_tx(tx):
-    return gdk_resolve(gdk.create_transaction(context.session.session_obj, json.dumps(tx)))
+    tx = gdk_resolve(gdk.create_transaction(context.session.session_obj, json.dumps(tx)))
+    return tx
 
 def _print_tx_summary(tx):
     click.echo(f"user signed: {tx['user_signed']}")
@@ -149,12 +150,17 @@ def setfeerate(session, feerate):
     with Tx(allow_errors=True) as tx:
         tx['fee_rate'] = feerate
 
+def _print_tx_output(options, output):
+    if options['show_all'] or (output['is_change'] == options['show_change']):
+        fg = 'green' if output['is_change'] else None
+        click.secho(f"{output['satoshi']} {output['address']}", fg=fg)
+
 @tx.group(invoke_without_command=True)
 @click.option('-a', '--show-all', '--all', is_flag=True)
 @click.option('-c', '--show-change', '--change', is_flag=True)
 @with_login
 @click.pass_context
-def outputs(ctx, session, show_all, show_change):
+def outputs(ctx, session, **options):
     """Show and modify transaction outputs.
 
     With no subcommand shows a summary of the current transaction outputs."""
@@ -162,17 +168,14 @@ def outputs(ctx, session, show_all, show_change):
         return
 
     tx = _load_tx(allow_errors=True)
-
     for output in tx['transaction_outputs']:
-        if show_all or (output['is_change'] == show_change):
-            fg = 'green' if output['is_change'] else None
-            click.secho(f"{output['satoshi']} {output['address']}", fg=fg)
+        _print_tx_output(options, output)
 
-@outputs.command()
+@outputs.command(name='add')
 @click.argument('address', type=Address(), expose_value=False)
 @click.argument('amount', type=Amount(), expose_value=False)
 @with_login
-def add(session, details):
+def add_outputs(session, details):
     """Add a transaction output."""
     with Tx(allow_errors=True) as tx:
         tx.setdefault('addressees', [])
@@ -266,13 +269,19 @@ def add(session, utxo_filter):
     """Add transaction inputs."""
     with Tx(allow_errors=True) as tx:
         tx['utxo_strategy'] = 'manual'
-        filtered = _filter_utxos(utxo_filter, tx['utxos']['btc'])
+        filtered = []
+        for asset in tx['utxos']:
+            filtered.extend(_filter_utxos(utxo_filter, tx['utxos'][asset]))
+            print(f"filtered: {len(filtered)}")
         if not filtered:
             raise click.ClickException(f"No inputs match {utxo_filter}")
         to_add = [utxo for utxo in filtered if not _filter_utxos(f"{utxo['txhash']}:{utxo['pt_idx']}", tx['used_utxos'])]
+        print(f"to_add: {len(to_add)}")
         if not to_add:
             raise click.ClickException("Inputs already selected")
+        print(f"used_utxos: {len(tx['used_utxos'])}")
         tx['used_utxos'].extend(to_add)
+        print(f"used_utxos: {len(tx['used_utxos'])}")
 
 @inputs.command()
 @click.argument('utxo_filter')
