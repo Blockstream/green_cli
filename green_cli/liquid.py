@@ -1,5 +1,5 @@
-"""Modifies base green_cli with liquid specific changes.
-"""
+"""Modifies base green_cli with liquid specific changes."""
+
 from green_cli import context
 from green_cli.green import green
 from green_cli.decorators import (
@@ -8,7 +8,7 @@ from green_cli.decorators import (
     print_result,
     with_gdk_resolve,
 )
-from green_cli.btc import (
+from green_cli.common import (
     main,
     _get_network,
 )
@@ -17,7 +17,7 @@ from green_cli.param_types import (
     Amount,
 )
 
-import green_cli.btc
+import green_cli.twofa
 
 import click
 
@@ -28,7 +28,7 @@ params['network'].help = None
 params['network'].default = 'localtest-liquid'
 
 # Add 2of2_no_recovery as a subaccount type to createsubaccount
-params = {p.name: p for p in green_cli.btc.createsubaccount.params}
+params = {p.name: p for p in green_cli.common.createsubaccount.params}
 params['type'].type.choices.append('2of2_no_recovery')
 
 # Add getassetinfo command
@@ -67,10 +67,10 @@ def sendtoaddress(session, details):
         # have different 'precision' specified and it's not currently clear how best to handle that.
         # Leave functionality on for testnet/dev environments as it is convenient
         raise click.ClickException("Unsafe asset amount conversion disabled")
-    return green_cli.btc._send_transaction(session, details)
+    return green_cli.common._send_transaction(session, details)
 
 # Insert asset into addressee option for createtransaction
-params = {p.name: p for p in green_cli.btc.createtransaction.params}
+params = {p.name: p for p in green_cli.common.createtransaction.params}
 params['addressee'].type = click.Tuple((Address(), Asset(), Amount()))
 params['addressee'].nargs = 3
 
