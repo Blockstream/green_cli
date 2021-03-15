@@ -1,5 +1,5 @@
 """Entry point for green-cli (btc)."""
-from .common import main
+from green_cli.common import main
 import green_cli.twofa
 
 if __name__ == "__main__":

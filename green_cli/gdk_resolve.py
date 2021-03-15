@@ -1,11 +1,10 @@
 import json
 import logging
-
 from typing import Dict, List
 
 import greenaddress as gdk
 
-from . import context
+from green_cli import context
 
 class TwoFactorResolver:
     """Resolves two factor authentication via the console"""

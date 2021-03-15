@@ -1,24 +1,17 @@
 """Code common to green-cli and green-liquid-cli."""
-import atexit
 import collections
-import functools
 import fileinput
 import json
 import logging
-import os
 import queue
-import sys
 
 import click
 from click_repl import register_repl
 
 import greenaddress as gdk
 
-import green_cli
-from . import context
-
+from green_cli import context
 from green_cli.green import green
-
 from green_cli.gdk_resolve import gdk_resolve
 from green_cli.decorators import (
     confs_str,

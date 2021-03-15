@@ -5,7 +5,7 @@ import click
 
 import greenaddress as gdk
 
-from .green import green
+from green_cli.green import green
 from green_cli.decorators import (
     with_login,
     print_result,
