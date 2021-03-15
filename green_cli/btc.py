@@ -15,7 +15,7 @@ from click_repl import register_repl
 import greenaddress as gdk
 
 import green_cli
-from . import context
+from green_cli import context
 
 from green_cli.green import green
 

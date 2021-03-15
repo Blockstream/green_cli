@@ -2,7 +2,7 @@ import logging
 
 import greenaddress as gdk
 
-from . import context
+from green_cli import context
 
 class Session(gdk.Session):
 

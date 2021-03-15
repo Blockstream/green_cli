@@ -6,7 +6,7 @@ import click
 
 import greenaddress as gdk
 
-from . import context
+from green_cli import context
 
 def _get_config_dir(options):
     """Return the default config dir for network"""

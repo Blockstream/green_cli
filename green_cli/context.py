@@ -1,8 +1,8 @@
 import atexit
 import sys
 
-from .session import Session
-import green_cli
+from green_cli import version
+from green_cli.session import Session
 
 class Context:
     """Holds global context related to the invocation of the tool"""
@@ -25,7 +25,7 @@ class Context:
                 'name': self.options['network'],
                 'use_tor': self.options['tor'],
                 'log_level': self.options['gdk_log'],
-                'user_agent': 'green_cli_{}'.format(green_cli.version),
+                'user_agent': 'green_cli_{}'.format(version),
             }
 
             self._session = Session(session_params)

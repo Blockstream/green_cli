@@ -4,10 +4,10 @@ import functools
 import json
 import logging
 
-from . import context
-from .gdk_resolve import gdk_resolve
-
 import greenaddress as gdk
+
+from green_cli import context
+from green_cli.gdk_resolve import gdk_resolve
 
 def format_output(value):
     """Return pretty string representation of value suitable for displaying
