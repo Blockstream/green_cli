@@ -74,5 +74,12 @@ params = {p.name: p for p in green_cli.common.createtransaction.params}
 params['addressee'].type = click.Tuple((Address(), Asset(), Amount()))
 params['addressee'].nargs = 3
 
+# Add '--confidential' option to getbalance and getunspentoutputs
+confidential_option = click.Option(
+    ['--confidential',], is_flag=True, expose_value=False, callback=details_json,
+    help='Include only confidential utxos')
+green_cli.common.getbalance.params.append(confidential_option)
+green_cli.common.getunspentoutputs.params.append(confidential_option)
+
 if __name__ == "__main__":
     main()

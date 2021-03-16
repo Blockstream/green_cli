@@ -310,7 +310,7 @@ def getbalance(session, details):
 @print_result
 @with_gdk_resolve
 def getunspentoutputs(session, details):
-    """Get unspent outputs."""
+    """Get unspent outputs (utxos)."""
     return gdk.get_unspent_outputs(session.session_obj, json.dumps(details))
 
 @green.command()
