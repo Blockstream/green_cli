@@ -85,9 +85,16 @@ class SoftwareAuthenticator(Authenticator, MnemonicOnDisk):
     def password(self):
         return ''
 
-    def create(self, session_obj):
+    def create(self, session_obj, words):
         """Create and register a new wallet"""
-        self._mnemonic = gdk.generate_mnemonic()
+        if words == 24:
+            self._mnemonic = gdk.generate_mnemonic()
+        elif words == 12:
+            self._mnemonic = gdk.generate_mnemonic_12()
+        else:
+            raise click.ClickException("Unsupported number of words")
+
+        assert len(self._mnemonic.split()) == words
         return self.register(session_obj)
 
     def set_mnemonic(self, mnemonic):

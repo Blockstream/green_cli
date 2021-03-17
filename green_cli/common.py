@@ -61,16 +61,21 @@ def getnetwork():
     return _get_network()
 
 @green.command()
+@click.option('--words', type=click.Choice(['12', '24']), default='24', help="Mnemonic length")
 @with_session
 @with_gdk_resolve
-def create(session):
+def create(session, words):
     """Create a new wallet."""
+    if not getattr(context.authenticator, 'create', None):
+        raise click.ClickException("{} does not support creating new wallets".format(context.authenticator.name))
+
     if _get_network()['mainnet'] and not context.expert:
         # Disable create on mainnet
         # To make this safe clients usually implement some mechanism to check that the user has
         # correctly stored their mnemonic before proceeding.
         raise click.ClickException("Wallet creation on mainnet disabled")
-    return context.authenticator.create(session.session_obj)
+
+    return context.authenticator.create(session.session_obj, int(words))
 
 @green.command()
 @with_login

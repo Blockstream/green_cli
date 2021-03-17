@@ -16,12 +16,15 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
     def name(self):
         return 'libwally software signer'
 
-    def create(self, session_obj):
+    def create(self, session_obj, words):
         """Create and register a new wallet"""
-        entropy = secrets.token_bytes(wally.BIP39_ENTROPY_LEN_256)
+        entropy_len = int(words * 4 / 3);
+        entropy = secrets.token_bytes(entropy_len)
+
         wordlist = wally.bip39_get_wordlist('en')
         mnemonic = wally.bip39_mnemonic_from_bytes(wordlist, entropy)
-        assert len(mnemonic.split()) == 24
+        assert len(mnemonic.split()) == words
+
         self._mnemonic = mnemonic
         return self.register(session_obj)
 
@@ -113,7 +116,7 @@ class WallyAuthenticatorLiquid(WallyAuthenticator):
 
     def _get_blinding_factors(self, txdetails, wally_tx):
         utxos = txdetails['used_utxos'] or txdetails['old_used_utxos']
- 
+
         for i, o in enumerate(txdetails['transaction_outputs']):
             o['wally_index'] = i
 
