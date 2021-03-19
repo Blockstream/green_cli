@@ -31,6 +31,15 @@ class TwoFactorResolver:
                 click.echo(f'To enable telegram please visit {telegram_url}, or search for the '
                            f'telegram bot {botname} and say "/start {secret}" to get a code')
             msg = "Enter Telegram 2fa code for action '{}'".format(details['action'])
+        elif details['method'] == 'u2f':
+            # Import u2f module here so that if it's not invoked the dependencies
+            # do not need to be installed
+            import green_cli.u2f
+
+            if details['action'] == 'enable_u2f':
+                return green_cli.u2f.register(details['auth_data'])
+            else:
+                return green_cli.u2f.authenticate(details['auth_data'])
         elif details['method'] == 'gauth':
             msg = "Enter Google Authenticator 2fa code for action '{}'".format(details['action'])
         else:

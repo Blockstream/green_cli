@@ -76,8 +76,15 @@ def telegram(session):
         raise click.ClickException("Telegram not available")
     return _enable_2fa(session, 'telegram', '')
 
+@enabletwofa.command()
+@with_login
+@with_gdk_resolve
+def u2f(session):
+    """Enable u2f 2fa"""
+    return _enable_2fa(session, 'u2f', '')
+
 @twofa.command()
-@click.argument('factor', type=click.Choice(['email', 'sms', 'phone', 'gauth', 'telegram']))
+@click.argument('factor', type=click.Choice(['email', 'sms', 'phone', 'gauth', 'telegram', 'u2f']))
 @with_login
 @with_gdk_resolve
 def disable(session, factor):
