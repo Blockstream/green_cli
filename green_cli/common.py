@@ -287,6 +287,16 @@ def getreceiveaddress(session, details):
     return gdk.get_receive_address(session.session_obj, json.dumps(details))
 
 @green.command()
+@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
+@click.option('--last-pointer', default=0, expose_value=False, callback=details_json)
+@with_login
+@print_result
+@with_gdk_resolve
+def getpreviousaddresses(session, details):
+    """Get previously generated addresses."""
+    return gdk.get_previous_addresses(session.session_obj, json.dumps(details))
+
+@green.command()
 @with_login
 @print_result
 def getfeeestimates(session):
