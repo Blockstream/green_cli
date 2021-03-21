@@ -169,12 +169,13 @@ def getsubaccount(session, pointer):
     return gdk.get_subaccount(session.session_obj, pointer)
 
 @green.command()
-@click.argument('pointer', type=int)
-@click.argument('name', type=str)
+@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
+@click.option('--name', expose_value=False, callback=details_json)
+@click.option('--hidden', type=bool, expose_value=False, callback=details_json)
 @with_login
-def renamesubaccount(session, pointer, name):
-    """Rename a subaccount."""
-    return session.rename_subaccount(pointer, name)
+@with_gdk_resolve
+def updatesubaccount(session, details):
+    return gdk.update_subaccount(session.session_obj, json.dumps(details))
 
 @green.command()
 @click.argument('pin')
