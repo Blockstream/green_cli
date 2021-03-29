@@ -16,7 +16,7 @@ def _get_authenticator(options):
     """Return an object that implements the authentication interface"""
     auth_module = importlib.import_module('green_cli.authenticators.{}'.format(options['auth']))
     logging.debug("using auth module {}".format(auth_module))
-    return auth_module.get_authenticator(options['network'], options['config_dir'])
+    return auth_module.get_authenticator(options)
 
 @click.group()
 @click.option('--log-level', type=click.Choice(['error', 'warning', 'info', 'debug']))

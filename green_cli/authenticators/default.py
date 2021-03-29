@@ -3,8 +3,9 @@ from green_cli.authenticators import *
 class DefaultAuthenticator(SoftwareAuthenticator):
     """Adds pin login functionality"""
 
-    def __init__(self, config_dir):
-        super().__init__(config_dir)
+    def __init__(self, options):
+        super().__init__(options)
+        config_dir = options['config_dir']
         self.pin_data_filename = os.path.join(config_dir, 'pin_data')
 
     def login(self, session_obj):
@@ -25,5 +26,5 @@ class DefaultAuthenticator(SoftwareAuthenticator):
         return pin_data
 
 
-def get_authenticator(network, config_dir):
-    return DefaultAuthenticator(config_dir)
+def get_authenticator(options):
+    return DefaultAuthenticator(options)

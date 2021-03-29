@@ -3,7 +3,8 @@ from green_cli.authenticators import *
 class WatchOnlyAuthenticator:
     """Watch-only logins"""
 
-    def __init__(self, config_dir):
+    def __init__(self, options):
+        config_dir = options['config_dir']
         self._username = ConfigProperty(config_dir, 'username', lambda: input('Username: '))
         self._password = ConfigProperty(config_dir, 'password', getpass)
 
@@ -17,5 +18,5 @@ class WatchOnlyAuthenticator:
         return gdk.login_watch_only(session_obj, self._username.get(), self._password.get())
 
 
-def get_authenticator(network, config_dir):
-    return WatchOnlyAuthenticator(config_dir)
+def get_authenticator(options):
+    return WatchOnlyAuthenticator(options)

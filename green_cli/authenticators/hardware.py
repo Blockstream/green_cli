@@ -15,11 +15,12 @@ class HWIDevice(HardwareDevice):
         """
         return '/'.join(['m'] + [str(path_elem) for path_elem in path])
 
-    def __init__(self, details: Dict):
+    def __init__(self, details: Dict, options: Dict):
         """Create a hardware wallet instance
 
         details: Details of hardware wallet as returned by hwi enumerate command
         """
+        super().__init__(options)
         self.details = details
         self._device = hwilib.commands.find_device(details['path'])
 
@@ -54,7 +55,7 @@ class HWIDevice(HardwareDevice):
         raise NotImplementedError("hwi sign tx not implemented")
 
     @staticmethod
-    def get_device():
+    def get_device(options):
         """Enumerate and select a hardware wallet"""
         devices = hwilib.commands.enumerate()
         logging.debug('hwi devices: %s', devices)
@@ -77,7 +78,7 @@ class HWIDevice(HardwareDevice):
                 "Error with hwi device: {}\n"
                 "Check the device and activate the bitcoin app if necessary"
                 .format(device['error']))
-        return HWIDevice(device)
+        return HWIDevice(device, options)
 
-def get_authenticator(network, config_dir):
-    return HWIDevice.get_device()
+def get_authenticator(options):
+    return HWIDevice.get_device(options)

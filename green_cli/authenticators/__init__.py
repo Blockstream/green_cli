@@ -15,6 +15,11 @@ import greenaddress as gdk
 class Authenticator:
     """Provide authentication"""
 
+    # Provide init() function with expected signature so all subclasses can
+    # safely call super().__init__(options)
+    def __init__(self, options):
+        super().__init__()
+
     def login(self, session_obj):
         return gdk.login(session_obj, self.hw_device, self.mnemonic, self.password)
 
@@ -47,9 +52,12 @@ class ConfigProperty:
 class MnemonicOnDisk:
     """Persist a mnemonic using the filesystem"""
 
-    def __init__(self, config_dir):
+    def __init__(self, options):
+        super().__init__(options)
+
         # mnemonic file has read-only permissions to prevent accidental deletion
         prompt_fn = lambda: getpass('Mnemonic: ')
+        config_dir = options['config_dir']
         self.mnemonic_prop = ConfigProperty(config_dir, 'mnemonic', prompt_fn, stat.S_IRUSR)
 
     @property
@@ -69,7 +77,7 @@ class MnemonicOnDisk:
             raise click.ClickException(message)
 
 
-class SoftwareAuthenticator(Authenticator, MnemonicOnDisk):
+class SoftwareAuthenticator(MnemonicOnDisk, Authenticator):
     """Represent a 'software signer' which passes the mnemonic to the gdk for authentication
     """
 

@@ -174,8 +174,8 @@ class WallyAuthenticatorLiquid(WallyAuthenticator):
         return json.dumps(retval)
 
 
-def get_authenticator(network, config_dir):
-    if 'liquid' in network:
-        return WallyAuthenticatorLiquid(config_dir)
+def get_authenticator(options):
+    if 'liquid' in options['network']:
+        return WallyAuthenticatorLiquid(options)
     else:
-        return WallyAuthenticator(config_dir)
+        return WallyAuthenticator(options)

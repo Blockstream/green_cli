@@ -452,13 +452,13 @@ def set():
 @click.argument('username', type=str)
 def username(username):
     """Set username to use for watch-only login."""
-    WatchOnlyAuthenticator(context.config_dir).set_username(username)
+    WatchOnlyAuthenticator(context.options).set_username(username)
 
 @set.command()
 @click.argument('password', type=str)
 def password(password):
     """Set password to use for watch-only login."""
-    WatchOnlyAuthenticator(context.config_dir).set_password(password)
+    WatchOnlyAuthenticator(context.options).set_password(password)
 
 @set.command()
 @click.option('--file', '-f', 'file_', is_flag=True, help='Read mnemonic from file')
@@ -470,7 +470,7 @@ def mnemonic(file_, mnemonic):
     """
     if file_:
         mnemonic = fileinput.input(mnemonic).readline()
-    DefaultAuthenticator(context.config_dir).set_mnemonic(mnemonic)
+    DefaultAuthenticator(context.options).set_mnemonic(mnemonic)
 
 def main():
     register_repl(green)
