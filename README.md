@@ -62,6 +62,31 @@ order to enable this option libwally must be installed:
 $ pip install -r requirements-wally.txt
 ```
 
+# Override hww capabilities
+
+If using the options `--auth hardware` or `--auth wally` it is possible to
+override the default device capabilities sent to the GDK, using the
+`--auth-config` option and the `hw_device_data` key.
+
+eg:
+```
+--auth hardware --auth-config '{"hw_device_data": {"supports_low_r": true}}'
+```
+
+Note `--auth-config` json data can also be passed in a text file:
+```
+--auth wally --auth-config hw_liquid_lowr.json
+```
+where the file contents are, eg:
+```
+{
+    "hw_device_data": {
+        "supports_low_r": true,
+        "supports_liquid": 1
+    }
+}
+```
+
 # Example usage
 
 Log in to a testnet wallet and report the balance:

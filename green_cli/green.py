@@ -1,5 +1,6 @@
 import importlib
 import logging
+import json
 import os
 
 import click
@@ -12,6 +13,19 @@ def _get_config_dir(options):
     """Return the default config dir for network"""
     return os.path.expanduser(os.path.join('~', '.green-cli', options['network']))
 
+def _normalise_auth_config(options):
+    """Load additional config json file for the authenticator if required."""
+    auth_config = options['auth_config']
+    if auth_config is None:
+        auth_config = {}
+    elif os.path.exists(auth_config):
+        with open(auth_config, 'r') as f:
+          auth_config = json.load(f)
+    else:
+        auth_config = json.loads(auth_config)
+
+    options['auth_config'] = auth_config
+
 def _get_authenticator(options):
     """Return an object that implements the authentication interface"""
     auth_module = importlib.import_module('green_cli.authenticators.{}'.format(options['auth']))
@@ -23,6 +37,7 @@ def _get_authenticator(options):
 @click.option('--gdk-log', default='none', type=click.Choice(['none', 'debug', 'warn', 'info', 'fatal']))
 @click.option('--network', default='localtest', help='Network: localtest|testnet|mainnet.')
 @click.option('--auth', default='default', type=click.Choice(['default', 'hardware', 'wally', 'watchonly']))
+@click.option('--auth-config', default=None, help='Additional json config passed to the authenticator')
 @click.option('--config-dir', '-C', default=None, help='Override config directory.')
 @click.option('--compact', '-c', is_flag=True, help='Compact json output (no pretty printing)')
 @click.option('--watch-only', is_flag=True, help='Use watch-only login')
@@ -54,6 +69,8 @@ def green(**options):
     if options['watch_only']:
         options['auth'] = 'watchonly'
 
+    # Load additional config json file for the authenticator if required
+    _normalise_auth_config(options)
+
     authenticator = _get_authenticator(options)
     context.configure(authenticator, options)
-

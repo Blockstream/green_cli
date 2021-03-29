@@ -120,10 +120,25 @@ class HardwareDevice(Authenticator):
     device interface
     """
 
+    def __init__(self, options):
+        super().__init__(options)
+        auth_config = options['auth_config']
+        self.hw_device_data = self.default_hw_device_info
+        if 'hw_device_data' in auth_config:
+            self.hw_device_data['device'].update(auth_config['hw_device_data'])
+
+    @property
+    def default_hw_device_info(self):
+        return {'device': {
+                  'name': self.name,
+                  'supports_low_r': False,
+                  'supports_liquid': 0,
+                  'supports_arbitrary_scripts': True}
+               }
+
     @property
     def hw_device(self):
-        return json.dumps({'device': {'name': self.name, 'supports_liquid': 1,
-            'supports_low_r': True, 'supports_arbitrary_scripts': True}})
+        return json.dumps(self.hw_device_data)
 
     @property
     def mnemonic(self):

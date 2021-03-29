@@ -16,6 +16,15 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
     def name(self):
         return 'libwally software signer'
 
+    @property
+    def default_hw_device_info(self):
+        return {'device': {
+                  'name': self.name,
+                  'supports_low_r': True,
+                  'supports_liquid': 0,
+                  'supports_arbitrary_scripts': True}
+               }
+
     def create(self, session_obj, words):
         """Create and register a new wallet"""
         entropy_len = int(words * 4 / 3);
@@ -97,6 +106,15 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
 
 
 class WallyAuthenticatorLiquid(WallyAuthenticator):
+
+    @property
+    def default_hw_device_info(self):
+        return {'device': {
+                  'name': self.name,
+                  'supports_low_r': True,
+                  'supports_liquid': 1,
+                  'supports_arbitrary_scripts': True}
+               }
 
     @property
     def master_blinding_key(self) -> bytes:
