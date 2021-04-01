@@ -149,19 +149,6 @@ def setfeerate(session, feerate):
     with Tx(allow_errors=True) as tx:
         tx['fee_rate'] = feerate
 
-def _print_tx_output(options, output):
-    if not options['show_all']:
-        if output['is_change']:
-            if not options['show_change']:
-                return
-        else:
-            if options['show_change']:
-                return
-
-    value = output['satoshi']
-    address = output['address']
-    click.echo(f"{output['satoshi']} {output['address']}")
-
 @tx.group(invoke_without_command=True)
 @click.option('-a', '--show-all', '--all', is_flag=True)
 @click.option('-c', '--show-change', '--change', is_flag=True)
@@ -177,7 +164,9 @@ def outputs(ctx, session, show_all, show_change):
     tx = _load_tx(allow_errors=True)
 
     for output in tx['transaction_outputs']:
-        _print_tx_output(options, output)
+        if show_all or (output['is_change'] == show_change):
+            fg = 'green' if output['is_change'] else None
+            click.secho(f"{output['satoshi']} {output['address']}", fg=fg)
 
 @outputs.command()
 @click.argument('address', type=Address(), expose_value=False)
