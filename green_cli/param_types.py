@@ -20,6 +20,8 @@ class Amount(click.ParamType):
     def value2sat(self, value):
         """Takes a decimal string and returns an integer number of satoshis as per precision
         """
+        if value == '0':
+            return 0
         integer_part, _, fractional_part = value.partition('.')
         if len(fractional_part) > self.precision:
             raise click.ClickException("Invalid amount (too many decimal digits)")
@@ -27,6 +29,7 @@ class Amount(click.ParamType):
         return int(value)
 
     def convert(self, value, param, ctx):
+        greedy = False
         if value == 'all':
             # all is handled specially, value must be set to zero and send_all is set at the top
             # level. gdk only allows one addressee with send all
@@ -34,9 +37,12 @@ class Amount(click.ParamType):
             value = 0
         else:
             value = self.value2sat(value)
+            greedy = value == 0
 
         assert 'amount' not in ctx.params['details']['addressees'][-1]
         ctx.params['details']['addressees'][-1]['satoshi'] = value
+        if greedy:
+            ctx.params['details']['addressees'][-1]['greedy'] = True
         return value
 
 class UtxoUserStatus(click.ParamType):
