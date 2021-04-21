@@ -272,16 +272,12 @@ def add(session, utxo_filter):
         filtered = []
         for asset in tx['utxos']:
             filtered.extend(_filter_utxos(utxo_filter, tx['utxos'][asset]))
-            print(f"filtered: {len(filtered)}")
         if not filtered:
             raise click.ClickException(f"No inputs match {utxo_filter}")
         to_add = [utxo for utxo in filtered if not _filter_utxos(f"{utxo['txhash']}:{utxo['pt_idx']}", tx['used_utxos'])]
-        print(f"to_add: {len(to_add)}")
         if not to_add:
             raise click.ClickException("Inputs already selected")
-        print(f"used_utxos: {len(tx['used_utxos'])}")
         tx['used_utxos'].extend(to_add)
-        print(f"used_utxos: {len(tx['used_utxos'])}")
 
 @inputs.command()
 @click.argument('utxo_filter')
