@@ -198,7 +198,7 @@ def setpin(session, pin, device_id):
     return context.authenticator.setpin(session, pin, device_id)
 
 @green.command()
-@click.argument('password', type=str, default='')
+@click.option('--password', type=str, default='')
 @with_login
 @print_result
 def getmnemonic(session, password):
