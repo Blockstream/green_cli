@@ -91,6 +91,8 @@ class SoftwareAuthenticator(MnemonicOnDisk, Authenticator):
 
     @property
     def password(self):
+        if len(self._mnemonic.split()) == 27:
+            return getpass('Mnemonic password: ')
         return ''
 
     def create(self, session_obj, words):
@@ -106,10 +108,14 @@ class SoftwareAuthenticator(MnemonicOnDisk, Authenticator):
         return self.register(session_obj)
 
     def set_mnemonic(self, mnemonic):
-        mnemonic = ' '.join(mnemonic.split())
+        words = mnemonic.split()
+        is_encrypted = len(words) == 27
+        mnemonic = ' '.join(words)
         logging.debug("mnemonic: '{}'".format(mnemonic))
-        if not gdk.validate_mnemonic(mnemonic):
-            raise click.ClickException("Invalid mnemonic")
+        # For now no validation of encrypted mnemonic
+        if not is_encrypted:
+            if not gdk.validate_mnemonic(mnemonic):
+                raise click.ClickException("Invalid mnemonic")
         self._mnemonic = mnemonic
 
 
