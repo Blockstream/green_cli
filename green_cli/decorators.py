@@ -59,11 +59,7 @@ def with_login(fn):
         if not context.logged_in:
             logging.info("Logging in")
             result = context.authenticator.login(session.session_obj)
-            # authenticator.login attempts to abstract the actual login method, it may call
-            # GA_login, GA_login_with_pin or GA_login_watch_only
-            # Unfortunately only GA_login returns an auth_handler, so both cases must be handled
-            if result:
-                gdk_resolve(result)
+            gdk_resolve(result)
             context.logged_in = True
 
             if not context.no_warn_sysmsg:

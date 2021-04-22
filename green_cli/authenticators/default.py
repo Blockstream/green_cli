@@ -13,7 +13,8 @@ class DefaultAuthenticator(SoftwareAuthenticator):
         try:
             pin_data = open(self.pin_data_filename).read()
             pin = getpass("PIN: ")
-            return gdk.login_with_pin(session_obj, pin, pin_data)
+            credentials = {'pin': pin, 'pin_data': json.loads(pin_data)}
+            return gdk.login_user(session_obj, '{}', json.dumps(credentials))
         except IOError:
             return super().login(session_obj)
 

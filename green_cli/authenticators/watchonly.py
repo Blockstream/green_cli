@@ -15,7 +15,8 @@ class WatchOnlyAuthenticator:
         self._password.set(password)
 
     def login(self, session_obj):
-        return gdk.login_watch_only(session_obj, self._username.get(), self._password.get())
+        credentials = {'username': self._username.get(), 'password': self._password.get()}
+        return gdk.login_user(session_obj, '{}', json.dumps(credentials))
 
 
 def get_authenticator(options):
