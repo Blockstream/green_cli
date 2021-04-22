@@ -175,7 +175,7 @@ def outputs(ctx, session, **options):
 
 @outputs.command(name='add')
 @click.argument('address', type=Address(), expose_value=False)
-@click.argument('amount', type=Amount(), expose_value=False)
+@click.argument('amount', type=Amount(), default='0', expose_value=False)
 @with_login
 def add_outputs(session, details):
     """Add a transaction output."""

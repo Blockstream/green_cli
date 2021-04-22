@@ -32,6 +32,9 @@ class Amount(click.ParamType):
             # level. gdk only allows one addressee with send all
             ctx.params['details']['send_all'] = True
             value = 0
+        elif value == '0':
+            ctx.params['details']['addressees'][-1]['greedy'] = True
+            value = 0
         else:
             value = self.value2sat(value)
 
