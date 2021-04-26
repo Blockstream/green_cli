@@ -22,7 +22,6 @@ from green_cli.param_types import (
 )
 
 import green_cli.twofa
-import green_cli.tx
 
 # Restrict networks to liquid networks and default to localtest-liquid
 params = {p.name: p for p in green.params}
@@ -58,18 +57,6 @@ class Asset(click.ParamType):
         ctx.params['details']['addressees'][-1]['asset_tag'] = value
         return value
 
-def format_utxo(utxo):
-    confs = green_cli.tx.confs_str(utxo['block_height'])
-    s = f"{utxo['satoshi']} {_asset_name(utxo['asset_id'])}"
-    s += f" {utxo['txhash']}:{utxo['pt_idx']} {utxo['address_type']} {confs} {utxo['address']}"
-    return s
-
-green_cli.tx.format_utxo = format_utxo
-
-# Add asset parameter to tx.outputs.add
-asset_arg = click.Argument(['asset',], type=Asset(), expose_value=False)
-green_cli.tx.add_outputs.params.insert(1, asset_arg)
-
 # Add asset parameter to sendtoaddress but also check for unsafe usage
 @green.command()
 @click.argument('address', type=Address(), expose_value=False)
@@ -101,60 +88,6 @@ confidential_option = click.Option(
     help='Include only confidential utxos')
 green_cli.common.getbalance.params.append(confidential_option)
 green_cli.common.getunspentoutputs.params.append(confidential_option)
-
-def _print_tx_summary(tx):
-    click.echo(f"user signed: {tx['user_signed']}")
-    click.echo(f"server signed: {tx['server_signed']}")
-    click.echo(f"send all: {tx.get('send_all', False)}")
-    click.echo(f"utxo strategy: {tx['utxo_strategy']}")
-
-    available_per_asset = defaultdict(int)
-    used_per_asset = defaultdict(int)
-    change_per_asset = defaultdict(int)
-    for asset in tx['utxos']:
-        available = sum([utxo['satoshi'] for utxo in tx['utxos'][asset]])
-        available_per_asset[_asset_name(asset)] += available
-    for utxo in tx['used_utxos']:
-        used_per_asset[_asset_name(utxo['asset_id'])] += utxo['satoshi']
-    for asset in tx['change_amount']:
-        change_per_asset[_asset_name(asset)] += tx['change_amount'][asset]
-
-    for asset in available_per_asset:
-        click.echo(f"{asset}:")
-        click.echo(f"\tavailable: {available_per_asset[asset]}")
-        click.echo(f"\tused: {used_per_asset[asset]}")
-        click.echo(f"\tchange: {change_per_asset[asset]}")
-
-    click.echo(f"size: {tx['transaction_size']}")
-    click.echo(f"vsize: {tx['transaction_vsize']}")
-    click.echo(f"weight: {tx['transaction_weight']}")
-    click.echo(f"fee: {tx['fee']}")
-    click.echo(f"fee rate: {tx['calculated_fee_rate']} sat/kb")
-
-green_cli.tx._print_tx_summary = _print_tx_summary
-
-def _print_tx_output(options, output):
-    fg = None
-    if output['is_fee']:
-        fg = 'red'
-        if not options['show_all'] and not options['show_fee']:
-            return
-    elif output['is_change']:
-        fg = 'green'
-        if not options['show_all'] and not options['show_change']:
-            return
-    else:
-        if not options['show_all'] and options['show_fee'] or options['show_change']:
-            return
-
-    value = output['satoshi']
-    asset = _asset_name(output['asset_id'])
-    dest = 'fee' if output['is_fee'] else output['address']
-    click.secho(f"{value} {asset} {dest}", fg=fg)
-
-# Liquid txs have explicit fee outputs
-green_cli.tx.outputs.params.append(click.Option(['-f', '--show-fee', '--fee'], is_flag=True))
-green_cli.tx._print_tx_output = _print_tx_output
 
 if __name__ == "__main__":
     main()
