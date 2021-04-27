@@ -129,6 +129,8 @@ class Tx:
         if self.recreate:
             self._tx = _create_tx(self._tx)
         self._tx = _save_tx(self._tx)
+        if self._tx['error']:
+            click.echo(f"ERROR: {self._tx['error']}", err=True)
         return False
 
 @tx.command()
@@ -167,9 +169,9 @@ def outputs(ctx, session, **options):
     if ctx.invoked_subcommand:
         return
 
-    tx = _load_tx(allow_errors=True)
-    for output in tx['transaction_outputs']:
-        _print_tx_output(options, output)
+    with Tx(allow_errors=True) as tx:
+        for output in tx['transaction_outputs']:
+            _print_tx_output(options, output)
 
 @outputs.command(name='add')
 @click.argument('address', type=Address(), expose_value=False)
