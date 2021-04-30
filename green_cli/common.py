@@ -444,6 +444,15 @@ def bumpfee(session, previous_txid, fee_multiplier):
     details['fee_rate'] = int(previous_transaction['fee_rate'] * fee_multiplier)
     return _send_transaction(session, details)
 
+@green.command()
+@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
+@click.option('--num-confs', default=0, expose_value=False, callback=details_json)
+@with_login
+@print_result
+@with_gdk_resolve
+def getexpireddeposits(session, details):
+    return gdk.get_expired_deposits(session.session_obj, json.dumps(details))
+
 @green.group()
 def set():
     """Set local options."""
