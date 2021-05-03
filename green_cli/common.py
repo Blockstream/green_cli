@@ -444,6 +444,20 @@ def bumpfee(session, previous_txid, fee_multiplier):
     details['fee_rate'] = int(previous_transaction['fee_rate'] * fee_multiplier)
     return _send_transaction(session, details)
 
+@green.command(hidden=True)
+@click.argument('url', nargs=-1)
+@click.option('--certificate', multiple=True, type=click.File('r'))
+@click.option('--accept', default='', expose_value=False, callback=details_json)
+@click.option('--method', default='GET', expose_value=False, callback=details_json)
+@click.option('--data', default='/', expose_value=False, callback=details_json)
+@with_login
+@print_result
+def http_request(session, url, certificate, details):
+    """Provided only for diagnostic purposes."""
+    details['urls'] = [url for url in url]
+    details['root_certificates'] = [f.read() for f in certificate]
+    return gdk.http_request(session.session_obj, json.dumps(details))
+
 @green.group()
 def set():
     """Set local options."""
