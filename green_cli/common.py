@@ -113,6 +113,29 @@ def getsystemmessages(session):
 
 @green.command()
 @with_login
+@click.argument('event_type')
+@print_result
+def getlatestevent(session, event_type):
+    """Get the most recent of some event type.
+
+    Will wait if necessary until the first such event arrrives.
+
+    Useful events include 'block' and 'fees', for example:
+
+    # Get the latest reported block height
+
+    $ green-cli getlatestevent block | jq .block_height
+    123
+
+    # Get the minimum fee rate
+
+    $ green-cli getlatestevent fees | jq .[0]
+    1000
+    """
+    return session.getlatestevent(event_type)
+
+@green.command()
+@with_login
 @click.option('--ignore', type=str, help='Comma delimited list of events to ignore, e.g. "block,fees"')
 def listen(session, ignore):
     """Listen for notifications.
