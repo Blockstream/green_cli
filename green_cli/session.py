@@ -8,10 +8,10 @@ from green_cli import context
 class Session(gdk.Session):
 
     def __init__(self, net_params):
-        super().__init__(net_params)
         self.current_block_height = None
         self.latest_events = {}
         self.event_cv = threading.Condition()
+        super().__init__(net_params)
 
     def getlatestevent(self, event_type):
         with self.event_cv:
