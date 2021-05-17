@@ -53,8 +53,8 @@ class Asset(click.ParamType):
     name = 'asset'
 
     def convert(self, value, param, ctx):
-        assert 'asset_tag' not in ctx.params['details']['addressees'][-1]
-        ctx.params['details']['addressees'][-1]['asset_tag'] = value
+        assert 'asset_id' not in ctx.params['details']['addressees'][-1]
+        ctx.params['details']['addressees'][-1]['asset_id'] = value
         return value
 
 # Add asset parameter to sendtoaddress but also check for unsafe usage
@@ -66,7 +66,7 @@ class Asset(click.ParamType):
 @with_login
 @print_result
 def sendtoaddress(session, details):
-    assets = set([a['asset_tag'] for a in details['addressees']])
+    assets = set([a['asset_id'] for a in details['addressees']])
     precision_risk = _get_network()['mainnet'] and 'send_all' not in details and assets != {'btc'}
     if precision_risk and not context.expert:
         # Disable sendtoaddress for non btc assets with amounts on mainnet
