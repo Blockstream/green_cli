@@ -1,10 +1,10 @@
-https://github.com/Blockstream/gdk/releases/download/release_0.0.41/greenaddress-0.0.41-cp36-cp36m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.6' --hash=sha256:52b74df38e44c652886a5849081c8cbdbcca80485d341942e0a46cef0be6b59b
-https://github.com/Blockstream/gdk/releases/download/release_0.0.41/greenaddress-0.0.41-cp37-cp37m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.7' --hash=sha256:77e40edfcc184eba712403c3d98401e3df9b71936eca260229df8c5110d6d9c3
-https://github.com/Blockstream/gdk/releases/download/release_0.0.41/greenaddress-0.0.41-cp37-cp37m-macosx_10_14_x86_64.whl; 'darwin' in sys_platform and python_version == '3.7' --hash=sha256:2101e1eaa0b033388b41c3e13f45279755097600ea0e8c323c3ed89158762054
-# FIXME: This fallback doesn't work
-#https://github.com/Blockstream/gdk/archive/release_0.0.41.tar.gz --hash=sha256:d9281da3032add7da8481fbee12da0ce329b97d5091eb502cfee065def39962e
+https://github.com/Blockstream/gdk/releases/download/release_0.0.42/greenaddress-0.0.42-cp36-cp36m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.6' --hash=sha256:5b150762c5a39405233cf5b12954865731c1230bdcd34e087ab95f4999fb0114
+https://github.com/Blockstream/gdk/releases/download/release_0.0.42/greenaddress-0.0.42-cp37-cp37m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.7' --hash=sha256:4f8556ae1f72d367816c58864b6c4fd13982d2b74b070b5c0b0866c653aa8d5f
+https://github.com/Blockstream/gdk/releases/download/release_0.0.42/greenaddress-0.0.42-cp37-cp37m-macosx_10_14_x86_64.whl; 'darwin' in sys_platform and python_version == '3.7' --hash=sha256:c27f8868bbeb7ae186cdbfd2c853e0f041557058c3af9b24fbd665f94f5f5596
 
-click==7.0 --hash=sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13
+click==7.1.2 \
+    --hash=sha256:d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a \
+    --hash=sha256:dacca89f4bfadd5de3d7489b7c8a566eee0d3676333fbb50030263894c38c0dc
 click-repl==0.1.6 \
     --hash=sha256:9c4c3d022789cae912aad8a3f5e1d7c2cdd016ee1225b5212ad3e8691563cda5 \
     --hash=sha256:b9f29d52abc4d6059f8e276132a111ab8d94980afe6a5432b9d996544afa95d5
