@@ -1,6 +1,7 @@
 """Code common to green-cli and green-liquid-cli."""
 import collections
 import fileinput
+import functools
 import json
 import logging
 import queue
@@ -48,6 +49,7 @@ def getnetworks():
     """Show all available networks."""
     return gdk.get_networks()
 
+@functools.lru_cache(maxsize=None)
 def _get_network():
     return gdk.get_networks()[context.network]
 

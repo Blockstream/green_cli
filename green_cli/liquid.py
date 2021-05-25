@@ -1,6 +1,6 @@
 """Modifies base green_cli with liquid specific changes."""
-from collections import defaultdict
 import functools
+import string
 
 import click
 
@@ -33,6 +33,10 @@ params['network'].default = 'localtest-liquid'
 params = {p.name: p for p in green_cli.common.createsubaccount.params}
 params['type'].type.choices.append('2of2_no_recovery')
 
+@functools.lru_cache(maxsize=None)
+def _get_assets(session):
+    return context.session.refresh_assets({'assets': True})
+
 # Add getassetinfo command
 @green.command()
 @click.option('--refresh', is_flag=True, default=False, expose_value=False, callback=details_json)
@@ -42,6 +46,19 @@ params['type'].type.choices.append('2of2_no_recovery')
 def getassetinfo(session, details):
     details['assets'] = True
     return session.refresh_assets(details)
+
+@functools.lru_cache(maxsize=None)
+def _get_assets_by_name(session):
+    """Get asset registry indexed by name."""
+    assets = _get_assets(session)['assets']
+    # Don't return assets with duplicate names or whose names
+    # can be mistaken for asset ids
+    counts = {}
+    for k, v in assets.items():
+        if len(v['name']) != 64 or any(c not in string.hexdigits for c in v['name']):
+            counts.setdefault(v['name'], list()).append(None)
+    return { v['name']: v for k, v in assets.items()
+             if v['name'] in counts and len(counts[v['name']]) == 1 }
 
 @functools.lru_cache(maxsize=None)
 def _asset_name(asset_id):
@@ -54,6 +71,8 @@ class Asset(click.ParamType):
 
     def convert(self, value, param, ctx):
         assert 'asset_id' not in ctx.params['details']['addressees'][-1]
+        # Map any (unique) registered asset name to its asset_id
+        value = _get_assets_by_name(context.session).get(value, {'asset_id': value})['asset_id']
         ctx.params['details']['addressees'][-1]['asset_id'] = value
         return value
 
@@ -67,7 +86,9 @@ class Asset(click.ParamType):
 @print_result
 def sendtoaddress(session, details):
     assets = set([a['asset_id'] for a in details['addressees']])
-    precision_risk = _get_network()['mainnet'] and 'send_all' not in details and assets != {'btc'}
+    btc = _get_assets_by_name(context.session)['btc']['asset_id']
+    precision_risk = _get_network()['mainnet'] and 'send_all' not in details and assets != {btc}
+
     if precision_risk and not context.expert:
         # Disable sendtoaddress for non btc assets with amounts on mainnet
         # The interface is considered unsafe due to the ambiguity of the amount field. For btc the
