@@ -71,8 +71,13 @@ class Asset(click.ParamType):
 
     def convert(self, value, param, ctx):
         assert 'asset_id' not in ctx.params['details']['addressees'][-1]
-        # Map any (unique) registered asset name to its asset_id
-        value = _get_assets_by_name(context.session).get(value, {'asset_id': value})['asset_id']
+        if not _get_network()['mainnet']:
+            # Map any (unique) registered asset name to its asset_id.
+            # This is disabled in mainnet since the asset registry has
+            # no constraints on the data entered and so assets can trivially
+            # be spoofed by name or ticker.
+            default = {'asset_id': value}
+            value = _get_assets_by_name(context.session).get(value, default)['asset_id']
         ctx.params['details']['addressees'][-1]['asset_id'] = value
         return value
 
