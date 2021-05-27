@@ -33,8 +33,8 @@ def _get_authenticator(options):
     return auth_module.get_authenticator(options)
 
 @click.group()
-@click.option('--log-level', type=click.Choice(['error', 'warning', 'info', 'debug']))
-@click.option('--gdk-log', default='none', type=click.Choice(['none', 'debug', 'warn', 'info', 'fatal']))
+@click.option('--log-level', type=click.Choice(['error', 'warn', 'info', 'debug']))
+@click.option('--gdk-log', default='none', type=click.Choice(['none', 'debug', 'warn', 'info', 'error']))
 @click.option('--network', default='localtest', help='Network: localtest|testnet|mainnet.')
 @click.option('--auth', default='default', type=click.Choice(['default', 'hardware', 'wally', 'watchonly']))
 @click.option('--auth-config', default=None, help='Additional json config passed to the authenticator')
@@ -53,7 +53,7 @@ def green(**options):
     if options['log_level']:
         py_log_level = {
             'error': logging.ERROR,
-            'warning': logging.WARNING,
+            'warn': logging.WARNING,
             'info': logging.INFO,
             'debug': logging.DEBUG,
         }[options['log_level']]
