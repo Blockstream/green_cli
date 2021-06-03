@@ -25,7 +25,7 @@ import green_cli.twofa
 
 # Restrict networks to liquid networks and default to localtest-liquid
 params = {p.name: p for p in green.params}
-params['network'].type = click.Choice(['liquid', 'localtest-liquid'])
+params['network'].type = click.Choice(['liquid', 'testnet-liquid', 'localtest-liquid'])
 params['network'].help = None
 params['network'].default = 'localtest-liquid'
 
