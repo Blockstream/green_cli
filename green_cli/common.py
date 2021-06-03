@@ -241,7 +241,7 @@ def setwatchonly(session, username, password):
 
 @green.command()
 @with_login
-def sendlocktimes(session):
+def sendnlocktimes(session):
     """Send an encrypted nlocktimes zip to the wallet's email address."""
     return gdk.send_nlocktimes(session.session_obj)
 
