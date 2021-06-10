@@ -58,7 +58,7 @@ def gdk_resolve(auth_handler):
             # resolve_code covers two different cases: a request for authentication data from some
             # kind of authentication device, for example a hardware wallet (but could be some
             # software implementation) or a 2fa request
-            if status['device']:
+            if 'required_data' in status:
                 logging.debug('resolving auth handler with authentication device')
                 resolution = context.authenticator.resolve(status)
             else:
