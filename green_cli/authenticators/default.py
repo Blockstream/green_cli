@@ -15,8 +15,9 @@ class DefaultAuthenticator(SoftwareAuthenticator):
             pin = getpass("PIN: ")
             credentials = {'pin': pin, 'pin_data': json.loads(pin_data)}
             return gdk.login_user(session_obj, '{}', json.dumps(credentials))
-        except IOError:
-            return super().login(session_obj)
+        except (IOError, FileNotFoundError):
+            pass
+        return super().login(session_obj)
 
     def setpin(self, session, pin, device_id):
         # session.set_pin converts the pin_data string into a dict, which is not what we want, so
