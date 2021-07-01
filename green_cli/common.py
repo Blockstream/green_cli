@@ -354,6 +354,7 @@ def getbalance(session, details):
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--num-confs', default=0, expose_value=False, callback=details_json)
 @click.option('--all-coins', type=bool, default=False, expose_value=False, callback=details_json)
+@click.option('--expired-at', type=int, expose_value=False, callback=details_json)
 @with_login
 @print_result
 @with_gdk_resolve
