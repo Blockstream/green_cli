@@ -390,6 +390,14 @@ def _txlist_summary(txlist):
     return '\n'.join(lines)
 
 @green.command()
+@click.argument('txid', type=str)
+@with_login
+@print_result
+def gettransactiondetails(session, txid):
+    """Get transaction details of an arbitrary transaction."""
+    return session.get_transaction_details(txid)
+
+@green.command()
 @click.option('--subaccount', type=int, default=0, expose_value=False, callback=details_json)
 @click.option('--first', type=int, default=0, expose_value=False, callback=details_json)
 @click.option('--count', type=int, default=30, expose_value=False, callback=details_json)
