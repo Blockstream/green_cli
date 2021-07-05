@@ -31,7 +31,7 @@ from green_cli.param_types import (
     Amount,
     UtxoUserStatus,
 )
-from green_cli.utils import get_transaction
+from green_cli.utils import get_user_transaction
 
 # In older verions of python (<3.6?) json.loads does not respect the order of the input
 # unless specifically passed object_pairs_hook=collections.OrderedDict
@@ -467,7 +467,7 @@ def sendtoaddress(session, details):
 @print_result
 def bumpfee(session, previous_txid, fee_multiplier):
     """Increase the fee of an unconfirmed transaction."""
-    previous_transaction = get_transaction(session, previous_txid)
+    previous_transaction = get_user_transaction(session, previous_txid)
     if not previous_transaction['can_rbf']:
         raise click.ClickException("Previous transaction not replaceable")
     details = {'previous_transaction': previous_transaction}

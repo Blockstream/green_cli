@@ -10,7 +10,7 @@ from green_cli import context
 from green_cli.gdk_resolve import gdk_resolve
 from green_cli.green import green
 from green_cli.utils import (
-    get_transaction,
+    get_user_transaction,
 )
 from green_cli.decorators import (
     confs_str,
@@ -42,7 +42,7 @@ def _save_tx(tx, txid='scratch'):
 
 def _add_input_address(utxo):
     utxo['address'] = ''
-    transaction = get_transaction(context.session, utxo['txhash'])
+    transaction = get_user_transaction(context.session, utxo['txhash'])
     for output in transaction['outputs']:
         if output['pt_idx'] == utxo['pt_idx']:
             utxo['address'] = output['address']
