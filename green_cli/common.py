@@ -283,6 +283,13 @@ def getwatchonly(session):
 @green.command()
 @with_login
 @print_result
+def getavailablecurrencies(session, txid):
+    """Get supported currencies and their assocated pricing source."""
+    return session.get_available_currencies()
+
+@green.command()
+@with_login
+@print_result
 def getsettings(session):
     """Print wallet settings."""
     return session.get_settings()
