@@ -284,7 +284,7 @@ def getwatchonly(session):
 @with_login
 @print_result
 def getavailablecurrencies(session, txid):
-    """Get supported currencies and their assocated pricing source."""
+    """Get supported currencies and their associated pricing source."""
     return session.get_available_currencies()
 
 @green.command()
