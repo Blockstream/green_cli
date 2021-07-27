@@ -24,7 +24,7 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
                   'name': self.name,
                   'supports_low_r': False,
                   'supports_liquid': 0,
-                  'ae_protocol_support_level': 1,
+                  'supports_ae_protocol': 1,
                   'supports_arbitrary_scripts': True}
                }
 
@@ -155,7 +155,7 @@ class WallyAuthenticatorLiquid(WallyAuthenticator):
                   'name': self.name,
                   'supports_low_r': False,
                   'supports_liquid': 1,
-                  'ae_protocol_support_level': 1,
+                  'supports_ae_protocol': 1,
                   'supports_arbitrary_scripts': True}
                }
 
