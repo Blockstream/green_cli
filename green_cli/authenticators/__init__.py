@@ -140,6 +140,7 @@ class HardwareDevice(Authenticator):
                   'name': self.name,
                   'supports_low_r': False,
                   'supports_liquid': 0,
+                  'supports_host_unblinding': False,
                   'supports_arbitrary_scripts': True}
                }
 
@@ -178,28 +179,18 @@ class HardwareDevice(Authenticator):
             return response
         if details['action'] == 'sign_tx':
             return self.sign_tx(details)
-        if details['action'] == 'get_receive_address':
-            blinding_script_hash = bytes.fromhex(details['address']['blinding_script_hash'])
-            public_blinding_key = self.get_public_blinding_key(blinding_script_hash)
-            return json.dumps({'blinding_key': public_blinding_key.hex()})
-
-        retval = {}
-        if details['action'] == 'create_transaction':
-            blinding_keys = {}
-            change_addresses = details['transaction'].get('change_address', {})
-            for asset, addr in change_addresses.items():
-                blinding_script_hash = bytes.fromhex(addr['blinding_script_hash'])
-                blinding_keys[asset] = self.get_public_blinding_key(blinding_script_hash).hex()
-            retval['blinding_keys'] = blinding_keys
-        if 'blinded_scripts' in details:
+        if details['action'] == 'get_master_blinding_key':
+            return json.dumps({'master_blinding_key': self.master_blinding_key.hex()})
+        if details['action'] == 'get_blinding_public_keys':
+            public_keys = []
+            for script in details['scripts']:
+                # Note that a 'real' implementation should verify 'script'
+                public_keys.append(self.get_public_blinding_key(bytes.fromhex(script)).hex())
+            return json.dumps({'public_keys': public_keys})
+        if details['action'] == 'get_blinding_nonces':
             nonces = []
-            for elem in details['blinded_scripts']:
-                pubkey = bytes.fromhex(elem['pubkey'])
-                script = bytes.fromhex(elem['script'])
-                nonces.append(self.get_shared_nonce(pubkey, script).hex())
-            retval['nonces'] = nonces
+            for (pubkey, script) in zip(details['public_keys'], details['scripts']):
+                nonces.append(self.get_shared_nonce(bytes.fromhex(pubkey), bytes.fromhex(script)).hex())
+            return json.dumps({'nonces': nonces})
 
-        if not retval:
-            raise NotImplementedError("action = \"{}\"".format(details['action']))
-
-        return json.dumps(retval)
+        raise NotImplementedError("action = \"{}\"".format(details['action']))
