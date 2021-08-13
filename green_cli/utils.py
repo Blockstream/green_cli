@@ -16,4 +16,11 @@ def get_user_transaction(session, txid):
             return transaction
     raise click.ClickException("Previous transaction not found")
 
+def add_utxos_to_transaction(session, details):
+    """Add UTXOs to transaction details JSON for create_transaction"""
+    if 'utxos' not in details and 'private_key' not in details:
+        num_confs = 1 if 'previous_transaction' in details else 0
+        utxo_details = {'subaccount': details['subaccount'], 'num_confs': num_confs}
+        utxos = gdk_resolve(gdk.get_unspent_outputs(session.session_obj, json.dumps(utxo_details)))
+        details['utxos'] = utxos['unspent_outputs']
 

@@ -11,6 +11,7 @@ from green_cli.gdk_resolve import gdk_resolve
 from green_cli.green import green
 from green_cli.utils import (
     get_user_transaction,
+    add_utxos_to_transaction
 )
 from green_cli.decorators import (
     confs_str,
@@ -57,6 +58,7 @@ def _add_input_addresses(tx):
         _add_input_address(utxo)
 
 def _create_tx(tx):
+    add_utxos_to_transaction(context.session, tx)
     tx = gdk_resolve(gdk.create_transaction(context.session.session_obj, json.dumps(tx)))
     return tx
 

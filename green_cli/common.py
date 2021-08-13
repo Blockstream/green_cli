@@ -31,7 +31,10 @@ from green_cli.param_types import (
     Amount,
     UtxoUserStatus,
 )
-from green_cli.utils import get_user_transaction
+from green_cli.utils import (
+    get_user_transaction,
+    add_utxos_to_transaction
+)
 
 # In older verions of python (<3.6?) json.loads does not respect the order of the input
 # unless specifically passed object_pairs_hook=collections.OrderedDict
@@ -430,6 +433,7 @@ def gettransactions(session, summary, details):
 @print_result
 def createtransaction(session, details):
     """Create an outgoing transaction."""
+    add_utxos_to_transaction(session, details)
     return gdk_resolve(gdk.create_transaction(session.session_obj, json.dumps(details)))
 
 @green.command()
@@ -465,6 +469,7 @@ def sendtransaction(session, details):
     return gdk.send_transaction(session.session_obj, details)
 
 def _send_transaction(session, details):
+    add_utxos_to_transaction(session, details)
     details = gdk_resolve(gdk.create_transaction(session.session_obj, json.dumps(details)))
     details = gdk_resolve(gdk.sign_transaction(session.session_obj, json.dumps(details)))
     details = gdk_resolve(gdk.send_transaction(session.session_obj, json.dumps(details)))
