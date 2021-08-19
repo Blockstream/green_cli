@@ -18,6 +18,7 @@ def get_user_transaction(session, txid):
 
 def add_utxos_to_transaction(session, details):
     """Add UTXOs to transaction details JSON for create_transaction"""
+    # Note: We check 'private_key' here for manually built txs/future sweeping support
     if 'utxos' not in details and 'private_key' not in details:
         num_confs = 1 if 'previous_transaction' in details else 0
         utxo_details = {'subaccount': details['subaccount'], 'num_confs': num_confs}
