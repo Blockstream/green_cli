@@ -21,8 +21,12 @@ class Authenticator:
         super().__init__()
 
     def login(self, session_obj):
-        credentials = {'mnemonic': self.mnemonic, 'password': self.password}
-        return gdk.login_user(session_obj, self.hw_device, json.dumps(credentials))
+        hw_device = self.hw_device
+        if hw_device == '{}':
+            credentials = {'mnemonic': self.mnemonic, 'password': self.password}
+        else:
+            credentials = {} # Hardware login, do not pass credentials
+        return gdk.login_user(session_obj, hw_device, json.dumps(credentials))
 
     def register(self, session):
         return gdk.register_user(session, self.hw_device, self.mnemonic)
