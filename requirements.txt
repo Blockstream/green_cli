@@ -1,6 +1,6 @@
-https://github.com/Blockstream/gdk/releases/download/release_0.0.44/greenaddress-0.0.44-cp36-cp36m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.6' --hash=sha256:2255c0270d6208d89c2832f982b4d4efc046256213f52896fa1c5b2666db8e1d
-https://github.com/Blockstream/gdk/releases/download/release_0.0.44/greenaddress-0.0.44-cp37-cp37m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.7' --hash=sha256:61b80839819158cf95f76c122ac85fdc32ffbef2ec6ca4312989de47bf61741a
-https://github.com/Blockstream/gdk/releases/download/release_0.0.44/greenaddress-0.0.44-cp39-cp39-macosx_11_0_x86_64.whl; 'darwin' in sys_platform and python_version == '3.7' --hash=sha256:c8ddc0f6ac096d1df8022a9519130bd13b2110f2e8499f0d60e998d6abdda5da
+https://github.com/Blockstream/gdk/releases/download/release_0.0.45.post1/greenaddress-0.0.45.post1-cp36-cp36m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.6' --hash=sha256:c6eb33b8aeb4d7217d453e9d53e49bbf1563f75fcccb47b3bd4614e0ec7fcbbd
+https://github.com/Blockstream/gdk/releases/download/release_0.0.45.post1/greenaddress-0.0.45.post1-cp37-cp37m-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.7' --hash=sha256:a7539c8bd5396771757a56f11572300268c88e4102b6a54b06863a13acba84a3
+https://github.com/Blockstream/gdk/releases/download/release_0.0.45.post1/greenaddress-0.0.45.post1-cp39-cp39-macosx_11_0_x86_64.whl; 'darwin' in sys_platform and python_version == '3.7' --hash=sha256:e510f13f425708233aa2a85e3ea9cad1090de701acf2617a4f8665c30d23a951
 
 click==7.1.2 \
     --hash=sha256:d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a \
