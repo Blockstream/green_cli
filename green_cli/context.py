@@ -30,6 +30,10 @@ class Context:
                 'user_agent': 'green_cli_{}'.format(version),
             }
 
+            optional_keys = ['cert_expiry_threshold']
+            overrides = {k: v for (k, v) in self.options.items() if k in optional_keys and v is not None}
+            session_params.update(overrides)
+
             self._session = Session(session_params)
             atexit.register(self._session.destroy)
         return self._session

@@ -44,6 +44,7 @@ def _get_authenticator(options):
 @click.option('--tor', is_flag=True, help='Use tor for external connections')
 @click.option('--no-warn-sysmsg', is_flag=True, help='Suppress warning about unread system messages')
 @click.option('--expert', is_flag=True, hidden=True)
+@click.option('--cert-expiry-threshold', type=int, hidden=True)
 def green(**options):
     """Command line interface for Blockstream Green."""
     if context.configured:
