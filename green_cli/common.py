@@ -8,6 +8,7 @@ import queue
 
 import click
 from click_repl import register_repl
+from datetime import datetime, timezone
 
 import greenaddress as gdk
 
@@ -389,7 +390,7 @@ def setunspentoutputsstatus(session, details):
     return gdk.set_unspent_outputs_status(session.session_obj, json.dumps(details))
 
 def _txlist_summary(txlist):
-    txns = sorted(txlist['transactions'], key=lambda tx: tx['created_at'])
+    txns = sorted(txlist['transactions'], key=lambda tx: tx['created_at_ts'])
     balance = collections.defaultdict(int)
     lines = []
     for tx in txns:
@@ -400,7 +401,9 @@ def _txlist_summary(txlist):
             tx['satoshi'] = {asset: -tx['satoshi'][asset] for asset in tx['satoshi']}
         for asset, amount in tx['satoshi'].items():
             balance[asset] += amount
-            lines.append(f"{tx['txhash']} {tx['created_at']} ({confs}) {amount:+} "\
+            ts = tx['created_at_ts']
+            created_at = datetime.fromtimestamp(ts / 1000000.0, tz=timezone.utc).replace(tzinfo=None)
+            lines.append(f"{tx['txhash']} {created_at} ({confs}) {amount:+} "\
                 f"{balance[asset]} {asset} fee={tx['fee']}@{fee_rate:.2f}")
     return '\n'.join(lines)
 
