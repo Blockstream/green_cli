@@ -196,9 +196,13 @@ class HardwareDevice(Authenticator):
                 public_keys.append(self.get_public_blinding_key(bytes.fromhex(script)).hex())
             return json.dumps({'public_keys': public_keys})
         if details['action'] == 'get_blinding_nonces':
-            nonces = []
+            keys_required = details.get("blinding_keys_required", False)
+            public_keys, nonces = [], []
             for (pubkey, script) in zip(details['public_keys'], details['scripts']):
+                if keys_required:
+                    public_keys.append(self.get_public_blinding_key(bytes.fromhex(script)).hex())
                 nonces.append(self.get_shared_nonce(bytes.fromhex(pubkey), bytes.fromhex(script)).hex())
-            return json.dumps({'nonces': nonces})
+            ret = {'nonces': nonces, 'public_keys': public_keys} if keys_required else {'nonces': nonces}
+            return json.dumps(ret)
 
         raise NotImplementedError("action = \"{}\"".format(details['action']))
