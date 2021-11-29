@@ -65,15 +65,19 @@ class MnemonicOnDisk:
         config_dir = options['config_dir']
         self.mnemonic_prop = ConfigProperty(config_dir, 'mnemonic', prompt_fn, stat.S_IRUSR)
 
+    @staticmethod
+    def normalize_mnemonic(mnemonic):
+        return ' '.join(mnemonic.split())
+
     @property
     def _mnemonic(self):
-        return self.mnemonic_prop.get()
+        return MnemonicOnDisk.normalize_mnemonic(self.mnemonic_prop.get())
 
     @_mnemonic.setter
     def _mnemonic(self, mnemonic):
         """Write mnemonic to config file"""
         try:
-            self.mnemonic_prop.set(mnemonic)
+            self.mnemonic_prop.set(MnemonicOnDisk.normalize_mnemonic(mnemonic))
         except PermissionError:
             message = (
                 "Refusing to overwrite mnemonic file {}\n"
@@ -113,9 +117,9 @@ class SoftwareAuthenticator(MnemonicOnDisk, Authenticator):
         return self.register(session_obj)
 
     def set_mnemonic(self, mnemonic):
+        mnemonic = MnemonicOnDisk.normalize_mnemonic(mnemonic)
         words = mnemonic.split()
         is_encrypted = len(words) == 27
-        mnemonic = ' '.join(words)
         logging.debug("mnemonic: '{}'".format(mnemonic))
         # For now no validation of encrypted mnemonic
         if not is_encrypted:
