@@ -41,6 +41,7 @@ def _get_authenticator(options):
 @click.option('--config-dir', '-C', default=None, help='Override config directory.')
 @click.option('--compact', '-c', is_flag=True, help='Compact json output (no pretty printing)')
 @click.option('--watch-only', is_flag=True, help='Use watch-only login')
+@click.option('--spv', is_flag=True, help='Enable SPV verification')
 @click.option('--tor', is_flag=True, help='Use tor for external connections')
 @click.option('--no-warn-sysmsg', is_flag=True, help='Suppress warning about unread system messages')
 @click.option('--expert', is_flag=True, hidden=True)

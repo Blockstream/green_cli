@@ -28,6 +28,7 @@ class Context:
                 'use_tor': self.options['tor'],
                 'log_level': self.options['gdk_log'],
                 'user_agent': 'green_cli_{}'.format(version),
+                'spv_enabled': self.options['spv'],
             }
 
             optional_keys = ['cert_expiry_threshold']
