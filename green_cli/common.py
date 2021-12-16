@@ -187,12 +187,13 @@ def createsubaccount(session, details):
     return gdk.create_subaccount(session.session_obj, json.dumps(details))
 
 @green.command()
+@click.option('--refresh', is_flag=True, help='Refresh cached values', expose_value=False, callback=details_json)
 @with_login
 @print_result
 @with_gdk_resolve
-def getsubaccounts(session):
+def getsubaccounts(session, details):
     """Show all subaccounts for the wallet."""
-    return gdk.get_subaccounts(session.session_obj)
+    return gdk.get_subaccounts(session.session_obj, json.dumps(details))
 
 @green.command()
 @click.argument('pointer', type=int)
