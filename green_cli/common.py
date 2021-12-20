@@ -532,6 +532,35 @@ def mnemonic(file_, mnemonic):
         mnemonic = fileinput.input(mnemonic).readline()
     DefaultAuthenticator(context.options).set_mnemonic(mnemonic)
 
+@green.command()
+@click.option('--method', default="GET", expose_value=False, callback=details_json)
+@click.option('--urls',  default="",multiple=True, expose_value=False, callback=details_json)
+@click.option('--accept',  default="json", type=str, expose_value=False, callback=details_json)
+@click.option('--headers',  type=str, expose_value=False, callback=details_json)
+@click.option('--timeout',  default=10, type=int, expose_value=False, callback=details_json)
+@with_login
+@print_result
+def httprequest(session, details):
+    """Make a request to an http server.
+
+    Request headers may be passed using a python dictionary string, e.g.
+    --headers="{'If-Modified-Since':'Mon, 02 Sep 2019 22:39:39 GMT'}"
+
+    If multiple URLs are given, the most secure is used; tor .onion is
+    preferred over https which is preferred over http. You must pass
+    --tor to enable fetching onion domains over tor. Non-onion sites
+    are fetched over tor if --tor is given and the URL is https or http.
+
+    For example, to fetch the current testnet block height over tor:
+
+    $ green --tor --network testnet httprequest --urls https://blockstream.info/testnet/api/blocks/tip/height --urls http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/testnet/api/blocks/tip/height
+    """
+    if "headers" in details:
+        # Convert headers string to dict
+        from ast import literal_eval
+        details["headers"] = literal_eval(details["headers"])
+    return json.loads(gdk.http_request(session.session_obj, json.dumps(details)))
+
 def main():
     register_repl(green)
     green()
