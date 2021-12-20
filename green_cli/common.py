@@ -5,6 +5,7 @@ import functools
 import json
 import logging
 import queue
+import ast
 
 import click
 from click_repl import register_repl
@@ -530,6 +531,26 @@ def mnemonic(file_, mnemonic):
     if file_:
         mnemonic = fileinput.input(mnemonic).readline()
     DefaultAuthenticator(context.options).set_mnemonic(mnemonic)
+
+@green.command()
+@click.option('--method', default="GET", expose_value=False, callback=details_json)
+@click.option('--urls',  default="",multiple=True, expose_value=False, callback=details_json)
+@click.option('--accept',  default="JSON", type=str, expose_value=False, callback=details_json)
+@click.option('--headers',  type=str, expose_value=False, callback=details_json)
+@click.option('--timeout',  default=10, type=int, expose_value=False, callback=details_json)
+@with_login
+@print_result
+def httprequest(session, details):
+    """Make a request to an http server"""
+    # convert headers string to dict
+    if "headers" in details.keys():
+        headers_dict = ast.literal_eval(details["headers"])
+        details["headers"] = headers_dict
+    # get tor socks
+    res = gdk.get_tor_socks5(session.session_obj)
+    if res != "":
+        details["proxy"] = res
+    return gdk.http_request(session.session_obj, json.dumps(details))
 
 def main():
     register_repl(green)
