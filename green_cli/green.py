@@ -40,6 +40,8 @@ def _get_authenticator(options):
 @click.option('--auth-config', default=None, help='Additional json config passed to the authenticator')
 @click.option('--config-dir', '-C', default=None, help='Override config directory.')
 @click.option('--compact', '-c', is_flag=True, help='Compact json output (no pretty printing)')
+@click.option('--electrum-url', default=None, type=str, help='Use the given Electrum server')
+@click.option('--electrum-tls', default=None, type=bool, help='Connect to Electrum using TLS')
 @click.option('--watch-only', is_flag=True, help='Use watch-only login')
 @click.option('--spv', is_flag=True, help='Enable SPV verification')
 @click.option('--tor', is_flag=True, help='Use tor for external connections')
