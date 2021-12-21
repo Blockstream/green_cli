@@ -5,6 +5,8 @@ from collections import defaultdict
 
 import click
 
+import greenaddress as gdk
+
 from green_cli import context
 from green_cli.green import green
 from green_cli.decorators import (
@@ -25,9 +27,16 @@ from green_cli.param_types import (
 import green_cli.twofa
 import green_cli.tx
 
+def _get_liquid_networks():
+    # Do not allow single sig Liquid mainnet for now.
+    # TODO: Enable single sig Liquid once testing is complete.
+    def is_liquid(network):
+        return 'liquid' in network and network != 'electrum-liquid'
+    return reversed([n for n in gdk.get_networks() if is_liquid(n)])
+
 # Restrict networks to liquid networks and default to localtest-liquid
 params = {p.name: p for p in green.params}
-params['network'].type = click.Choice(['liquid', 'testnet-liquid', 'localtest-liquid'])
+params['network'].type = click.Choice(_get_liquid_networks())
 params['network'].help = None
 params['network'].default = 'localtest-liquid'
 
