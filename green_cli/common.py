@@ -354,7 +354,7 @@ def getfeeestimates(session):
 @green.command()
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--num-confs', default=0, expose_value=False, callback=details_json)
-@click.option('--all-coins', type=bool, default=False, expose_value=False, callback=details_json)
+@click.option('--all-coins', is_flag=True, expose_value=False, callback=details_json)
 @click.option('--expired-at', type=int, expose_value=False, callback=details_json)
 @click.option('--dust-limit', type=int, expose_value=False, callback=details_json)
 @with_login
@@ -367,7 +367,7 @@ def getbalance(session, details):
 @green.command()
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--num-confs', default=0, expose_value=False, callback=details_json)
-@click.option('--all-coins', type=bool, default=False, expose_value=False, callback=details_json)
+@click.option('--all-coins', is_flag=True, expose_value=False, callback=details_json)
 @click.option('--expired-at', type=int, expose_value=False, callback=details_json)
 @click.option('--dust-limit', type=int, expose_value=False, callback=details_json)
 @with_login
