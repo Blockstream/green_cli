@@ -24,7 +24,7 @@ class Session(gdk.Session):
             event_type = event['event']
             event_body = event[event_type]
 
-            if event_type == 'network' and event_body.get('login_required', False):
+            if event_type == 'network':
                 logging.debug("Setting logged_in to false after network event")
                 context.logged_in = False
 
