@@ -110,7 +110,7 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
         signatures = []
         signer_commitments = []
         for index, utxo in enumerate(utxos):
-            is_segwit = utxo['script_type'] in [14, 15, 159, 162] # FIXME!!
+            is_segwit = utxo['address_type'] in ['p2wsh', 'csv']
             if not is_segwit:
                 # FIXME
                 raise NotImplementedError("Non-segwit input")
