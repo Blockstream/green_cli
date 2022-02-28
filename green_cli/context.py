@@ -36,7 +36,6 @@ class Context:
             session_params.update(overrides)
 
             self._session = Session(session_params)
-            atexit.register(self._session.destroy)
         return self._session
 
 sys.modules[__name__] = Context()
