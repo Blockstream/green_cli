@@ -174,9 +174,11 @@ def convertamount(session, amount, unit):
     amount = int(amount) if unit == 'satoshi' else amount
     return session.convert_amount({unit: amount})
 
+_SUBACCOUNT_TYPES = ['2of2', '2of3', 'p2pkh', 'p2sh-p2wpkh', 'p2wpkh']
+
 @green.command()
 @click.argument('name', expose_value=False, callback=details_json)
-@click.argument('type', type=click.Choice(['2of2', '2of3']), expose_value=False, callback=details_json)
+@click.argument('type', type=click.Choice(_SUBACCOUNT_TYPES), expose_value=False, callback=details_json)
 @click.option('--recovery-mnemonic', type=str, expose_value=False, callback=details_json)
 @click.option('--recovery-xpub', type=str, expose_value=False, callback=details_json)
 @with_login
