@@ -62,8 +62,7 @@ class WallyAuthenticatorLiquid(WallyAuthenticator):
             retval[key] = [o.get(key[:-1], '') for o in txdetails['transaction_outputs']]
         return retval
 
-    def _get_sighash(self, wally_tx, index, utxo):
-        flags = wally.WALLY_TX_FLAG_USE_WITNESS
+    def _get_sighash(self, wally_tx, index, utxo, flags):
         prevout_script = wally.hex_to_bytes(utxo['prevout_script'])
         if utxo['confidential']:
             value = bytes.fromhex(utxo['commitment'])

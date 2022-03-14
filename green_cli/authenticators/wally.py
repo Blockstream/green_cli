@@ -96,8 +96,7 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
         result['signature'] = wally.ec_sig_to_der(signature).hex()
         return result
 
-    def _get_sighash(self, wally_tx, index, utxo):
-        flags = wally.WALLY_TX_FLAG_USE_WITNESS
+    def _get_sighash(self, wally_tx, index, utxo, flags):
         prevout_script = wally.hex_to_bytes(utxo['prevout_script'])
         return wally.tx_get_btc_signature_hash(
                 wally_tx, index, prevout_script, utxo['satoshi'], wally.WALLY_SIGHASH_ALL, flags)
@@ -110,12 +109,10 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
         signatures = []
         signer_commitments = []
         for index, utxo in enumerate(utxos):
-            is_segwit = utxo['address_type'] in ['p2wsh', 'csv']
-            if not is_segwit:
-                # FIXME
-                raise NotImplementedError("Non-segwit input")
+            is_segwit = utxo['address_type'] in ['p2wsh', 'csv', 'p2wpkh', 'p2sh-p2wpkh']
+            flags = wally.WALLY_TX_FLAG_USE_WITNESS if is_segwit else 0
 
-            txhash = self._get_sighash(wally_tx, index, utxo)
+            txhash = self._get_sighash(wally_tx, index, utxo, flags)
             path = utxo['user_path']
             privkey = self.get_privkey(path)
             logging.debug('Processing input %s, path %s', index, path)
@@ -216,8 +213,7 @@ class WallyAuthenticatorLiquid(WallyAuthenticator):
             retval[key] = [o.get(key[:-1], '') for o in txdetails['transaction_outputs']]
         return retval
 
-    def _get_sighash(self, wally_tx, index, utxo):
-        flags = wally.WALLY_TX_FLAG_USE_WITNESS
+    def _get_sighash(self, wally_tx, index, utxo, flags):
         prevout_script = wally.hex_to_bytes(utxo['prevout_script'])
         if utxo['confidential']:
             value = bytes.fromhex(utxo['commitment'])
