@@ -68,7 +68,7 @@ def green(**options):
         options['config_dir'] = _get_config_dir(options)
     os.makedirs(options['config_dir'], exist_ok=True)
 
-    gdk.init({})
+    gdk.init({'log_level': options['gdk_log']})
 
     if options['watch_only']:
         options['auth'] = 'watchonly'
