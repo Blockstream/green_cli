@@ -48,6 +48,8 @@ def _get_authenticator(options):
 @click.option('--no-warn-sysmsg', is_flag=True, help='Suppress warning about unread system messages')
 @click.option('--expert', is_flag=True, hidden=True)
 @click.option('--cert-expiry-threshold', type=int, hidden=True)
+@click.option('--datadir', help='A directory which gdk will use to store encrypted data relating to sessions')
+@click.option('--tordir', help='An optional directory for tor state data')
 def green(**options):
     """Command line interface for Blockstream Green."""
     if context.configured:
@@ -68,7 +70,19 @@ def green(**options):
         options['config_dir'] = _get_config_dir(options)
     os.makedirs(options['config_dir'], exist_ok=True)
 
-    gdk.init({'log_level': options['gdk_log']})
+    if options['datadir'] is None:
+        options['datadir'] = os.path.join(options['config_dir'], 'gdk_datadir')
+    os.makedirs(options['datadir'], exist_ok=True)
+
+    if options['tordir'] is None:
+        options['tordir'] = os.path.join(options['config_dir'], 'gdk_tordir')
+    os.makedirs(options['tordir'], exist_ok=True)
+
+    gdk.init({
+        'log_level': options['gdk_log'],
+        'datadir': options['datadir'],
+        'tordir': options['tordir'],
+    })
 
     if options['watch_only']:
         options['auth'] = 'watchonly'
