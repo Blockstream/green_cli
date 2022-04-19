@@ -278,7 +278,7 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
             custom_vbf)
 
         # Add the script blinding key and return
-        commitments['blinding_key'] = bytes.fromhex(output['public_key'])
+        commitments['blinding_key'] = bytes.fromhex(output['blinding_key'])
         return commitments
 
     # Poke the blinding factors and commitments into the results structure
