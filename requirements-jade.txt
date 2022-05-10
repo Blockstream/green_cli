@@ -1,1 +1,1 @@
-git+https://github.com/Blockstream/Jade.git@0.1.33#egg=jadepy
+git+https://github.com/Blockstream/Jade.git@0.1.37#egg=jadepy

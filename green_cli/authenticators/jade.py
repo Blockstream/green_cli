@@ -8,6 +8,7 @@ import logging
 from typing import List
 
 from green_cli.authenticators import *
+from green_cli import context
 
 try:
     import jadepy
@@ -367,9 +368,17 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
         # Add a 'null' commitment for the final (fee) output
         trusted_commitments.append(None)
 
+        # Get the asset-registry entries for any assets in the tx outputs
+        # NOTE: must contain sufficient data for jade to be able to verify (ie. contract, issuance)
+        # Not passing 'refresh=True' here so will only use already downloaded/cached asset info
+        all_assets = context.session.refresh_assets({'assets': True})['assets']
+        tx_asset_ids = set(output['asset_id'] for output in transaction_outputs)
+        tx_asset_info = [all_assets.get(asset_id) for asset_id in tx_asset_ids]
+        tx_assets_sanitised = [asset for asset in tx_asset_info if asset and asset.get('contract') and asset.get('issuance_prevout')]
+
         # Sign!
         txn = bytes.fromhex(txhex)
-        signatures = self.jade.sign_liquid_tx(self.network, txn, jade_inputs, trusted_commitments, change, use_ae_protocol)
+        signatures = self.jade.sign_liquid_tx(self.network, txn, jade_inputs, trusted_commitments, change, use_ae_protocol, tx_assets_sanitised)
         assert len(signatures) == len(signing_inputs)
 
         result = {}
