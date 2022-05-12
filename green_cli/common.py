@@ -246,8 +246,14 @@ def getmnemonic(session, password):
 @click.argument('password')
 @with_login
 def setwatchonly(session, username, password):
-    """Set watch-only login details."""
+    """Enable watch-only login with the supplied username and password."""
     return session.set_watch_only(username, password)
+
+@green.command()
+@with_login
+def disablewatchonly(session):
+    """Disable watch-only logins for the wallet."""
+    return session.set_watch_only('', '')
 
 @green.command()
 @with_login
