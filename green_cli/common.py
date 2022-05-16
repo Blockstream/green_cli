@@ -346,7 +346,8 @@ def getreceiveaddress(session, details):
 
 @green.command()
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
-@click.option('--last-pointer', default=0, expose_value=False, callback=details_json)
+@click.option('--last-pointer', type=int, expose_value=False, callback=details_json)
+@click.option('--is-internal', is_flag=True, expose_value=False, callback=details_json)
 @with_login
 @print_result
 @with_gdk_resolve
