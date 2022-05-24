@@ -29,7 +29,8 @@ class Authenticator:
         return gdk.login_user(session_obj, hw_device, json.dumps(credentials))
 
     def register(self, session):
-        return gdk.register_user(session, self.hw_device, self.mnemonic)
+        credentials = {'mnemonic': self.mnemonic} if self.mnemonic else {}
+        return gdk.register_user(session, self.hw_device, json.dumps(credentials))
 
 
 class ConfigProperty:
