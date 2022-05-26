@@ -231,15 +231,16 @@ def setpin(session, pin, device_id):
     return context.authenticator.setpin(session, pin, device_id)
 
 @green.command()
-@click.option('--password', type=str, default='')
+@click.option('--password', default="", expose_value=False, callback=details_json)
 @with_login
 @print_result
-def getmnemonic(session, password):
-    """Get the wallet mnemonic.
+@with_gdk_resolve
+def getcredentials(session, details):
+    """Get the wallet credentials.
 
     If password is not empty, it is used to bip38-encrypt the mnemonic.
     """
-    return session.get_mnemonic_passphrase(password)
+    return gdk.get_credentials(session.session_obj, json.dumps(details))
 
 @green.command()
 @click.argument('username')
