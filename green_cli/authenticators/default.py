@@ -20,9 +20,10 @@ class DefaultAuthenticator(SoftwareAuthenticator):
         return super().login(session_obj)
 
     def setpin(self, session, pin, device_id):
-        # session.set_pin converts the pin_data string into a dict, which is not what we want, so
-        # use the underlying call instead
-        pin_data = gdk.set_pin(session.session_obj, self.mnemonic, pin, device_id)
+        credentials = session.get_credentials({}).resolve()
+        assert credentials['mnemonic'] == self.mnemonic
+        details = {'pin': pin, 'device_id': device_id, 'plaintext': credentials}
+        pin_data = json.dumps(session.encrypt_with_pin(details).resolve()['pin_data'])
         open(self.pin_data_filename, 'w').write(pin_data)
         os.remove(self.mnemonic_prop.filename)
         return pin_data
