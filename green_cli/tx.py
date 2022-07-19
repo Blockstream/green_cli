@@ -63,8 +63,6 @@ def _create_tx(tx):
     return tx
 
 def _print_tx_summary(tx):
-    click.echo(f"user signed: {tx['user_signed']}")
-    click.echo(f"server signed: {tx['server_signed']}")
     click.echo(f"send all: {tx.get('send_all', False)}")
     click.echo(f"utxo strategy: {tx['utxo_strategy']}")
     click.echo(f"available inputs: {tx['available_total']}")

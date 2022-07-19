@@ -186,8 +186,6 @@ Change outputs are shown in green.
 At any point you can print a summary of the using the `tx` command.
 ```
 > tx
-user signed: False
-server signed: False
 send all: False
 utxo strategy: default
 available inputs: 1787590
