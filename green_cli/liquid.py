@@ -139,8 +139,6 @@ green_cli.common.getbalance.params.append(confidential_option)
 green_cli.common.getunspentoutputs.params.append(confidential_option)
 
 def _print_tx_summary(tx):
-    click.echo(f"user signed: {tx['user_signed']}")
-    click.echo(f"server signed: {tx['server_signed']}")
     click.echo(f"send all: {tx.get('send_all', False)}")
     click.echo(f"utxo strategy: {tx['utxo_strategy']}")
 
