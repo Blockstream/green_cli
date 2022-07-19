@@ -387,6 +387,14 @@ def getunspentoutputs(session, details):
     return gdk.get_unspent_outputs(session.session_obj, json.dumps(details))
 
 @green.command()
+@click.argument('privatekey', type=str)
+@click.argument('password', default='')
+@with_login
+@print_result
+def getunspentoutputsforprivatekey(session, privatekey, password):
+    return session.get_unspent_outputs_for_private_key(privatekey, password, 0)
+
+@green.command()
 @click.argument('status', type=(UtxoUserStatus()), expose_value=False, nargs=-1)
 @with_login
 @print_result
