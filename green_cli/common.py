@@ -415,9 +415,6 @@ def _txlist_summary(txlist):
     for tx in txns:
         confs = confs_str(tx['block_height'])
         fee_rate = tx['fee'] / tx['transaction_vsize']
-        if tx['type'] == 'outgoing':
-            # Currently only supports txs which are all one-way
-            tx['satoshi'] = {asset: -tx['satoshi'][asset] for asset in tx['satoshi']}
         for asset, amount in tx['satoshi'].items():
             balance[asset] += amount
             ts = tx['created_at_ts']
