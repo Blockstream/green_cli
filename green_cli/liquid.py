@@ -46,7 +46,7 @@ params['type'].type.choices.append('2of2_no_recovery')
 
 @functools.lru_cache(maxsize=None)
 def _get_assets(session):
-    return context.session.refresh_assets({'assets': True})
+    return context.session.get_assets({'category': 'all'})
 
 # Add getassetinfo command
 @green.command()
@@ -55,8 +55,9 @@ def _get_assets(session):
 @with_login
 @print_result
 def getassetinfo(session, details):
-    details['assets'] = True
-    return session.refresh_assets(details)
+    if details['refresh']:
+        session.refresh_assets({'assets': True, 'icons': details['icons']})
+    return session.get_assets({'category': 'all'})
 
 @functools.lru_cache(maxsize=None)
 def _get_assets_by_name(session):
@@ -74,7 +75,7 @@ def _get_assets_by_name(session):
 @functools.lru_cache(maxsize=None)
 def _asset_name(asset_id):
     """Get the name of an asset."""
-    asset_info = context.session.refresh_assets({'assets': True})
+    asset_info = context.session.get_assets({'assets_id': [asset_id]})
     return asset_info['assets'].get(asset_id, {'name': asset_id})['name']
 
 class Asset(click.ParamType):

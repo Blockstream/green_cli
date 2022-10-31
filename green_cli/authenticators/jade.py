@@ -370,8 +370,8 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
 
         # Get the asset-registry entries for any assets in the tx outputs
         # NOTE: must contain sufficient data for jade to be able to verify (ie. contract, issuance)
-        # Not passing 'refresh=True' here so will only use already downloaded/cached asset info
-        all_assets = context.session.refresh_assets({'assets': True})['assets']
+        # Not calling 'refresh_assets' here so will only use already downloaded/cached asset info
+        all_assets = context.session.get_assets({'category': 'all'})['assets']
         tx_asset_ids = set(output['asset_id'] for output in transaction_outputs)
         tx_asset_info = [all_assets.get(asset_id) for asset_id in tx_asset_ids]
         tx_assets_sanitised = [asset for asset in tx_asset_info if asset and asset.get('contract') and asset.get('issuance_prevout')]
