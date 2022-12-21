@@ -2,10 +2,67 @@
 
 ## Installation
 
+### Docker
+
+Rather than installing green-cli locally you may find it easier to build and run
+it as a docker image. First build the image and optionally tag it for
+convenience:
+
+`docker build -t green-cli .`
+
+And then run like this:
+
+`docker run -it --rm green-cli ....`
+
+We pass `-it` to run in an interactive terminal. Sometimes green-cli requires
+interaction with the user.
+We pass `--rm` to delete the container once it has run to avoid having lots of
+redundant containers lying around. This is optional.
+
+For example, to create a new testnet wallet:
+
+`docker run -it --rm green-cli --network testnet create`
+
+As this is creating a new docker container each time it's invoked it's not
+generally very useful as the mnemonic will be written inside the container and
+will not persist across invocations. To persist the wallet state mount a docker
+volume at `/config` inside the container. This can either be a named docker
+volume, e.g. `-v green-cli:/config`, or some local directory e.g.
+`-v /path/to/config/dir:/config`. Care must be taken to manage the volume or
+bind mount directory as it will be used to store the plaintext mnemonic (unless
+you set a pin, in which case it only stores the mnemonic encrypted with a key
+held by the pinserver).
+
+Putting this altogether, using a testnet wallet and a named docker volume
+`green-cli` for the config, we have:
+
+`docker run -it --rm -v green-cli:/config green-cli --network testnet ...`
+
+This command is now quite unwieldy so it's useful to define a shell alias:
+
+`alias green-cli="docker run -it --rm -v green-cli:/config green-cli --network testnet"`
+
+With the alias defined green-cli can be invoked simply as:
+
+`green-cli create`
+
+`green-cli getbalance`
+
+etc.
+
+You can also avail yourself of the `repl` command and avoid repeatedly creating
+new containers for each command:
+
+`green-cli repl`
+
+`> getnewaddress`
+
+### Local installation
+
 It's recommended that you first create and activate a (python3)
 virtualenv and use that to install the green-cli.
 
-# Basic install
+#### Basic install
 
 1) Install requirements
 ```
@@ -23,12 +80,7 @@ for green-cli:
 $ eval "$(_GREEN_CLI_COMPLETE=source green-cli)"
 ```
 
-for green-liquid-cli:
-```
-$ eval "$(_GREEN_LIQUID_CLI_COMPLETE=source green-liquid-cli)"
-```
-
-# Blockstream Jade hardware wallet support
+#### Blockstream Jade hardware wallet support
 
 To enable support for the Blockstream Jade hardware wallet (via
 the `--auth jade` option) additional dependencies must be installed
@@ -50,7 +102,7 @@ NOTE: this must be two separate invocations, as the jade python api is installed
 You can now run green-cli (or green-liquid-cli) passing the `--auth
 jade` option.
 
-# Generic hardware wallet support (via hwi) [BETA]
+#### Generic hardware wallet support (via hwi) [BETA]
 
 To enable hardware wallet support (via the `--auth hardware` option)
 additional dependencies must be installed from requirements-hwi.txt.
@@ -69,7 +121,7 @@ $ pip install -r requirements-hwi.txt
 You can now run green-cli (or green-liquid-cli) passing the `--auth
 hardware` option.
 
-# Software authenticator support (via libwally) [BETA]
+#### Software authenticator support (via libwally) [BETA]
 
 There is another authenticator option `--auth wally` which delegates the
 possession of key material (the mnemonic) and authentication services to
@@ -81,7 +133,7 @@ order to enable this option libwally must be installed:
 $ pip install -r requirements-wally.txt
 ```
 
-# Override hww capabilities
+#### Override hww capabilities
 
 If using the options `--auth hardware` or `--auth wally` it is possible to
 override the default device capabilities sent to the GDK, using the
@@ -106,7 +158,7 @@ where the file contents are, eg:
 }
 ```
 
-# Example usage
+## Example usage
 
 Log in to a testnet wallet and report the balance:
 ```
