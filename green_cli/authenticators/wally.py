@@ -43,8 +43,7 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
 
     @property
     def seed(self):
-        _, seed = wally.bip39_mnemonic_to_seed512(self._mnemonic, None)
-        return seed
+        return wally.bip39_mnemonic_to_seed512(self._mnemonic, None)
 
     @property
     def master_key(self):
