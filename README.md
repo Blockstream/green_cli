@@ -5,9 +5,6 @@
 It's recommended that you first create and activate a (python3)
 virtualenv and use that to install the green-cli.
 
-Note that the package installs two scripts: green-cli for use with the
-bitcoin network an green-liquid-cli for the liquid network.
-
 # Basic install
 
 1) Install requirements
@@ -125,8 +122,8 @@ $ green-cli --network mainnet sendtoaddress $ADDR 0.1
 
 Log in to a liquid wallet and send an asset to an address
 ```
-$ green-liquid-cli --network liquid set mnemonic "liquid mnemonic here ..."
-$ green-liquid-cli --network liquid sendtoaddress
+$ green-cli --network liquid set mnemonic "liquid mnemonic here ..."
+$ green-cli --network liquid sendtoaddress
 ```
 
 For now wallet creation is disabled on use on mainnet/liquid mainnet
