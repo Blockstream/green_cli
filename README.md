@@ -1,8 +1,28 @@
-# GreenAddress command line interface
+# Command line interface for Blockstream Green wallet (GDK)
 
-## Installation
+green-cli is a command line interface for the Blockstream Green wallet
 
-### Docker
+* [Getting Started](#getting-started)
+    * [Using docker](#using-docker)
+    * [Basic installation](#basic-installation)
+    * [Installing Blockstream Jade support](#installing-blockstream-jade-support)
+    * [Installing Generic hardware wallet support](#installing-generic-hardware-wallet-support)
+    * [Installing the wally authenticator](#installing-the-wally-authenticator)
+    * [Example usage](#example-usage)
+* [Hardware device capabilities](#hardware-device-capabilities)
+* [Interactive transaction creation](#interactive-transaction-creation)
+    * [Create a new transaction](#create-a-new-transaction)
+    * [Adding outputs](#adding-outputs)
+    * [Transaction summary](#transaction-summary)
+    * [Coin selection](#coin-selection)
+    * [Sending all outputs with no change](#sending-all-outputs-with-no-change)
+    * [Setting the feerate](#setting-the-feerate)
+    * [Signing and sending the transaction](#signing-and-sending-the-transaction)
+
+
+## Getting Started
+
+### Using docker
 
 Rather than installing green-cli locally you may find it easier to build and run
 it as a docker image. First build the image and optionally tag it for
@@ -57,30 +77,38 @@ new containers for each command:
 
 `> getnewaddress`
 
-### Local installation
+### Basic installation
 
-It's recommended that you first create and activate a (python3)
-virtualenv and use that to install the green-cli.
+green-cli itself is a python package which requires installation of the Green
+Deveopment Kit (GDK) as part of its requirements.
 
-#### Basic install
+It's recommended that you first create and activate a python3 virtualenv and use
+that to install the green-cli. Instructions for that will depend on your
+platform, but might look something like this:
 
-1) Install requirements
+`python3 -m virtualenv /path/to/venv/green-cli`
+
+Activate the virtualenv before proceeding with the installation steps below
+
+`. /path/to/venv/green-cli`
+
+Install the requirements:
+
 ```
 $ pip install -r requirements.txt
 ```
 
-2) Install green_cli
+Install green-cli itself:
 ```
 $ pip install .
 ```
 
-3) [Optional] Enable bash completion
-for green-cli:
+Optional: enable bash completion
 ```
 $ eval "$(_GREEN_CLI_COMPLETE=source green-cli)"
 ```
 
-#### Blockstream Jade hardware wallet support
+### Installing Blockstream Jade support
 
 To enable support for the Blockstream Jade hardware wallet (via
 the `--auth jade` option) additional dependencies must be installed
@@ -102,10 +130,9 @@ NOTE: this must be two separate invocations, as the jade python api is installed
 You can now run green-cli (or green-liquid-cli) passing the `--auth
 jade` option.
 
-#### Generic hardware wallet support (via hwi) [BETA]
+### Installing Generic hardware wallet support
 
-To enable hardware wallet support (via the `--auth hardware` option)
-additional dependencies must be installed from requirements-hwi.txt.
+Support for various hardware wallets can be enabled via hwi.
 
 1) Install libudev and libusb. This is platform specific but for
 debian-based systems:
@@ -121,7 +148,7 @@ $ pip install -r requirements-hwi.txt
 You can now run green-cli (or green-liquid-cli) passing the `--auth
 hardware` option.
 
-#### Software authenticator support (via libwally) [BETA]
+### Installing the wally authenticator
 
 There is another authenticator option `--auth wally` which delegates the
 possession of key material (the mnemonic) and authentication services to
@@ -133,7 +160,29 @@ order to enable this option libwally must be installed:
 $ pip install -r requirements-wally.txt
 ```
 
-#### Override hww capabilities
+### Example usage
+
+Log in to a testnet wallet and report the balance:
+```
+$ green-cli --network testnet set mnemonic -f /file/containing/testnet/mnemonics
+$ green-cli --network testnet getbalance
+```
+
+Log in to a mainnet wallet and send 0.1 BTC to an address
+```
+$ green-cli --network mainnet set mnemonic "mainnet mnemonic here ..."
+$ green-cli --network mainnet sendtoaddress $ADDR 0.1
+```
+
+Log in to a liquid wallet and send an asset to an address
+```
+$ green-cli --network liquid set mnemonic "liquid mnemonic here ..."
+$ green-cli --network liquid sendtoaddress
+```
+
+For now wallet creation is disabled on use on mainnet/liquid mainnet
+
+## Hardware device capabilities
 
 If using the options `--auth hardware` or `--auth wally` it is possible to
 override the default device capabilities sent to the GDK, using the
@@ -158,29 +207,7 @@ where the file contents are, eg:
 }
 ```
 
-## Example usage
-
-Log in to a testnet wallet and report the balance:
-```
-$ green-cli --network testnet set mnemonic -f /file/containing/testnet/mnemonics
-$ green-cli --network testnet getbalance
-```
-
-Log in to a mainnet wallet and send 0.1 BTC to an address
-```
-$ green-cli --network mainnet set mnemonic "mainnet mnemonic here ..."
-$ green-cli --network mainnet sendtoaddress $ADDR 0.1
-```
-
-Log in to a liquid wallet and send an asset to an address
-```
-$ green-cli --network liquid set mnemonic "liquid mnemonic here ..."
-$ green-cli --network liquid sendtoaddress
-```
-
-For now wallet creation is disabled on use on mainnet/liquid mainnet
-
-## Manual coin selection (alpha - use at your own risk)
+## Interactive transaction creation
 
 WARNING: Please note that green-cli in general and the tx/coin selection
 functions in particular are alpha software and not currently recommended
@@ -248,7 +275,7 @@ fee: 210
 fee rate: 1000 sat/kb
 ```
 
-### Transaction inputs (coin selection)
+### Coin selection
 Note that 'utxo strategy' is 'default', which means the transaction
 inputs have been automatically selected. Use `tx inputs` to see the
 selected inputs.
@@ -266,7 +293,7 @@ selected and available. Unselected inputs show in red.
 100000 0c0863f5ab4e11c6844b25b2883a4056be8f245aa2da09e34b54d8a61b840d26:1 csv 205 confs 2NDky839U4fqR19y6Lz7xLSGEitHjqJvSqA
 ```
 
-Automatic input selection can be overridden using the `tx inputs`
+Automatic coin selection can be overridden using the `tx inputs`
 command. Use `tx inputs clear` to remove all selected inputs.
 ```
 > tx inputs clear
@@ -322,8 +349,8 @@ fee: 443
 fee rate: 1000 sat/kb
 ```
 
-### Changing the fee
-You can change the feerate by calling `tx setfeerate`. The fee rate is
+### Setting the feerate
+You can set the feerate by calling `tx setfeerate`. The fee rate is
 specified in satoshis per kilobyte.
 
 ### Signing and sending the transaction
