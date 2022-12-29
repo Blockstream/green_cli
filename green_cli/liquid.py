@@ -126,11 +126,6 @@ def sendtoaddress(session, details):
         raise click.ClickException("Unsafe asset amount conversion disabled")
     return green_cli.common._send_transaction(session, details)
 
-# Insert asset into addressee option for createtransaction
-params = {p.name: p for p in green_cli.common.createtransaction.params}
-params['addressee'].type = click.Tuple((Address(), Asset(), Amount()))
-params['addressee'].nargs = 3
-
 # Add '--confidential' option to getbalance and getunspentoutputs
 confidential_option = click.Option(
     ['--confidential',], is_flag=True, expose_value=False, callback=details_json,
