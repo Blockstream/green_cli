@@ -25,3 +25,10 @@ def add_utxos_to_transaction(session, details):
         utxos = gdk_resolve(gdk.get_unspent_outputs(session.session_obj, json.dumps(utxo_details)))
         details['utxos'] = utxos['unspent_outputs']
 
+def get_txhash_with_sync(session, details, wait):
+    txhash = details['txhash']
+    while wait:
+        ntf = session.getlatestevent('transaction')
+        if ntf['txhash'] == txhash:
+            break
+    return txhash
