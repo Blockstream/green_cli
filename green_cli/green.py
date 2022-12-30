@@ -78,11 +78,15 @@ def green(**options):
         options['tordir'] = os.path.join(options['config_dir'], 'gdk_tordir')
     os.makedirs(options['tordir'], exist_ok=True)
 
-    gdk.init({
+    enable_shared_tx = os.getenv('GA_SHARE_TX_IMPL', '').lower() in ['true','t','1']
+    init_config = {
         'log_level': options['gdk_log'],
         'datadir': options['datadir'],
         'tordir': options['tordir'],
-    })
+        'enable_shared_tx_impl': enable_shared_tx,
+        'allow_ss_liquid_hww': enable_shared_tx
+    }
+    gdk.init(init_config)
 
     if options['watch_only']:
         options['auth'] = 'watchonly'
