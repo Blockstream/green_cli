@@ -111,9 +111,11 @@ green_cli.tx.add_outputs.params.insert(1, asset_arg)
 @click.argument('asset', type=Asset(), expose_value=False)
 @click.argument('amount', type=Amount(precision=8), expose_value=False)
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
+@click.option('--wait', is_flag=True, help='Wait for the transaction notification before returning')
+@click.option('--timeout', default=None, type=int, help='Maximum number of seconds to wait')
 @with_login
 @print_result
-def sendtoaddress(session, details):
+def sendtoaddress(session, details, wait, timeout):
     assets = set([a['asset_id'] for a in details['addressees']])
     btc = _get_assets_by_name(context.session)['btc']['asset_id']
     precision_risk = _get_network()['mainnet'] and 'send_all' not in details and assets != {btc}
@@ -125,7 +127,7 @@ def sendtoaddress(session, details):
         # have different 'precision' specified and it's not currently clear how best to handle that.
         # Leave functionality on for testnet/dev environments as it is convenient
         raise click.ClickException("Unsafe asset amount conversion disabled")
-    return green_cli.common._send_transaction(session, details)
+    return green_cli.common._send_transaction(session, details, wait, timeout)
 
 # Insert asset into addressee option for createtransaction
 params = {p.name: p for p in green_cli.common.createtransaction.params}

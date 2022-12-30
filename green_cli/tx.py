@@ -10,8 +10,9 @@ from green_cli import context
 from green_cli.gdk_resolve import gdk_resolve
 from green_cli.green import green
 from green_cli.utils import (
+    add_utxos_to_transaction,
+    get_txhash_with_sync,
     get_user_transaction,
-    add_utxos_to_transaction
 )
 from green_cli.decorators import (
     confs_str,
@@ -311,10 +312,13 @@ def sign(session):
 
 @tx.command()
 @with_login
-def send(session):
+@click.option('--wait', is_flag=True, help='Wait for the transaction notification before returning')
+@click.option('--timeout', default=None, type=int, help='Maximum number of seconds to wait')
+def send(session, wait, timeout):
     """Send/broadcast the current transaction."""
     with Tx(allow_errors=False, recreate=False) as tx:
         sent = gdk_resolve(gdk.send_transaction(session.session_obj, json.dumps(tx)))
         tx.clear()
         tx.update(sent)
-        click.echo(f"{tx['txhash']}")
+        txhash = get_txhash_with_sync(session, sent, wait, timeout)
+        click.echo(txhash)

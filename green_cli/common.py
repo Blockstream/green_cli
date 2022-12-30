@@ -33,8 +33,9 @@ from green_cli.param_types import (
     UtxoUserStatus,
 )
 from green_cli.utils import (
+    add_utxos_to_transaction,
+    get_txhash_with_sync,
     get_user_transaction,
-    add_utxos_to_transaction
 )
 
 # In older verions of python (<3.6?) json.loads does not respect the order of the input
@@ -120,11 +121,12 @@ def getsystemmessages(session):
 @green.command()
 @with_login
 @click.argument('event_type')
+@click.option('--timeout', default=None, type=int, help='Maximum number of seconds to wait')
 @print_result
-def getlatestevent(session, event_type):
+def getlatestevent(session, event_type, timeout):
     """Get the most recent of some event type.
 
-    Will wait if necessary until the first such event arrrives.
+    Will wait if necessary until the first such event arrrives, if no timeout is given.
 
     Useful events include 'block' and 'fees', for example:
 
@@ -138,7 +140,7 @@ def getlatestevent(session, event_type):
     $ green-cli getlatestevent fees | jq .[0]
     1000
     """
-    return session.getlatestevent(event_type)
+    return session.getlatestevent(event_type, timeout)
 
 @green.command()
 @with_login
@@ -473,10 +475,11 @@ def signtransaction(session, details):
 
 @green.command()
 @click.argument('details', type=click.File('rb'))
+@click.option('--wait', is_flag=True, help='Wait for the transaction notification before returning')
+@click.option('--timeout', default=None, type=int, help='Maximum number of seconds to wait')
 @with_login
 @print_result
-@with_gdk_resolve
-def sendtransaction(session, details):
+def sendtransaction(session, details, wait, timeout):
     """Send a transaction.
 
     Send a transaction previously returned by signtransaction. TXDETAILS can be a filename or - to
@@ -485,31 +488,36 @@ def sendtransaction(session, details):
     $ green createtransaction -a <address> 1000 | green signtransaction - | green sendtransaction -
     """
     details = details.read().decode('utf-8')
-    return gdk.send_transaction(session.session_obj, details)
+    details = gdk_resolve(gdk.send_transaction(session.session_obj, json.dumps(details)))
+    return get_txhash_with_sync(session, details, wait, timeout)
 
-def _send_transaction(session, details):
+def _send_transaction(session, details, wait, timeout):
     add_utxos_to_transaction(session, details)
     details = gdk_resolve(gdk.create_transaction(session.session_obj, json.dumps(details)))
     details = gdk_resolve(gdk.sign_transaction(session.session_obj, json.dumps(details)))
     details = gdk_resolve(gdk.send_transaction(session.session_obj, json.dumps(details)))
-    return details['txhash']
+    return get_txhash_with_sync(session, details, wait, timeout)
 
 @green.command()
 @click.argument('address', type=Address(), expose_value=False)
 @click.argument('amount', type=Amount(precision=8), expose_value=False)
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
+@click.option('--wait', is_flag=True, help='Wait for the transaction notification before returning')
+@click.option('--timeout', default=None, type=int, help='Maximum number of seconds to wait')
 @with_login
 @print_result
-def sendtoaddress(session, details):
+def sendtoaddress(session, details, wait, timeout):
     """Send funds to an address."""
-    return _send_transaction(session, details)
+    return _send_transaction(session, details, wait, timeout)
 
 @green.command()
 @click.argument('previous_txid', type=str)
 @click.argument('fee_multiplier', default=2, type=float)
+@click.option('--wait', is_flag=True, help='Wait for the transaction notification before returning')
+@click.option('--timeout', default=None, type=int, help='Maximum number of seconds to wait')
 @with_login
 @print_result
-def bumpfee(session, previous_txid, fee_multiplier):
+def bumpfee(session, previous_txid, fee_multiplier, wait, timeout):
     """Increase the fee of an unconfirmed transaction."""
     previous_transaction = get_user_transaction(session, previous_txid)
     if not previous_transaction['can_rbf']:
@@ -517,7 +525,7 @@ def bumpfee(session, previous_txid, fee_multiplier):
     details = {'previous_transaction': previous_transaction}
     details['subaccount'] = 0 # FIXME ?
     details['fee_rate'] = int(previous_transaction['fee_rate'] * fee_multiplier)
-    return _send_transaction(session, details)
+    return _send_transaction(session, details, wait, timeout)
 
 @green.group()
 def set():
