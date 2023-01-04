@@ -88,11 +88,11 @@ $ pip install -r requirements-wally.txt
 
 If using the options `--auth hardware` or `--auth wally` it is possible to
 override the default device capabilities sent to the GDK, using the
-`--auth-config` option and the `hw_device_data` key.
+`--auth-config` option and the `device` key.
 
 eg:
 ```
---auth hardware --auth-config '{"hw_device_data": {"supports_low_r": true}}'
+--auth hardware --auth-config '{"device": {"supports_low_r": true}}'
 ```
 
 Note `--auth-config` json data can also be passed in a text file:
@@ -102,7 +102,7 @@ Note `--auth-config` json data can also be passed in a text file:
 where the file contents are, eg:
 ```
 {
-    "hw_device_data": {
+    "device": {
         "supports_low_r": true,
         "supports_liquid": 1
     }
