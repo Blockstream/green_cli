@@ -139,10 +139,9 @@ class HardwareDevice(Authenticator):
 
     def __init__(self, options):
         super().__init__(options)
-        auth_config = options['auth_config']
         self.hw_device_data = self.default_hw_device_info
-        if 'hw_device_data' in auth_config:
-            self.hw_device_data['device'].update(auth_config['hw_device_data'])
+        device_overrides = options['auth_config'].get('device', dict())
+        self.hw_device_data['device'].update(device_overrides)
 
     @property
     def default_hw_device_info(self):
