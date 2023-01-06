@@ -16,7 +16,7 @@ class Session(gdk.Session):
     def getlatestevent(self, event_type, timeout=None):
         with self.event_cv:
             self.event_cv.wait_for(lambda: event_type in self.latest_events, timeout=timeout)
-        return self.latest_events[event_type]
+        return self.latest_events.get(event_type, dict())
 
     def callback_handler(self, event):
         logging.debug("Callback received event: {}".format(event))
