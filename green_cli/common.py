@@ -494,7 +494,11 @@ def sendtransaction(session, details, wait, timeout):
 def _send_transaction(session, details, wait, timeout):
     add_utxos_to_transaction(session, details)
     details = gdk_resolve(gdk.create_transaction(session.session_obj, json.dumps(details)))
+    if details['error']:
+        raise click.ClickException(details['error'])
     details = gdk_resolve(gdk.sign_transaction(session.session_obj, json.dumps(details)))
+    if details['error']:
+        raise click.ClickException(details['error'])
     details = gdk_resolve(gdk.send_transaction(session.session_obj, json.dumps(details)))
     return get_txhash_with_sync(session, details, wait, timeout)
 

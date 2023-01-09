@@ -26,6 +26,8 @@ def add_utxos_to_transaction(session, details):
         details['utxos'] = utxos['unspent_outputs']
 
 def get_txhash_with_sync(session, details, wait, timeout):
+    if details['error']:
+        raise click.ClickException(details['error'])
     txhash = details['txhash']
     while wait:
         ntf = session.getlatestevent('transaction', timeout)
