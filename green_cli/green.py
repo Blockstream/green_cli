@@ -84,7 +84,7 @@ def green(**options):
         'datadir': options['datadir'],
         'tordir': options['tordir'],
         'enable_shared_tx_impl': enable_shared_tx,
-        'allow_ss_liquid_hww': enable_shared_tx
+        'enable_ss_liquid_hww': enable_shared_tx
     }
     gdk.init(init_config)
 
