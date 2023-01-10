@@ -517,17 +517,18 @@ def sendtoaddress(session, details, wait, timeout):
 @green.command()
 @click.argument('previous_txid', type=str)
 @click.argument('fee_multiplier', default=2, type=float)
+@click.option('--subaccount', default=0, type=int)
 @click.option('--wait', is_flag=True, help='Wait for the transaction notification before returning')
 @click.option('--timeout', default=None, type=int, help='Maximum number of seconds to wait')
 @with_login
 @print_result
-def bumpfee(session, previous_txid, fee_multiplier, wait, timeout):
+def bumpfee(session, previous_txid, fee_multiplier, subaccount, wait, timeout):
     """Increase the fee of an unconfirmed transaction."""
     previous_transaction = get_user_transaction(session, previous_txid)
     if not previous_transaction['can_rbf']:
         raise click.ClickException("Previous transaction not replaceable")
     details = {'previous_transaction': previous_transaction}
-    details['subaccount'] = 0 # FIXME ?
+    details['subaccount'] = subaccount
     details['fee_rate'] = int(previous_transaction['fee_rate'] * fee_multiplier)
     return _send_transaction(session, details, wait, timeout)
 
