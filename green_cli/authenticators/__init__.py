@@ -45,14 +45,16 @@ class ConfigProperty:
     def get(self):
         """Read the value from the config file, or failing that prompt the user"""
         try:
-            return open(self.filename).read()
+            with open(self.filename) as f:
+                return f.read()
         except IOError:
             value = self.prompt_fn()
             self.set(value)
             return value
 
     def set(self, value):
-        open(self.filename, 'w').write(value)
+        with open(self.filename, 'w') as f:
+            f.write(value)
         os.chmod(self.filename, self.file_perms)
 
 
