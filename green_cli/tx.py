@@ -169,7 +169,7 @@ def outputs(ctx, session, **options):
         return
 
     tx = _load_tx(allow_errors=True)
-    for output in tx['transaction_outputs']:
+    for output in tx.get('transaction_outputs', list()):
         _print_tx_output(options, output)
 
 @outputs.command(name='add')
