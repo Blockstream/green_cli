@@ -32,7 +32,7 @@ def _get_liquid_networks():
     # TODO: Enable single sig Liquid once testing is complete.
     def is_liquid(network):
         return 'liquid' in network and network != 'electrum-liquid'
-    return reversed([n for n in gdk.get_networks() if is_liquid(n)])
+    return list(reversed([n for n in gdk.get_networks() if is_liquid(n)]))
 
 # Restrict networks to liquid networks and default to localtest-liquid
 params = {p.name: p for p in green.params}
