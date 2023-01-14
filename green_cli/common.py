@@ -488,7 +488,7 @@ def sendtransaction(session, details, wait, timeout):
     $ green createtransaction -a <address> 1000 | green signtransaction - | green sendtransaction -
     """
     details = details.read().decode('utf-8')
-    details = gdk_resolve(gdk.send_transaction(session.session_obj, json.dumps(details)))
+    details = gdk_resolve(gdk.send_transaction(session.session_obj, details))
     return get_txhash_with_sync(session, details, wait, timeout)
 
 def _send_transaction(session, details, wait, timeout):
