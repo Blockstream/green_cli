@@ -218,8 +218,8 @@ def _filter_utxos(utxo_filter, utxos):
         if  address and address == utxo.get('address', None):
             selected.append(utxo)
             continue
-        if txhash == '*' or txhash == 'all' or txhash == utxo['txhash']:
-            if not pt_idx or pt_idx == 'all' or pt_idx == '*' or int(pt_idx) == utxo['pt_idx']:
+        if txhash in ('*', 'all', utxo['txhash']):
+            if pt_idx in ('', '*', 'all', str(utxo['pt_idx'])):
                 selected.append(utxo)
     return selected
 
