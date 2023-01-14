@@ -187,7 +187,7 @@ def _print_tx_output(options, output):
     value = output['satoshi']
     asset_name = _asset_name(output['asset_id'])
     dest = 'fee' if output['is_fee'] else output['address']
-    click.secho(f"{value} {asset_name} {dest}", fg=fg)
+    click.secho(f"{value} {asset_name} {dest}", fg=fg, color=context.color())
 
 # Liquid txs have explicit fee outputs
 green_cli.tx.outputs.params.append(click.Option(['-f', '--show-fee', '--fee'], is_flag=True))

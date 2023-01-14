@@ -38,4 +38,7 @@ class Context:
             atexit.register(self._session.destroy)
         return self._session
 
+    def color(self):
+        return False if self.no_color else None # None means let click decide
+
 sys.modules[__name__] = Context()

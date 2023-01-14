@@ -154,7 +154,7 @@ def setfeerate(session, feerate):
 def _print_tx_output(options, output):
     if options['show_all'] or (output['is_change'] == options['show_change']):
         fg = 'green' if output['is_change'] else None
-        click.secho(f"{output['satoshi']} {output['address']}", fg=fg)
+        click.secho(f"{output['satoshi']} {output['address']}", fg=fg, color=context.color())
 
 @tx.group(invoke_without_command=True)
 @click.option('-a', '--show-all', '--all', is_flag=True)
@@ -251,7 +251,7 @@ def inputs(ctx, session, show_all, show_unused):
         for asset, utxos in tx['utxos'].items():
             for utxo in utxos:
                 if not _filter_utxos(f"{utxo['txhash']}:{utxo['pt_idx']}", tx['used_utxos']):
-                    click.secho(f"{format_utxo(utxo)}", fg='red')
+                    click.secho(f"{format_utxo(utxo)}", fg='red', color=context.color())
 
 @inputs.command()
 @with_login
