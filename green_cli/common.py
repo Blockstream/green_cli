@@ -392,12 +392,15 @@ def getbalance(session, details):
     """Get balance."""
     return gdk.get_balance(context.session.session_obj, json.dumps(details))
 
+_UTXO_SORT_TYPES = ['oldest', 'newest', 'largest', 'smallest']
+
 @green.command()
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--num-confs', default=0, expose_value=False, callback=details_json)
 @click.option('--all-coins', is_flag=True, expose_value=False, callback=details_json)
 @click.option('--expired-at', type=int, expose_value=False, callback=details_json)
 @click.option('--dust-limit', type=int, expose_value=False, callback=details_json)
+@click.option('--sort-by', type=click.Choice(_UTXO_SORT_TYPES), expose_value=False, callback=details_json)
 @with_login
 @print_result
 @with_gdk_resolve
