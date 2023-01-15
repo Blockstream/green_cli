@@ -17,7 +17,7 @@ class TwoFactorResolver:
         if len(factors) > 1:
             for i, factor in enumerate(factors):
                 click.echo("{}) {}".format(i, factor))
-            return factors[click.prompt("Select factor: ", type=int)]
+            return factors[click.prompt("Select factor", type=int)]
         return factors[0]
 
     @staticmethod
