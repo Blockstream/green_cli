@@ -547,6 +547,16 @@ def bumpfee(session, previous_txid, fee_multiplier, subaccount, timeout):
     details['fee_rate'] = int(previous_transaction['fee_rate'] * fee_multiplier)
     return _send_transaction(session, details, timeout)
 
+@green.command()
+@click.argument('address', type=str, expose_value=False, callback=details_json)
+@click.argument('message', type=str, expose_value=False, callback=details_json)
+@with_login
+@print_result
+@with_gdk_resolve
+def signmessage(session, details):
+    """Sign a message"""
+    return gdk.sign_message(session.session_obj, json.dumps(details))
+
 @green.group()
 def set():
     """Set local options."""
