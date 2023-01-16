@@ -121,7 +121,7 @@ def getsystemmessages(session):
 @green.command()
 @with_login
 @click.argument('event_type')
-@click.option('--timeout', default=None, type=int, help='Maximum number of seconds to wait')
+@click.option('--timeout', default=-1, type=int, help='Maximum number of seconds to wait')
 @print_result
 def getlatestevent(session, event_type, timeout):
     """Get the most recent of some event type.
@@ -490,11 +490,10 @@ def signtransaction(session, details):
 
 @green.command()
 @click.argument('details', type=click.File('rb'))
-@click.option('--wait', is_flag=True, help='Wait for the transaction notification before returning')
-@click.option('--timeout', default=None, type=int, help='Maximum number of seconds to wait')
+@click.option('--timeout', default=0, type=int, help='Maximum number of seconds to wait')
 @with_login
 @print_result
-def sendtransaction(session, details, wait, timeout):
+def sendtransaction(session, details, timeout):
     """Send a transaction.
 
     Send a transaction previously returned by signtransaction. TXDETAILS can be a filename or - to
@@ -504,9 +503,9 @@ def sendtransaction(session, details, wait, timeout):
     """
     details = details.read().decode('utf-8')
     details = gdk_resolve(gdk.send_transaction(session.session_obj, details))
-    return get_txhash_with_sync(session, details, wait, timeout)
+    return get_txhash_with_sync(session, details, timeout)
 
-def _send_transaction(session, details, wait, timeout):
+def _send_transaction(session, details, timeout):
     add_utxos_to_transaction(session, details)
     details = gdk_resolve(gdk.create_transaction(session.session_obj, json.dumps(details)))
     if details['error']:
@@ -515,29 +514,27 @@ def _send_transaction(session, details, wait, timeout):
     if details['error']:
         raise click.ClickException(details['error'])
     details = gdk_resolve(gdk.send_transaction(session.session_obj, json.dumps(details)))
-    return get_txhash_with_sync(session, details, wait, timeout)
+    return get_txhash_with_sync(session, details, timeout)
 
 @green.command()
 @click.argument('address', type=Address(), expose_value=False)
 @click.argument('amount', type=Amount(precision=8), expose_value=False)
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
-@click.option('--wait', is_flag=True, help='Wait for the transaction notification before returning')
-@click.option('--timeout', default=None, type=int, help='Maximum number of seconds to wait')
+@click.option('--timeout', default=0, type=int, help='Maximum number of seconds to wait')
 @with_login
 @print_result
-def sendtoaddress(session, details, wait, timeout):
+def sendtoaddress(session, details, timeout):
     """Send funds to an address."""
-    return _send_transaction(session, details, wait, timeout)
+    return _send_transaction(session, details, timeout)
 
 @green.command()
 @click.argument('previous_txid', type=str)
 @click.argument('fee_multiplier', default=2, type=float)
 @click.option('--subaccount', default=0, type=int)
-@click.option('--wait', is_flag=True, help='Wait for the transaction notification before returning')
-@click.option('--timeout', default=None, type=int, help='Maximum number of seconds to wait')
+@click.option('--timeout', default=0, type=int, help='Maximum number of seconds to wait')
 @with_login
 @print_result
-def bumpfee(session, previous_txid, fee_multiplier, subaccount, wait, timeout):
+def bumpfee(session, previous_txid, fee_multiplier, subaccount, timeout):
     """Increase the fee of an unconfirmed transaction."""
     previous_transaction = get_user_transaction(session, previous_txid)
     if not previous_transaction['can_rbf']:
@@ -545,7 +542,7 @@ def bumpfee(session, previous_txid, fee_multiplier, subaccount, wait, timeout):
     details = {'previous_transaction': previous_transaction}
     details['subaccount'] = subaccount
     details['fee_rate'] = int(previous_transaction['fee_rate'] * fee_multiplier)
-    return _send_transaction(session, details, wait, timeout)
+    return _send_transaction(session, details, timeout)
 
 @green.group()
 def set():

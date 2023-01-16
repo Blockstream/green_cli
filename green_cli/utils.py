@@ -1,5 +1,7 @@
 import click
 import json
+import queue
+import time
 
 import greenaddress as gdk
 
@@ -25,12 +27,24 @@ def add_utxos_to_transaction(session, details):
         utxos = gdk_resolve(gdk.get_unspent_outputs(session.session_obj, json.dumps(utxo_details)))
         details['utxos'] = utxos['unspent_outputs']
 
-def get_txhash_with_sync(session, details, wait, timeout):
+def get_txhash_with_sync(session, details, timeout):
     if details['error']:
         raise click.ClickException(details['error'])
     txhash = details['txhash']
-    while wait:
-        ntf = session.getlatestevent('transaction', timeout)
-        if ntf.get('txhash', '') == txhash:
-            break
+    if timeout:
+        # Wait for the tx notification, forever if timeout < 0, else timeout seconds
+        timeout = timeout * 10
+        start_time = time.time()
+        while True:
+            try:
+                ntf = session.notifications.get(block=False)
+            except queue.Empty:
+                ntf = dict()
+            if 'transaction' in ntf and ntf['transaction']['txhash'] == txhash:
+                return txhash
+            if timeout >= 0:
+                timeout = timeout - (time.time() - start_time)
+                if timeout <= 0:
+                    raise click.ClickException(f'Timed out waiting for tx {txhash}')
+                time.sleep(0.1)
     return txhash

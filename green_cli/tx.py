@@ -321,13 +321,12 @@ def sign(session):
 
 @tx.command()
 @with_login
-@click.option('--wait', is_flag=True, help='Wait for the transaction notification before returning')
-@click.option('--timeout', default=None, type=int, help='Maximum number of seconds to wait')
-def send(session, wait, timeout):
+@click.option('--timeout', default=0, type=int, help='Maximum number of seconds to wait')
+def send(session, timeout):
     """Send/broadcast the current transaction."""
     with Tx(allow_errors=False, recreate=False) as tx:
         sent = gdk_resolve(gdk.send_transaction(session.session_obj, json.dumps(tx)))
         tx.clear()
         tx.update(sent)
-        txhash = get_txhash_with_sync(session, sent, wait, timeout)
+        txhash = get_txhash_with_sync(session, sent, timeout)
         click.echo(txhash)

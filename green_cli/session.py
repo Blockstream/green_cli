@@ -13,8 +13,9 @@ class Session(gdk.Session):
         self.event_cv = threading.Condition()
         super().__init__(net_params)
 
-    def getlatestevent(self, event_type, timeout=None):
+    def getlatestevent(self, event_type, timeout):
         with self.event_cv:
+            timeout = None if timeout < 0 else timeout
             self.event_cv.wait_for(lambda: event_type in self.latest_events, timeout=timeout)
         return self.latest_events.get(event_type, dict())
 
