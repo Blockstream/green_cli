@@ -66,6 +66,7 @@ def _create_tx(tx):
 def _print_tx_summary(tx):
     click.echo(f"send all: {tx.get('send_all', False)}")
     click.echo(f"utxo strategy: {tx['utxo_strategy']}")
+    click.echo(f"randomize_inputs: {tx['randomize_inputs']}")
     click.echo(f"available inputs: {tx['available_total']}")
     click.echo(f"selected inputs: {sum([utxo['satoshi'] for utxo in tx['used_utxos']])}")
     click.echo(f"total outputs: {tx['satoshi']['btc']}")
@@ -150,6 +151,14 @@ def setfeerate(session, feerate):
     """Set the fee rate (satoshi/kB)."""
     with Tx(allow_errors=True) as tx:
         tx['fee_rate'] = feerate
+
+@tx.command()
+@click.argument('randomize-inputs', type=bool)
+@with_login
+def setrandomizeinputs(session, randomize_inputs):
+    """Set whether the created transaction should have its inputs randomized."""
+    with Tx(allow_errors=True) as tx:
+        tx['randomize_inputs'] = randomize_inputs
 
 def _print_tx_output(options, output):
     if options['show_all'] or (output['is_change'] == options['show_change']):
