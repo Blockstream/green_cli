@@ -144,6 +144,21 @@ def getlatestevent(session, event_type, timeout):
 
 @green.command()
 @with_login
+@print_result
+def getnextevent(session):
+    """Get the next queued notification, if any.
+
+    Does not wait, returns an empty JSON document if no notifications remain.
+
+    This command is useful only in the context of a repl loop.
+    """
+    try:
+        return session.notifications.get(block=False)
+    except queue.Empty:
+        return dict()
+
+@green.command()
+@with_login
 @click.option('--ignore', type=str, help='Comma delimited list of events to ignore, e.g. "block,fees"')
 def listen(session, ignore):
     """Listen for notifications.
