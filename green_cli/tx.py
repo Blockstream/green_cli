@@ -44,7 +44,7 @@ def _save_tx(tx, txid='scratch'):
 
 def _add_input_address(utxo):
     utxo['address'] = ''
-    transaction = get_user_transaction(context.session, utxo['txhash'])
+    transaction = get_user_transaction(context.session, utxo['subaccount'], utxo['txhash'])
     for output in transaction['outputs']:
         if output['pt_idx'] == utxo['pt_idx']:
             utxo['address'] = output['address']

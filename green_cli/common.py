@@ -536,7 +536,7 @@ def sendtoaddress(session, details, timeout):
 @print_result
 def bumpfee(session, previous_txid, fee_multiplier, subaccount, timeout):
     """Increase the fee of an unconfirmed transaction."""
-    previous_transaction = get_user_transaction(session, previous_txid)
+    previous_transaction = get_user_transaction(session, subaccount, previous_txid)
     if not previous_transaction['can_rbf']:
         raise click.ClickException("Previous transaction not replaceable")
     details = {'previous_transaction': previous_transaction}

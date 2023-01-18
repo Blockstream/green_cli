@@ -7,9 +7,9 @@ import greenaddress as gdk
 
 from green_cli.gdk_resolve import gdk_resolve
 
-def get_user_transaction(session, txid):
+def get_user_transaction(session, subaccount, txid):
     # TODO: Iterate all pages
-    details = {'subaccount': 0, 'first': 0, 'count': 9999}
+    details = {'subaccount': subaccount, 'first': 0, 'count': 9999}
     transactions = gdk_resolve(gdk.get_transactions(session.session_obj, json.dumps(details)))
     transactions = transactions['transactions']
     for transaction in transactions:
