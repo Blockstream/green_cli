@@ -95,10 +95,12 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
         result['signature'] = wally.ec_sig_to_der(signature).hex()
         return result
 
-    def _get_sighash(self, wally_tx, index, utxo, flags):
+    def _get_signature_hash(self, wally_tx, index, utxo, sighash, flags):
+        # Only SIGHASH_ALL is currently allowed for BTC signing
+        assert sighash == wally.WALLY_SIGHASH_ALL
         prevout_script = wally.hex_to_bytes(utxo['prevout_script'])
         return wally.tx_get_btc_signature_hash(
-                wally_tx, index, prevout_script, utxo['satoshi'], wally.WALLY_SIGHASH_ALL, flags)
+                wally_tx, index, prevout_script, utxo['satoshi'], sighash, flags)
 
     def _sign_tx(self, details, wally_tx):
         utxos = details['signing_inputs']
@@ -118,7 +120,8 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
             is_segwit = utxo['address_type'] in ['p2wsh', 'csv', 'p2wpkh', 'p2sh-p2wpkh']
             flags = wally.WALLY_TX_FLAG_USE_WITNESS if is_segwit else 0
 
-            txhash = self._get_sighash(wally_tx, index, utxo, flags)
+            sighash = utxo.get('user_sighash', wally.WALLY_SIGHASH_ALL)
+            txhash = self._get_signature_hash(wally_tx, index, utxo, sighash, flags)
             path = utxo['user_path']
             privkey = self.get_privkey(path)
             logging.debug('Processing input %s, path %s', index, path)
@@ -134,7 +137,7 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
                                                     wally.EC_FLAG_ECDSA | wally.EC_FLAG_GRIND_R)
 
             signature = wally.ec_sig_to_der(signature)
-            signature.append(wally.WALLY_SIGHASH_ALL)
+            signature.append(sighash)
             signature = signature.hex()
             logging.debug('Signature (der): %s', signature)
             signatures.append(signature)
@@ -219,14 +222,17 @@ class WallyAuthenticatorLiquid(WallyAuthenticator):
             retval[key] = [o.get(key[:-1], '') for o in txdetails['transaction_outputs']]
         return retval
 
-    def _get_sighash(self, wally_tx, index, utxo, flags):
+    def _get_signature_hash(self, wally_tx, index, utxo, sighash, flags):
+        # Allowed sighash types are limited; check that here
+        assert sighash in [wally.WALLY_SIGHASH_ALL,
+                           wally.WALLY_SIGHASH_SINGLE | wally.WALLY_SIGHASH_ANYONECANPAY]
         prevout_script = wally.hex_to_bytes(utxo['prevout_script'])
         if utxo['confidential']:
             value = bytes.fromhex(utxo['commitment'])
         else:
             value = wally.tx_confidential_value_from_satoshi(utxo['satoshi'])
         return wally.tx_get_elements_signature_hash(
-            wally_tx, index, prevout_script, value, wally.WALLY_SIGHASH_ALL, flags)
+            wally_tx, index, prevout_script, value, sighash, flags)
 
     def sign_tx(self, details):
         tx_flags = wally.WALLY_TX_FLAG_USE_WITNESS | wally.WALLY_TX_FLAG_USE_ELEMENTS
