@@ -189,5 +189,25 @@ def _print_tx_output(options, output):
 green_cli.tx.outputs.params.append(click.Option(['-f', '--show-fee', '--fee'], is_flag=True))
 green_cli.tx._print_tx_output = _print_tx_output
 
+@green.command()
+@click.argument('details', type=click.File('rb'))
+@with_login
+@print_result
+@with_gdk_resolve
+def createswaptransaction(session, details):
+    """Create a swap proposal from initial 'maker' details json"""
+    maker_details = details.read().decode('utf-8')
+    return gdk.create_swap_transaction(session.session_obj, maker_details)
+
+@green.command()
+@click.argument('details', type=click.File('rb'))
+@with_login
+@print_result
+@with_gdk_resolve
+def completeswaptransaction(session, details):
+    """Create a complete swap transaction from the 'taker' details"""
+    taker_details = details.read().decode('utf-8')
+    return gdk.complete_swap_transaction(session.session_obj, taker_details)
+
 if __name__ == "__main__":
     main()
