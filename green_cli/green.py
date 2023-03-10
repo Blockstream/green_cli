@@ -32,10 +32,36 @@ def _get_authenticator(options):
     logging.debug("using auth module {}".format(auth_module))
     return auth_module.get_authenticator(options)
 
+def _resolve_network_options(options):
+    if options['network']:
+        for option in 'liquid', 'singlesig', 'testnet', 'mainnet':
+            if options[option]:
+                raise click.ClickException(f'Option --{option} not compatible with explicit --network option')
+        return
+    elems = []
+    if options['mainnet'] and options['testnet']:
+        raise click.ClickException(f'--mainnet and --testnet are mutually exclusive')
+    if options['singlesig']:
+        elems.append('electrum')
+    if options['mainnet']:
+        if not options['liquid']:
+            elems.append('mainnet')
+    elif options['testnet']:
+        elems.append('testnet')
+    else:
+        elems.append('localtest')
+    if options['liquid']:
+        elems.append('liquid')
+    options['network'] = '-'.join(elems)
+
 @click.group()
 @click.option('--log-level', type=click.Choice(['error', 'warn', 'info', 'debug']))
 @click.option('--gdk-log', default='none', type=click.Choice(['none', 'debug', 'warn', 'info', 'error']))
-@click.option('--network', default='localtest', help='Network: localtest|testnet|mainnet.')
+@click.option('--network', default=None, help='gdk network option')
+@click.option('--liquid', '-L', is_flag=True, help='Use liquid network')
+@click.option('--singlesig', '-S', is_flag=True, help='Use singlesig wallet')
+@click.option('--mainnet', '-M', is_flag=True, help='Use mainnet')
+@click.option('--testnet', '-T', is_flag=True, help='Use testnet')
 @click.option('--no-color', is_flag=True, help='Do not color text output')
 @click.option('--auth', default='default', type=click.Choice(['default', 'hardware', 'jade', 'wally', 'watchonly']))
 @click.option('--auth-config', default=None, help='Additional json config passed to the authenticator')
@@ -66,6 +92,9 @@ def green(**options):
         }[options['log_level']]
 
         logging.basicConfig(level=py_log_level)
+
+    _resolve_network_options(options)
+    logging.debug(f'network is {options["network"]}')
 
     if options['config_dir'] is None:
         options['config_dir'] = _get_config_dir(options)
