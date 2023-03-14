@@ -101,13 +101,20 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
                 wally_tx, index, prevout_script, utxo['satoshi'], wally.WALLY_SIGHASH_ALL, flags)
 
     def _sign_tx(self, details, wally_tx):
-        txdetails = details['transaction']
         utxos = details['signing_inputs']
         use_ae_protocol = details['use_ae_protocol']
 
         signatures = []
         signer_commitments = []
         for index, utxo in enumerate(utxos):
+            if utxo.get('skip_signing', False):
+                # Not signing this input (may not belong to this signer)
+                logging.debug(f'Not signing input {index}: skip_signing=True')
+                if use_ae_protocol:
+                    signer_commitments.append('')
+                signatures.append('')
+                continue
+
             is_segwit = utxo['address_type'] in ['p2wsh', 'csv', 'p2wpkh', 'p2sh-p2wpkh']
             flags = wally.WALLY_TX_FLAG_USE_WITNESS if is_segwit else 0
 
