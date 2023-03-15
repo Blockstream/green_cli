@@ -191,6 +191,11 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
                       len(signing_inputs), len(transaction_outputs))
 
         def _map_input(input: Dict) -> Dict:
+            if input.get('skip_signing', False):
+                # Not signing this input (may not belong to this signer)
+                logging.debug(f'Not signing input: skip_signing=True')
+                return dict()
+
             is_segwit = input['address_type'] in ['p2wsh', 'csv', 'p2sh-p2wpkh', 'p2wpkh']
             mapped = { 'is_witness': is_segwit,
                        'path': input['user_path'],
@@ -312,6 +317,11 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
                       len(signing_inputs), len(transaction_outputs))
 
         def _map_input(input: Dict) -> Dict:
+            if input.get('skip_signing', False):
+                # Not signing this input (may not belong to this signer)
+                logging.debug(f'Not signing input: skip_signing=True')
+                return dict()
+
             is_segwit = input['address_type'] in ['p2wsh', 'csv', 'p2sh-p2wpkh', 'p2wpkh']
             mapped = { 'is_witness': is_segwit,
                        'path': input['user_path'],
