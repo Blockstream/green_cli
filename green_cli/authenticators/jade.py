@@ -21,6 +21,9 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
 
     """Uses Jade device to authenticate"""
 
+    # Minimum supported fw version - liquid swaps and explicit blinding step
+    MIN_SUPPORTED_VERSION = (0, 1, 48)
+
     @staticmethod
     def _get_descriptor(addr_type: str) -> str:
          return {'p2pkh': 'pkh(k)',
@@ -89,6 +92,13 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
         self.jade.connect()
         self.info = self.jade.get_version_info()
         logging.debug('Connected to {}: {}'.format(self.name, self.info))
+
+        # Quick'n'dirty version check
+        vers = self.info['JADE_VERSION'].split('.')[:3]
+        vers[-1] = vers[-1].split('-')[0]  # truncate any suffix
+        if tuple(map(int, vers)) < self.MIN_SUPPORTED_VERSION:
+            raise click.ClickException(f"Unsupported Jade firmware version - {self.MIN_SUPPORTED_VERSION} required")
+
         entropy = gdk.get_random_bytes(wally.BIP39_ENTROPY_LEN_256)
         self.jade.add_entropy(entropy)
 
@@ -275,39 +285,8 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
     def get_shared_nonce(self, pubkey: bytes, script: bytes) -> bytes:
        return self.jade.get_shared_nonce(script, pubkey)
 
-    # Helper to get the commitment and blinding key from Jade
-    def _get_trusted_commitments(self, index: int, output: Dict, hash_prevouts: bytes, custom_vbf: bytes) -> Dict:
-        commitments = self.jade.get_commitments(
-            bytes.fromhex(output['asset_id']),
-            output['satoshi'],
-            hash_prevouts,
-            index,
-            custom_vbf)
-
-        # Add the script blinding key and return
-        commitments['blinding_key'] = bytes.fromhex(output['blinding_key'])
-        return commitments
-
-    # Poke the blinding factors and commitments into the results structure
-    @staticmethod
-    def _populate_result(trusted_commitments: Dict, result: Dict) -> Dict:
-        asset_blinders, value_blinders, asset_generators, value_commitments = [], [], [], []
-        for commitments in trusted_commitments:
-            if commitments is None:
-                # Unblinded/fee output - 'null' entries
-                for lst in asset_blinders, value_blinders, asset_generators, value_commitments:
-                    lst.append(None)
-            else:
-                asset_blinders.append(commitments['abf'][::-1].hex())
-                value_blinders.append(commitments['vbf'][::-1].hex())
-                asset_generators.append(commitments['asset_generator'].hex())
-                value_commitments.append(commitments['value_commitment'].hex())
-
-        result['assetblinders'] = asset_blinders
-        result['amountblinders'] = value_blinders
-        result['asset_commitments'] = asset_generators
-        result['value_commitments'] = value_commitments
-        return result
+    def get_blinding_factor(self, hash_prevouts: bytes, output_index: int) -> bytes:
+       return self.jade.get_blinding_factor(hash_prevouts, output_index, 'ASSET_AND_VALUE')
 
     def sign_tx(self, details: Dict) -> Dict:
         txhex = details['transaction']['transaction']
@@ -341,44 +320,23 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
         jade_inputs = list(map(_map_input, signing_inputs))
         change = list(map(self._map_change_output, transaction_outputs))
 
-        # Calculate the hash-prevout from the inputs
-        values, abfs, vbfs, input_prevouts = [], [], [], []
-        for input in signing_inputs:
-            # Get values, abfs and vbfs from inputs (needed to compute the final output vbf)
-            values.append(input['satoshi'])
-            abfs.append(bytes.fromhex(input['assetblinder'])[::-1])
-            vbfs.append(bytes.fromhex(input['amountblinder'])[::-1])
+        # Get the output blinding info
+        def _map_commitments_info(output):
+            if 'assetblinder' not in output or 'amountblinder' not in output:
+                # Output not blinded (or not by us), return null placeholder
+                return None
 
-            # Get the input prevout txid and index for hashing later
-            input_prevouts.append(bytes.fromhex(input['txhash'])[::-1])
-            input_prevouts.append(input['pt_idx'].to_bytes(4, byteorder='little'))
+            # Return blinding data
+            return {
+                'asset_id': bytes.fromhex(output['asset_id']),
+                'abf': bytes.fromhex(output['assetblinder'])[::-1],
+                'value': output['satoshi'],
+                'vbf': bytes.fromhex(output['amountblinder'])[::-1],
+                'blinding_key': bytes.fromhex(output['blinding_key'])
+            }
 
-        hash_prevouts = bytes(wally.sha256d(b''.join(input_prevouts)))
-
-        # Get the trusted commitments from Jade
-        idx, trusted_commitments = 0, []
-        blinded_outputs = transaction_outputs[:-1]  # Assume last output is fee
-        for output in blinded_outputs[:-1]:  # Not the last blinded output as we calculate the vbf for that
-            commitments = self._get_trusted_commitments(idx, output, hash_prevouts, None)
-            trusted_commitments.append(commitments)
-
-            values.append(output['satoshi'])
-            abfs.append(commitments['abf'])
-            vbfs.append(commitments['vbf'])
-            idx += 1
-
-        # Calculate the final vbf
-        values.append(blinded_outputs[idx]['satoshi'])
-        finalAbf = self.jade.get_blinding_factor(hash_prevouts, idx, 'ASSET')
-        abfs.append(finalAbf)
-        final_vbf = bytes(wally.asset_final_vbf(values, len(signing_inputs), b''.join(abfs), b''.join(vbfs)))
-
-        # Get the final trusted commitments from Jade (with the calculated vbf)
-        commitments = self._get_trusted_commitments(idx, blinded_outputs[idx], hash_prevouts, final_vbf)
-        trusted_commitments.append(commitments)
-
-        # Add a 'null' commitment for the final (fee) output
-        trusted_commitments.append(None)
+        # Get inputs and change outputs in form Jade expects
+        commitments = list(map(_map_commitments_info, transaction_outputs))
 
         # Get the asset-registry entries for any assets in the tx outputs
         # NOTE: must contain sufficient data for jade to be able to verify (ie. contract, issuance)
@@ -390,7 +348,7 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
 
         # Sign!
         txn = bytes.fromhex(txhex)
-        signatures = self.jade.sign_liquid_tx(self.network, txn, jade_inputs, trusted_commitments, change, use_ae_protocol, tx_assets_sanitised)
+        signatures = self.jade.sign_liquid_tx(self.network, txn, jade_inputs, commitments, change, use_ae_protocol, tx_assets_sanitised)
         assert len(signatures) == len(signing_inputs)
 
         result = {}
@@ -403,9 +361,6 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
 
         signatures = list(map(bytes.hex, signatures))
         result['signatures'] = signatures
-
-        # Poke the blinding factors into the results structure
-        self._populate_result(trusted_commitments, result)
 
         logging.debug('resolving {}'.format(result))
         return json.dumps(result)
