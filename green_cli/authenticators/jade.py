@@ -199,7 +199,8 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
             is_segwit = input['address_type'] in ['p2wsh', 'csv', 'p2sh-p2wpkh', 'p2wpkh']
             mapped = { 'is_witness': is_segwit,
                        'path': input['user_path'],
-                       'script': bytes.fromhex(input['prevout_script'])}
+                       'script': bytes.fromhex(input['prevout_script']),
+                       'sighash': input.get('user_sighash', wally.WALLY_SIGHASH_ALL) }
 
             # Additional fields to pass through if using the Anti-Exfil protocol
             if use_ae_protocol:
@@ -326,7 +327,8 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
             mapped = { 'is_witness': is_segwit,
                        'path': input['user_path'],
                        'value_commitment': bytes.fromhex(input['commitment']),
-                       'script': bytes.fromhex(input['prevout_script'])}
+                       'script': bytes.fromhex(input['prevout_script']),
+                       'sighash': input.get('user_sighash', wally.WALLY_SIGHASH_ALL) }
 
             # Additional fields to pass through if using the Anti-Exfil protocol
             if use_ae_protocol:
