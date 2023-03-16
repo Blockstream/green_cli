@@ -4,11 +4,12 @@ import greenaddress as gdk
 import base64
 import json
 import logging
-
+from collections import defaultdict
 from typing import List
 
 from green_cli.authenticators import *
 from green_cli import context
+from green_cli import tx
 
 try:
     import jadepy
@@ -31,6 +32,12 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
             'p2sh-p2wpkh': 'sh(wpkh(k))',
             'p2wpkh': 'wpkh(k)'
         }.get(addr_type)
+
+    @staticmethod
+    def _get_tx_type(tx_type: tx.TxType) -> str:
+        return {tx.TxType.SEND_PAYMENT: 'send_payment',
+                tx.TxType.SWAP: 'swap',
+                tx.TxType.UNKNOWN: 'unknown'}.get(tx_type)
 
     def __init__(self, options: Dict):
         self.info = None
@@ -180,20 +187,23 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
         return result
 
     @classmethod
-    def _map_change_output(cls, output: Dict) -> Dict:
-        if output['is_change']:
-            change = {'path': output['user_path']}
+    def _map_wallet_outputs(cls, output: Dict) -> Dict:
+        wallet_output = None
+        if 'user_path' in output:
+            wallet_output = {'is_change': output['is_change'],
+                             'path': output['user_path']}
+
             if output.get('recovery_xpub'):
-                change['recovery_xpub'] = output.get('recovery_xpub')
+                wallet_output['recovery_xpub'] = output.get('recovery_xpub')
 
             if output['address_type'] == 'csv':
-                change['csv_blocks'] = output['subtype']
+                wallet_output['csv_blocks'] = output['subtype']
             else:
                 variant = cls._get_descriptor(output['address_type'])
                 if variant is not None:
-                    change['variant'] = variant
+                    wallet_output['variant'] = variant
 
-            return change
+        return wallet_output
 
     def sign_tx(self, details: Dict) -> Dict:
         txhex = details['transaction']['transaction']
@@ -203,6 +213,12 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
         transaction_outputs = details['transaction_outputs']
         logging.debug('sign txn with %d inputs and %d outputs',
                       len(signing_inputs), len(transaction_outputs))
+
+        # Does this tx represent a simple send payment, a swap, etc
+        txtype = tx.get_tx_type(details)
+        logging.info("tx appears to be a " + str(txtype))
+        if txtype != tx.TxType.SEND_PAYMENT:
+            raise click.ClickException("Jade only supports simple send-payment BTC tx at this time")
 
         def _map_input(input: Dict) -> Dict:
             if input.get('skip_signing', False):
@@ -239,11 +255,11 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
 
         # Get inputs and change outputs in form Jade expects
         jade_inputs = list(map(_map_input, signing_inputs))
-        change = list(map(self._map_change_output, transaction_outputs))
+        wallet_outputs = list(map(self._map_wallet_outputs, transaction_outputs))
 
         # Sign!
         txn = bytes.fromhex(txhex)
-        signatures = self.jade.sign_tx(self.network, txn, jade_inputs, change, use_ae_protocol)
+        signatures = self.jade.sign_tx(self.network, txn, jade_inputs, wallet_outputs, use_ae_protocol)
         assert len(signatures) == len(signing_inputs)
 
         result = {}
@@ -304,11 +320,22 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
         logging.debug('sign liquid txn with %d inputs and %d outputs',
                       len(signing_inputs), len(transaction_outputs))
 
+        # Does this tx represent a simple send payment, a swap, etc
+        txtype = tx.get_tx_type(details)
+        logging.info("tx appears to be a " + str(txtype))
+        if txtype == tx.TxType.UNKNOWN:
+            raise click.ClickException("Unrecognised transaction type")
+
+        signing_input_amounts = defaultdict(lambda: 0)
+
         def _map_input(input: Dict) -> Dict:
             if input.get('skip_signing', False):
                 # Not signing this input (may not belong to this signer)
                 logging.debug(f'Not signing input: skip_signing=True')
                 return dict()
+
+            # Collate wallet inputs totals, per asset
+            signing_input_amounts[input.get('asset_id')] += input['satoshi']
 
             is_segwit = input['address_type'] in ['p2wsh', 'csv', 'p2sh-p2wpkh', 'p2wpkh']
             mapped = {
@@ -319,6 +346,18 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
                 'sighash': input.get('user_sighash', wally.WALLY_SIGHASH_ALL)
             }
 
+            # If non-trivial tx, also send any blinding information per input
+            if txtype != tx.TxType.SEND_PAYMENT and 'assetblinder' in input:
+                mapped['abf'] = bytes.fromhex(input['assetblinder'])[::-1]
+                mapped['asset_id'] = bytes.fromhex(input['asset_id'])
+                mapped['asset_generator'] = bytes.fromhex(input['asset_tag'])
+                if 'amountblinder' in input:
+                    mapped['vbf'] = bytes.fromhex(input['amountblinder'])[::-1]
+                elif 'value_blind_proof' in input:
+                    mapped['value_blind_proof'] = bytes.fromhex(input['value_blind_proof'])
+                mapped['value'] = input['satoshi']
+                # value_commitment sent in any case
+
             # Additional fields to pass through if using the Anti-Exfil protocol
             if use_ae_protocol:
                 mapped['ae_host_commitment'] = bytes.fromhex(input['ae_host_commitment'])
@@ -326,12 +365,23 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
 
             return mapped
 
-        # Get inputs and change outputs in form Jade expects
+        # Get inputs and wallet outputs in form Jade expects
         jade_inputs = list(map(_map_input, signing_inputs))
-        change = list(map(self._map_change_output, transaction_outputs))
+        wallet_outputs = list(map(self._map_wallet_outputs, transaction_outputs))
 
         # Get the output blinding info
+        wallet_output_amounts = defaultdict(lambda: 0)
+
         def _map_commitments_info(output):
+            # Collate wallet output totals, per asset
+            # NOTE: 'is_change' outputs are reversed from the inputs amount, so these
+            #       totals represent net movements in and out of the wallet
+            if 'user_path' in output:
+                if output['is_change']:
+                    signing_input_amounts[output['asset_id']] -= output['satoshi']
+                else:
+                    wallet_output_amounts[output['asset_id']] += output['satoshi']
+
             if 'assetblinder' not in output or 'amountblinder' not in output:
                 # Output not blinded (or not by us), return null placeholder
                 return None
@@ -356,9 +406,20 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
         tx_asset_info = [all_assets.get(asset_id) for asset_id in tx_asset_ids]
         tx_assets_sanitised = [asset for asset in tx_asset_info if asset and asset.get('contract') and asset.get('issuance_prevout')]
 
+        def _mksummary(asset_amounts):
+            return [{'asset_id': bytes.fromhex(asset_id), 'satoshi': satoshi} for asset_id, satoshi in asset_amounts.items()]
+
+        additional_info = {
+            'tx_type': self._get_tx_type(txtype),
+            'is_partial': details['transaction'].get('is_partial', False),
+            'wallet_input_summary': _mksummary(signing_input_amounts),
+            'wallet_output_summary': _mksummary(wallet_output_amounts)
+        } if txtype != tx.TxType.SEND_PAYMENT else None
+
         # Sign!
         txn = bytes.fromhex(txhex)
-        signatures = self.jade.sign_liquid_tx(self.network, txn, jade_inputs, commitments, change, use_ae_protocol, tx_assets_sanitised)
+        signatures = self.jade.sign_liquid_tx(self.network, txn, jade_inputs, commitments, wallet_outputs, use_ae_protocol,
+                                              tx_assets_sanitised, additional_info)
         assert len(signatures) == len(signing_inputs)
 
         result = {}
