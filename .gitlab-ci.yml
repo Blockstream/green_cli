@@ -1,6 +1,6 @@
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip-cache"
-image: greenaddress/ci@sha256:8e5e60d4be4736718a9392cea0f2d9ded2b81a339fc41f9c2bfa1e34496ffae7
+image: greenaddress/ci@sha256:ba2a76bb933f1da6573631597f947b1ff2f47e772674ab38c4e87e0eac6861b2
 
 .smoke_test:
   cache:
@@ -18,22 +18,22 @@ image: greenaddress/ci@sha256:8e5e60d4be4736718a9392cea0f2d9ded2b81a339fc41f9c2b
     - deactivate
     - rm -fr venv
 
-smoke_test_stretch:
+smoke_test_bullseye:
   extends: .smoke_test
   before_script:
     - echo "Dir{Cache $PIP_CACHE_DIR}" >> /etc/apt/apt.conf
     - echo "Dir::Cache $PIP_CACHE_DIR;" >> /etc/apt/apt.conf
     - mkdir -p ${PIP_CACHE_DIR}/archives/partial
-    - apt-get update -qq && apt-get install --no-install-recommends -y -qq libusb-1.0-0-dev libudev-dev
+    - apt-get install --no-install-recommends -y -qq libusb-1.0-0-dev libudev-dev
 
 smoke_test_fedora:
-  image: greenaddress/fedora_ci@sha256:3d710f476b3d44376acc9fca6e26129e954053834f09ad4327756d67a232bd47
+  image: fedora:33@sha256:46e6c941bb536f6a54390f9956e2566fde0738c28d21c16eb8daa16c22d13410
   extends: .smoke_test
   before_script:
     - rm -fr /var/cache/dnf
     - mkdir -p $PIP_CACHE_DIR
     - ln -s $PIP_CACHE_DIR /var/cache/dnf
-    - dnf -y install libusb-devel libudev-devel
+    - dnf -y install libusb-devel libudev-devel python-virtualenv
 
 smoke_test_osx:
   extends: .smoke_test
