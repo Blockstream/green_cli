@@ -1,10 +1,12 @@
 import json
 import logging
 import os
-import wallycore as wally
+from enum import Enum
+from collections import defaultdict
 
 import click
 
+import wallycore as wally
 import greenaddress as gdk
 
 from green_cli import context
@@ -24,6 +26,49 @@ from green_cli.param_types import (
     Address,
     Amount,
 )
+
+# Deduced tx type
+TxType = Enum('TxType', ['SEND_PAYMENT', 'SWAP', 'UNKNOWN'])  # TODO: COINJOIN, etc.
+
+# Collate satoshi total per asset
+def get_asset_amounts(utxos):
+    asset_amounts = defaultdict(lambda: 0)
+    for utxo in utxos:
+        asset_amounts[utxo.get('asset_id', 'btc')] += utxo['satoshi']
+    return asset_amounts
+
+# Deduce tx type from inspecting inputs and ouptuts.
+# Currently only works for sign_transaction details.
+def get_tx_type(tx):
+    wallet_inputs = [i for i in tx['signing_inputs'] if 'user_path' in i]
+    wallet_outputs = [output for output in tx['transaction_outputs'] if 'user_path' in output]
+    wallet_input_assets = get_asset_amounts(wallet_inputs)
+    wallet_output_assets = get_asset_amounts(wallet_outputs)
+
+    # We recognise a simple send (includes redeposit/send-to-self) tx if:
+    # a) the transaction is complete (ie. not 'partial')
+    # b) all the inputs belong to this wallet/signer
+    # c) for each asset, the net amounts in the outputs into the wallet are not
+    #    greater than the net amounts in the inputs from the wallet
+    if not tx['transaction'].get('is_partial', False) and \
+            wallet_inputs and len(wallet_inputs) == len(tx['signing_inputs']) and \
+            not any(outsats > wallet_input_assets.get(asset, 0) for asset, outsats in wallet_output_assets.items()):
+        return TxType.SEND_PAYMENT
+
+    # We treat tx as a swap (potentially incomplete/partial) if:
+    # a) the wallet has both inputs and non-change outputs, and
+    # b) multiple assets are involved in the wallets inputs and outputs, and
+    # c) and the wallet's outputs contain more of at least one asset than
+    #    is present in the wallet's inputs for that asset
+    if wallet_inputs and any(not output.get('is_change', False) for output in wallet_outputs) and \
+            len(set(wallet_input_assets.keys()).union(wallet_output_assets.keys())) > 1 and \
+            any(outsats > wallet_input_assets.get(asset, 0) for asset, outsats in wallet_output_assets.items()):
+        return TxType.SWAP
+
+    # TODO: coinjoin/payjoin, etc.
+
+    # Unrecognised atm
+    return TxType.UNKNOWN
 
 def _get_tx_filename(txid):
     tx_path = os.path.join(context.config_dir, 'tx')
