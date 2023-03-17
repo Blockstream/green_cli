@@ -28,10 +28,8 @@ import green_cli.twofa
 import green_cli.tx
 
 def _get_liquid_networks():
-    # Do not allow single sig Liquid mainnet for now.
-    # TODO: Enable single sig Liquid once testing is complete.
     def is_liquid(network):
-        return 'liquid' in network and network != 'electrum-liquid'
+        return 'liquid' in network
     return list(reversed([n for n in gdk.get_networks() if is_liquid(n)]))
 
 # Restrict networks to liquid networks and default to localtest-liquid
