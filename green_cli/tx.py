@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import wallycore as wally
 
 import click
 
@@ -283,9 +284,14 @@ def auto(session):
 
 @inputs.command()
 @click.argument('utxo_filter')
+@click.option('--sighash', type=click.Choice(['ALL', 'S_ACP']), default='ALL', help="SIGHASH type")
 @with_login
-def add(session, utxo_filter):
+def add(session, utxo_filter, sighash):
     """Add transaction inputs."""
+    user_sighash = {
+        'ALL': wally.WALLY_SIGHASH_ALL,
+        'S_ACP': wally.WALLY_SIGHASH_SINGLE | wally.WALLY_SIGHASH_ANYONECANPAY
+    }[sighash]
     with Tx(allow_errors=True) as tx:
         tx['utxo_strategy'] = 'manual'
         filtered = []
@@ -297,6 +303,7 @@ def add(session, utxo_filter):
         if not to_add:
             raise click.ClickException("Inputs already selected")
         tx['used_utxos'].extend(to_add)
+        tx['used_utxos'][-1]['user_sighash'] = user_sighash
 
 @inputs.command()
 @click.argument('utxo_filter')
