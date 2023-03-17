@@ -155,6 +155,22 @@ def setfeerate(session, feerate):
         tx['fee_rate'] = feerate
 
 @tx.command()
+@click.argument('version', type=int)
+@with_login
+def setversion(session, version):
+    """Set the version number of the created transaction."""
+    with Tx(allow_errors=True) as tx:
+        tx['transaction_version'] = version
+
+@tx.command()
+@click.argument('locktime', type=int)
+@with_login
+def setlocktime(session, locktime):
+    """Set the transaction locktime of the created transaction."""
+    with Tx(allow_errors=True) as tx:
+        tx['transaction_locktime'] = locktime
+
+@tx.command()
 @click.argument('randomize-inputs', type=bool)
 @with_login
 def setrandomizeinputs(session, randomize_inputs):
