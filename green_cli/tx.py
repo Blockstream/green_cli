@@ -66,6 +66,7 @@ def _create_tx(tx):
 def _print_tx_summary(tx):
     click.echo(f"send all: {tx.get('send_all', False)}")
     click.echo(f"utxo strategy: {tx['utxo_strategy']}")
+    click.echo(f"is_partial: {tx.get('is_partial', False)}")
     click.echo(f"randomize_inputs: {tx['randomize_inputs']}")
     click.echo(f"available inputs: {tx['available_total']}")
     click.echo(f"selected inputs: {sum([utxo['satoshi'] for utxo in tx['used_utxos']])}")
@@ -159,6 +160,14 @@ def setrandomizeinputs(session, randomize_inputs):
     """Set whether the created transaction should have its inputs randomized."""
     with Tx(allow_errors=True) as tx:
         tx['randomize_inputs'] = randomize_inputs
+
+@tx.command()
+@click.argument('partial', type=bool)
+@with_login
+def setpartial(session, partial):
+    """Set whether the created transaction is a partial transaction."""
+    with Tx(allow_errors=True) as tx:
+        tx['is_partial'] = partial
 
 def _print_tx_output(options, output):
     if options['show_all'] or (output['is_change'] == options['show_change']):
