@@ -170,6 +170,14 @@ def setpartial(session, partial):
     with Tx(allow_errors=True) as tx:
         tx['is_partial'] = partial
 
+@tx.command()
+@click.argument('sign-with', type=click.Choice(['user','green-backend','user;green-backend']))
+@with_login
+def setsignwith(session, sign_with):
+    """Set the signers a transaction should be signed with."""
+    with Tx(allow_errors=True) as tx:
+        tx['sign_with'] = sign_with.split(';')
+
 def _print_tx_output(options, output):
     if options['show_all'] or (output['is_change'] == options['show_change']):
         fg = 'green' if output['is_change'] else None
