@@ -352,10 +352,26 @@ def clear(session):
 
 @tx.command()
 @with_login
+def blind(session):
+    """Blind the current transaction. Does nothing for non-liquid transactions. """
+    if 'liquid' in context.options['network']:
+        with Tx(allow_errors=False, recreate=False) as tx:
+            blinded = gdk_resolve(gdk.blind_transaction(session.session_obj, json.dumps(tx)))
+            tx.clear()
+            tx.update(blinded)
+
+@tx.command()
+@with_login
 def sign(session):
-    """Sign the current transaction."""
+    """Sign the current transaction. For Liquid, blinds first if not blinded. """
     with Tx(allow_errors=False, recreate=False) as tx:
-        signed = gdk_resolve(gdk.sign_transaction(session.session_obj, json.dumps(tx)))
+        if 'liquid' in context.options['network'] and not tx.get('is_blinded', False):
+            blinded = gdk_resolve(gdk.blind_transaction(session.session_obj, json.dumps(tx)))
+            if blinded['error']:
+                raise click.ClickException(blinded['error'])
+        else:
+            blinded = tx
+        signed = gdk_resolve(gdk.sign_transaction(session.session_obj, json.dumps(blinded)))
         tx.clear()
         tx.update(signed)
 
