@@ -480,15 +480,36 @@ def createtransaction(session, details):
 @with_login
 @print_result
 @with_gdk_resolve
-def signtransaction(session, details):
-    """Sign a transaction.
+def blindtransaction(session, details):
+    """Blind a transaction.
 
     Pass in the transaction details json from createtransaction. TXDETAILS can be a filename or - to
     read from standard input, e.g.
 
+    $ green createtransaction -a <address> 1000 | green blindtransaction - | green signtransaction -
+    """
+    details = details.read().decode('utf-8')
+    return gdk.blind_transaction(session.session_obj, details)
+
+@green.command()
+@click.argument('details', type=click.File('rb'))
+@with_login
+@print_result
+@with_gdk_resolve
+def signtransaction(session, details):
+    """Sign a transaction. For Liquid, blinds first if not blinded.
+
+    Pass in the transaction details json from createtransaction or blindtransaction.
+    TXDETAILS can be a filename or - to read from standard input, e.g.
+
     $ green createtransaction -a <address> 1000 | green signtransaction -
     """
     details = details.read().decode('utf-8')
+    if 'liquid' in context.options['network'] and not json.loads(details).get('is_blinded', False):
+        details = gdk_resolve(gdk.blind_transaction(session.session_obj, details))
+        if details['error']:
+            raise click.ClickException(details['error'])
+        details = json.dumps(details)
     return gdk.sign_transaction(session.session_obj, details)
 
 @green.command()
