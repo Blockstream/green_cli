@@ -531,13 +531,13 @@ def sendtransaction(session, details, timeout):
 
 def _send_transaction(session, details, timeout):
     add_utxos_to_transaction(session, details)
-    details = gdk_resolve(gdk.create_transaction(session.session_obj, json.dumps(details)))
-    if details['error']:
-        raise click.ClickException(details['error'])
-    details = gdk_resolve(gdk.sign_transaction(session.session_obj, json.dumps(details)))
-    if details['error']:
-        raise click.ClickException(details['error'])
-    details = gdk_resolve(gdk.send_transaction(session.session_obj, json.dumps(details)))
+    steps = [gdk.create_transaction, gdk.sign_transaction, gdk.send_transaction]
+    if 'liquid' in context.options['network']:
+        steps.insert(1, gdk.blind_transaction)
+    for step in steps:
+        details = gdk_resolve(step(session.session_obj, json.dumps(details)))
+        if details['error']:
+            raise click.ClickException(details['error'])
     return get_txhash_with_sync(session, details, timeout)
 
 @green.command()
