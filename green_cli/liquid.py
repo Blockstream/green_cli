@@ -159,7 +159,6 @@ def _print_tx_summary(tx):
         click.echo(f"\tused: {used_per_asset[asset]}")
         click.echo(f"\tchange: {change_per_asset[asset]}")
 
-    click.echo(f"size: {tx['transaction_size']}")
     click.echo(f"vsize: {tx['transaction_vsize']}")
     click.echo(f"weight: {tx['transaction_weight']}")
     click.echo(f"fee: {tx['fee']}")

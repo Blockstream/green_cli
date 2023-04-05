@@ -73,7 +73,6 @@ def _print_tx_summary(tx):
     click.echo(f"selected inputs: {sum([utxo['satoshi'] for utxo in tx['used_utxos']])}")
     click.echo(f"total outputs: {tx['satoshi']['btc']}")
     click.echo(f"change: {tx['change_amount']['btc']}")
-    click.echo(f"size: {tx['transaction_size']}")
     click.echo(f"vsize: {tx['transaction_vsize']}")
     click.echo(f"weight: {tx['transaction_weight']}")
     click.echo(f"fee: {tx['fee']}")
