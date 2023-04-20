@@ -9,6 +9,7 @@ from getpass import getpass
 
 import click
 
+import wallycore as libwally
 import greenaddress as gdk
 
 
@@ -167,6 +168,33 @@ class HardwareDevice(Authenticator):
     def password(self):
         return ''
 
+    def get_blinding_factors(self, details: Dict) -> Dict:
+        h2b_rev = lambda h: bytes.fromhex(h)[::-1]
+        b2h_rev = lambda b: b[::-1].hex()
+
+        # Compute hashPrevouts to derive deterministic blinding factors from
+        txhashes = b''.join([h2b_rev(u['txhash']) for u in details['used_utxos']])
+        output_indices = [u['pt_idx'] for u in details['used_utxos']]
+        hash_prevouts = bytes(libwally.get_hash_prevouts(txhashes, output_indices))
+        is_partial = details.get('is_partial', False)
+        abfs, vbfs = [], []
+
+        # Enumerate the outputs and provide blinding factors as needed
+        final_i = len(details['transaction_outputs']) - 1
+        for i, output in enumerate(details['transaction_outputs']):
+            need_bfs = 'blinding_key' in output
+            if need_bfs:
+                # Call derived hww implementation to get abf+vbf
+                abf_vbf = self.get_blinding_factor(hash_prevouts, i)
+
+            abfs.append(b2h_rev(abf_vbf[:32]) if need_bfs else '')
+
+            # Skip final vbf for non-partial txs; it is calculated by gdk
+            need_bfs = need_bfs and (is_partial or i != final_i)
+            vbfs.append(b2h_rev(abf_vbf[32:]) if need_bfs else '')
+
+        return json.dumps({'assetblinders': abfs, 'amountblinders': vbfs})
+
     def resolve(self, details):
         """Resolve a requested action using the device"""
         logging.debug("%s resolving %s", self.name, details)
@@ -188,6 +216,8 @@ class HardwareDevice(Authenticator):
             response = json.dumps(self.sign_message(details))
             logging.debug('resolving: %s', response)
             return response
+        if details['action'] == 'get_blinding_factors':
+            return self.get_blinding_factors(details)
         if details['action'] == 'sign_tx':
             return self.sign_tx(details)
         if details['action'] == 'get_master_blinding_key':
