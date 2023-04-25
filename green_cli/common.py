@@ -529,6 +529,18 @@ def sendtransaction(session, details, timeout):
     details = gdk_resolve(gdk.send_transaction(session.session_obj, details))
     return get_txhash_with_sync(session, details, timeout)
 
+@green.command()
+@click.argument('details', type=click.File('rb'))
+@click.option('--timeout', default=0, type=int, help='Maximum number of seconds to wait')
+@with_login
+@print_result
+def broadcasttransaction(session, details, timeout):
+    """Broadcast a transaction directly to the network."""
+    details = details.read().decode('utf-8')
+    details = json.loads(details)
+    txhash = gdk.broadcast_transaction(session.session_obj, details['transaction'])
+    return get_txhash_with_sync(session, details, timeout)
+
 def _send_transaction(session, details, timeout):
     add_utxos_to_transaction(session, details)
     steps = [gdk.create_transaction, gdk.sign_transaction, gdk.send_transaction]
