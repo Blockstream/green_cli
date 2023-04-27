@@ -190,7 +190,7 @@ class WallyAuthenticatorLiquid(WallyAuthenticator):
         assert sighash in [wally.WALLY_SIGHASH_ALL,
                            wally.WALLY_SIGHASH_SINGLE | wally.WALLY_SIGHASH_ANYONECANPAY]
         prevout_script = wally.hex_to_bytes(utxo['prevout_script'])
-        if utxo['confidential']:
+        if utxo['is_blinded']:
             value = bytes.fromhex(utxo['commitment'])
         else:
             value = wally.tx_confidential_value_from_satoshi(utxo['satoshi'])
