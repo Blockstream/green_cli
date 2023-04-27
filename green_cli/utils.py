@@ -26,10 +26,10 @@ def add_utxos_to_transaction(session, details):
         utxos = gdk_resolve(gdk.get_unspent_outputs(session.session_obj, json.dumps(utxo_details)))
         details['utxos'] = utxos['unspent_outputs']
 
-def get_txhash_with_sync(session, details, timeout):
-    if details['error']:
+def get_txhash_with_sync(session, details, timeout, txhash=None):
+    if details.get('error', ''):
         raise click.ClickException(details['error'])
-    txhash = details['txhash']
+    txhash = txhash or details['txhash']
     if timeout:
         # Wait for the tx notification, forever if timeout < 0, else timeout seconds
         timeout = timeout * 10

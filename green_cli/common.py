@@ -539,7 +539,7 @@ def broadcasttransaction(session, details, timeout):
     details = details.read().decode('utf-8')
     details = json.loads(details)
     txhash = gdk.broadcast_transaction(session.session_obj, details['transaction'])
-    return get_txhash_with_sync(session, details, timeout)
+    return get_txhash_with_sync(session, details, timeout, txhash)
 
 def _send_transaction(session, details, timeout):
     add_utxos_to_transaction(session, details)

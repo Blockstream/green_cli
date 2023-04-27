@@ -433,8 +433,10 @@ def send(session, timeout):
 
 @tx.command()
 @with_login
+@click.option('--timeout', default=0, type=int, help='Maximum number of seconds to wait')
 def broadcast(session):
     """broadcast the current transaction directly to the network."""
     with Tx(allow_errors=False, recreate=False) as tx:
         txhash = gdk.broadcast_transaction(session.session_obj, tx['transaction'])
+        txhash = get_txhash_with_sync(session, {}, timeout, txhash)
         click.echo(txhash)
