@@ -132,5 +132,3 @@ def undo(session, reset_email):
 def cancel(session):
     """Cancel a 2fa reset."""
     return gdk.twofactor_cancel_reset(session.session_obj)
-
-

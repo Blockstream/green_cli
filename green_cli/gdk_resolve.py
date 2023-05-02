@@ -78,5 +78,3 @@ def gdk_resolve(auth_handler):
             gdk.auth_handler_resolve_code(auth_handler, resolution)
         elif state == 'call':
             gdk.auth_handler_call(auth_handler)
-
-

@@ -20,14 +20,16 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
     # (sacrifices low-r guarantee)
     @property
     def default_hw_device_info(self):
-        return {'device': {
-                  'name': self.name,
-                  'supports_low_r': False,
-                  'supports_liquid': 0,
-                  'supports_host_unblinding': False,
-                  'supports_ae_protocol': 1,
-                  'supports_arbitrary_scripts': True}
-               }
+        return {
+            'device': {
+                'name': self.name,
+                'supports_low_r': False,
+                'supports_liquid': 0,
+                'supports_host_unblinding': False,
+                'supports_ae_protocol': 1,
+                'supports_arbitrary_scripts': True
+            }
+        }
 
     def create(self, session_obj, words):
         """Create and register a new wallet"""
@@ -100,7 +102,7 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
         assert sighash == wally.WALLY_SIGHASH_ALL
         prevout_script = wally.hex_to_bytes(utxo['prevout_script'])
         return wally.tx_get_btc_signature_hash(
-                wally_tx, index, prevout_script, utxo['satoshi'], sighash, flags)
+            wally_tx, index, prevout_script, utxo['satoshi'], sighash, flags)
 
     def _sign_tx(self, details, wally_tx):
         utxos = details['signing_inputs']
@@ -158,14 +160,16 @@ class WallyAuthenticatorLiquid(WallyAuthenticator):
     # (sacrifices low-r guarantee)
     @property
     def default_hw_device_info(self):
-        return {'device': {
-                  'name': self.name,
-                  'supports_low_r': False,
-                  'supports_liquid': 1,
-                  'supports_host_unblinding': True,
-                  'supports_ae_protocol': 1,
-                  'supports_arbitrary_scripts': True}
-               }
+        return {
+            'device': {
+                'name': self.name,
+                'supports_low_r': False,
+                'supports_liquid': 1,
+                'supports_host_unblinding': True,
+                'supports_ae_protocol': 1,
+                'supports_arbitrary_scripts': True
+            }
+        }
 
     @property
     def master_blinding_key(self) -> bytes:
@@ -183,7 +187,7 @@ class WallyAuthenticatorLiquid(WallyAuthenticator):
         return wally.ecdh_nonce_hash(pubkey, our_private_key)
 
     def get_blinding_factor(self, hash_prevouts: bytes, output_index: int) -> bytes:
-       return wally.asset_blinding_key_to_abf_vbf(self.master_blinding_key, hash_prevouts, output_index)
+        return wally.asset_blinding_key_to_abf_vbf(self.master_blinding_key, hash_prevouts, output_index)
 
     def _get_signature_hash(self, wally_tx, index: int, utxo: Dict, sighash: int, flags: int) -> bytes:
         # Allowed sighash types are limited; check that here

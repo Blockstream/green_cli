@@ -25,7 +25,7 @@ class Authenticator:
         if self.hw_device == '{}':
             credentials = {'mnemonic': self.mnemonic, 'password': self.password}
         else:
-            credentials = {} # Hardware login, do not pass credentials
+            credentials = {}  # Hardware login, do not pass credentials
         return json.dumps(credentials)
 
     def login(self, session_obj):
@@ -148,13 +148,15 @@ class HardwareDevice(Authenticator):
 
     @property
     def default_hw_device_info(self):
-        return {'device': {
-                  'name': self.name,
-                  'supports_low_r': False,
-                  'supports_liquid': 0,
-                  'supports_host_unblinding': False,
-                  'supports_arbitrary_scripts': True}
-               }
+        return {
+            'device': {
+                'name': self.name,
+                'supports_low_r': False,
+                'supports_liquid': 0,
+                'supports_host_unblinding': False,
+                'supports_arbitrary_scripts': True
+            }
+        }
 
     @property
     def hw_device(self):

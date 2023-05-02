@@ -231,7 +231,7 @@ def setpartial(session, partial):
         tx['is_partial'] = partial
 
 @tx.command()
-@click.argument('sign-with', type=click.Choice(['user','green-backend','user;green-backend']))
+@click.argument('sign-with', type=click.Choice(['user', 'green-backend', 'user;green-backend']))
 @with_login
 def setsignwith(session, sign_with):
     """Set the signers a transaction should be signed with."""
@@ -302,7 +302,7 @@ def _filter_utxos(utxo_filter, utxos):
     txhash, sep, pt_idx = utxo_filter.partition(':')
     address = utxo_filter if not sep else None
     for utxo in utxos:
-        if  address and address == utxo.get('address', None):
+        if address and address == utxo.get('address', None):
             selected.append(utxo)
             continue
         if txhash in ('*', 'all', utxo['txhash']):

@@ -20,7 +20,7 @@ def _normalise_auth_config(options):
         auth_config = {}
     elif os.path.exists(auth_config):
         with open(auth_config, 'r') as f:
-          auth_config = json.load(f)
+            auth_config = json.load(f)
     else:
         auth_config = json.loads(auth_config)
 

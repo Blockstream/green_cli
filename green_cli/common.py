@@ -439,8 +439,8 @@ def _txlist_summary(txlist):
             balance[asset] += amount
             ts = tx['created_at_ts']
             created_at = datetime.fromtimestamp(ts // 1000000, tz=timezone.utc).replace(tzinfo=None)
-            lines.append(f"{tx['txhash']} {created_at} ({confs}) {amount:+} "\
-                f"{balance[asset]} {asset} fee={tx['fee']}@{fee_rate:.2f}")
+            lines.append(f"{tx['txhash']} {created_at} ({confs}) {amount:+} "
+                         f"{balance[asset]} {asset} fee={tx['fee']}@{fee_rate:.2f}")
     return '\n'.join(lines)
 
 @green.command()

@@ -67,8 +67,8 @@ def _get_assets_by_name(session):
     for k, v in assets.items():
         if len(v['name']) != 64 or any(c not in string.hexdigits for c in v['name']):
             counts.setdefault(v['name'], list()).append(None)
-    return { v['name']: v for k, v in assets.items()
-             if v['name'] in counts and len(counts[v['name']]) == 1 }
+    return {v['name']: v for k, v in assets.items()
+            if v['name'] in counts and len(counts[v['name']]) == 1}
 
 @functools.lru_cache(maxsize=None)
 def _asset_name(asset_id):
@@ -100,7 +100,7 @@ def format_utxo(utxo):
 green_cli.tx.format_utxo = format_utxo
 
 # Add asset parameter to tx.outputs.add
-asset_arg = click.Argument(['asset',], type=Asset(), expose_value=False)
+asset_arg = click.Argument(['asset'], type=Asset(), expose_value=False)
 green_cli.tx.add_outputs.params.insert(1, asset_arg)
 
 # Add asset parameter to sendtoaddress but also check for unsafe usage
@@ -133,7 +133,7 @@ params['addressee'].nargs = 3
 
 # Add '--confidential' option to getbalance and getunspentoutputs
 confidential_option = click.Option(
-    ['--confidential',], is_flag=True, expose_value=False, callback=details_json,
+    ['--confidential'], is_flag=True, expose_value=False, callback=details_json,
     help='Include only confidential utxos')
 green_cli.common.getbalance.params.append(confidential_option)
 green_cli.common.getunspentoutputs.params.append(confidential_option)

@@ -26,9 +26,11 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
 
     @staticmethod
     def _get_descriptor(addr_type: str) -> str:
-         return {'p2pkh': 'pkh(k)',
-                 'p2sh-p2wpkh': 'sh(wpkh(k))',
-                 'p2wpkh': 'wpkh(k)'}.get(addr_type)
+        return {
+            'p2pkh': 'pkh(k)',
+            'p2sh-p2wpkh': 'sh(wpkh(k))',
+            'p2wpkh': 'wpkh(k)'
+        }.get(addr_type)
 
     def __init__(self, options: Dict):
         self.info = None
@@ -57,13 +59,15 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
     # (sacrifices low-r guarantee)
     @property
     def default_hw_device_info(self):
-        return {'device': {
-                  'name': self.name,
-                  'supports_low_r': False,
-                  'supports_liquid': 0,
-                  'supports_ae_protocol': 1,
-                  'supports_arbitrary_scripts': True}
-               }
+        return {
+            'device': {
+                'name': self.name,
+                'supports_low_r': False,
+                'supports_liquid': 0,
+                'supports_ae_protocol': 1,
+                'supports_arbitrary_scripts': True
+            }
+        }
 
     def set_usb_serial_device(self, usb_serial_device: str):
         self.usb_serial_device.set(usb_serial_device)
@@ -156,7 +160,7 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
         result = {}
 
         if details['use_ae_protocol']:
-            ae_host_commitment =  bytes.fromhex(details['ae_host_commitment'])
+            ae_host_commitment = bytes.fromhex(details['ae_host_commitment'])
             ae_host_entropy = bytes.fromhex(details['ae_host_entropy'])
             signer_commitment, sig_encoded = self.jade.sign_message(path, message, True,
                                                                     ae_host_commitment,
@@ -178,7 +182,7 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
     @classmethod
     def _map_change_output(cls, output: Dict) -> Dict:
         if output['is_change']:
-            change = { 'path': output['user_path'] }
+            change = {'path': output['user_path']}
             if output.get('recovery_xpub'):
                 change['recovery_xpub'] = output.get('recovery_xpub')
 
@@ -207,10 +211,12 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
                 return dict()
 
             is_segwit = input['address_type'] in ['p2wsh', 'csv', 'p2sh-p2wpkh', 'p2wpkh']
-            mapped = { 'is_witness': is_segwit,
-                       'path': input['user_path'],
-                       'script': bytes.fromhex(input['prevout_script']),
-                       'sighash': input.get('user_sighash', wally.WALLY_SIGHASH_ALL) }
+            mapped = {
+                'is_witness': is_segwit,
+                'path': input['user_path'],
+                'script': bytes.fromhex(input['prevout_script']),
+                'sighash': input.get('user_sighash', wally.WALLY_SIGHASH_ALL)
+            }
 
             # Additional fields to pass through if using the Anti-Exfil protocol
             if use_ae_protocol:
@@ -261,14 +267,16 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
     # (sacrifices low-r guarantee)
     @property
     def default_hw_device_info(self):
-        return {'device': {
-                  'name': self.name,
-                  'supports_low_r': False,
-                  'supports_liquid': 1,
-                  'supports_ae_protocol': 1,
-                  'supports_host_unblinding': True,
-                  'supports_arbitrary_scripts': True}
-               }
+        return {
+            'device': {
+                'name': self.name,
+                'supports_low_r': False,
+                'supports_liquid': 1,
+                'supports_ae_protocol': 1,
+                'supports_host_unblinding': True,
+                'supports_arbitrary_scripts': True
+            }
+        }
 
     @property
     def master_blinding_key(self) -> bytes:
@@ -283,10 +291,10 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
         return self.jade.get_blinding_key(script)
 
     def get_shared_nonce(self, pubkey: bytes, script: bytes) -> bytes:
-       return self.jade.get_shared_nonce(script, pubkey)
+        return self.jade.get_shared_nonce(script, pubkey)
 
     def get_blinding_factor(self, hash_prevouts: bytes, output_index: int) -> bytes:
-       return self.jade.get_blinding_factor(hash_prevouts, output_index, 'ASSET_AND_VALUE')
+        return self.jade.get_blinding_factor(hash_prevouts, output_index, 'ASSET_AND_VALUE')
 
     def sign_tx(self, details: Dict) -> Dict:
         txhex = details['transaction']['transaction']
@@ -303,11 +311,13 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
                 return dict()
 
             is_segwit = input['address_type'] in ['p2wsh', 'csv', 'p2sh-p2wpkh', 'p2wpkh']
-            mapped = { 'is_witness': is_segwit,
-                       'path': input['user_path'],
-                       'value_commitment': bytes.fromhex(input['commitment']),
-                       'script': bytes.fromhex(input['prevout_script']),
-                       'sighash': input.get('user_sighash', wally.WALLY_SIGHASH_ALL) }
+            mapped = {
+                'is_witness': is_segwit,
+                'path': input['user_path'],
+                'value_commitment': bytes.fromhex(input['commitment']),
+                'script': bytes.fromhex(input['prevout_script']),
+                'sighash': input.get('user_sighash', wally.WALLY_SIGHASH_ALL)
+            }
 
             # Additional fields to pass through if using the Anti-Exfil protocol
             if use_ae_protocol:
