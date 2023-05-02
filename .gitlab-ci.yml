@@ -21,6 +21,8 @@ image: greenaddress/ci@sha256:ba2a76bb933f1da6573631597f947b1ff2f47e772674ab38c4
 smoke_test_bullseye:
   extends: .smoke_test
   before_script:
+    - pip install pycodestyle
+    - pycodestyle */*.py */*/*.py --ignore=E501,E731,E302,E305
     - echo "Dir{Cache $PIP_CACHE_DIR}" >> /etc/apt/apt.conf
     - echo "Dir::Cache $PIP_CACHE_DIR;" >> /etc/apt/apt.conf
     - mkdir -p ${PIP_CACHE_DIR}/archives/partial
