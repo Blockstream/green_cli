@@ -154,6 +154,7 @@ class HardwareDevice(Authenticator):
                 'supports_low_r': False,
                 'supports_liquid': 0,
                 'supports_host_unblinding': False,
+                'supports_external_blinding': False,
                 'supports_arbitrary_scripts': True
             }
         }
