@@ -1,6 +1,6 @@
-https://github.com/Blockstream/gdk/releases/download/release_0.0.61/greenaddress-0.0.61-cp39-cp39-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.9' --hash=sha256:d98cf40a152b533610c248bccd415e85244eb2a8d80d9202fca3448c2cd6be8c
-https://github.com/Blockstream/gdk/releases/download/release_0.0.61/greenaddress-0.0.61-cp310-cp310-macosx_12_0_arm64.whl; 'darwin' in sys_platform and platform_machine == 'arm64' and python_version == '3.10' --hash=sha256:4e39736d82c4e0ccd73b15fd585da4ca57b5e379e5dd667fe0515e438847999c
-https://github.com/Blockstream/gdk/releases/download/release_0.0.61/greenaddress-0.0.61-cp311-cp311-macosx_12_0_x86_64.whl; 'darwin' in sys_platform and platform_machine != 'arm64' and python_version == '3.11' --hash=sha256:dfe454b4351b7c86709c91a7225974a753f137834032f57f79592856ff590eb3
+https://github.com/Blockstream/gdk/releases/download/release_0.0.63/greenaddress-0.0.63-cp39-cp39-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.9' --hash=sha256:db4d3ea42568a54be13972c64954d75d8e93eb3ddc795237ba4c5827a3a5c95b
+https://github.com/Blockstream/gdk/releases/download/release_0.0.63/greenaddress-0.0.63-cp311-cp311-macosx_12_0_arm64.whl; 'darwin' in sys_platform and platform_machine == 'arm64' and python_version == '3.11' --hash=sha256:aeccef8e71a3673cfbd556a6dcb725da98119090140e1798a2214d3d8cdbddd5
+https://github.com/Blockstream/gdk/releases/download/release_0.0.63/greenaddress-0.0.63-cp311-cp311-macosx_12_0_x86_64.whl 'darwin' in sys_platform and platform_machine != 'arm64' and python_version == '3.11' --hash=sha256:8f707d3f5a1d0058cae555c7143ea405626a117f8055167aacc225700cfc8c67
 
 click==7.1.2 \
     --hash=sha256:d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a \
