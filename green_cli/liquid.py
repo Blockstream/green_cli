@@ -168,7 +168,7 @@ green_cli.tx._print_tx_summary = _print_tx_summary
 
 def _print_tx_output(options, output):
     fg = None
-    if output['is_fee']:
+    if not output['scriptpubkey']:
         fg = 'red'
         if not options['show_all'] and not options['show_fee']:
             return
@@ -182,7 +182,7 @@ def _print_tx_output(options, output):
 
     value = output['satoshi']
     asset_name = _asset_name(output['asset_id'])
-    dest = 'fee' if output['is_fee'] else output['address']
+    dest = output['address'] if output['scriptpubkey'] else 'fee'
     click.secho(f"{value} {asset_name} {dest}", fg=fg, color=context.color())
 
 # Liquid txs have explicit fee outputs
