@@ -110,7 +110,6 @@ def _create_tx(tx):
     return tx
 
 def _print_tx_summary(tx):
-    click.echo(f"send all: {tx.get('send_all', False)}")
     click.echo(f"utxo strategy: {tx['utxo_strategy']}")
     click.echo(f"is_partial: {tx.get('is_partial', False)}")
     click.echo(f"randomize_inputs: {tx['randomize_inputs']}")
@@ -261,19 +260,15 @@ def outputs(ctx, session, **options):
 
 @outputs.command(name='add')
 @click.argument('address', type=Address(), expose_value=False)
-@click.argument('amount', type=Amount(), expose_value=False)
+@click.argument('amount', type=Amount(), default='0', expose_value=False)
 @with_login
-def add_outputs(session, details):
+def add_outputs(session, details, **options):
     """Add a transaction output."""
     with Tx(allow_errors=True) as tx:
         tx.setdefault('addressees', [])
-        send_all = details.get('send_all', False)
-        if send_all:
-            if tx['addressees']:
-                raise click.ClickException(
-                    "Cannot add send-all output with other outputs present. "
-                    "First remove other outputs with `tx outputs clear`.")
-            tx['send_all'] = True
+        if not details['addressees'][0].get('is_greedy', False):
+            if not details['addressees'][0]['satoshi']:
+                raise click.ClickException('An amount must be given for non-all outputs')
         tx['addressees'].extend(details['addressees'])
 
 @outputs.command()
@@ -282,8 +277,6 @@ def add_outputs(session, details):
 def rm(session, address):
     """Remove transaction outputs."""
     with Tx(allow_errors=True) as tx:
-        if 'send_all' in tx:
-            del tx['send_all']
         addressees = tx.get('addressees', [])
         addressees = [a for a in addressees if a['address'] != address]
         tx['addressees'] = addressees
@@ -293,8 +286,6 @@ def rm(session, address):
 def clear(session):
     """Remove all transaction outputs."""
     with Tx(allow_errors=True) as tx:
-        if 'send_all' in tx:
-            del tx['send_all']
         tx['addressees'] = []
 
 def _filter_utxos(utxo_filter, utxos):

@@ -115,10 +115,10 @@ green_cli.tx.add_outputs.params.insert(1, asset_arg)
 def sendtoaddress(session, details, timeout):
     assets = set([a['asset_id'] for a in details['addressees']])
     btc = _get_assets_by_name(context.session)['btc']['asset_id']
-    precision_risk = _get_network()['mainnet'] and 'send_all' not in details and assets != {btc}
+    precision_risk = _get_network()['mainnet'] and assets != {btc}
 
     if precision_risk and not context.expert:
-        # Disable sendtoaddress for non btc assets with amounts on mainnet
+        # Disable sendtoaddress for non btc assets on mainnet
         # The interface is considered unsafe due to the ambiguity of the amount field. For btc the
         # amount passed to sendtoaddress is interpreted as btc (satoshi x10^8), however assets may
         # have different 'precision' specified and it's not currently clear how best to handle that.
@@ -139,7 +139,6 @@ green_cli.common.getbalance.params.append(confidential_option)
 green_cli.common.getunspentoutputs.params.append(confidential_option)
 
 def _print_tx_summary(tx):
-    click.echo(f"send all: {tx.get('send_all', False)}")
     click.echo(f"utxo strategy: {tx['utxo_strategy']}")
 
     available_per_asset = defaultdict(int)

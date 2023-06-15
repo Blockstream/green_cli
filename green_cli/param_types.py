@@ -27,15 +27,14 @@ class Amount(click.ParamType):
         return int(value)
 
     def convert(self, value, param, ctx):
+        assert 'amount' not in ctx.params['details']['addressees'][-1]
         if value == 'all':
-            # all is handled specially, value must be set to zero and send_all is set at the top
-            # level. gdk only allows one addressee with send all
-            ctx.params['details']['send_all'] = True
+            # "all" indicates a greedy output
+            ctx.params['details']['addressees'][-1]['is_greedy'] = True
             value = 0
         else:
             value = self.value2sat(value)
 
-        assert 'amount' not in ctx.params['details']['addressees'][-1]
         ctx.params['details']['addressees'][-1]['satoshi'] = value
         return value
 
