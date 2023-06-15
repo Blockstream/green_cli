@@ -206,7 +206,7 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
         return wallet_output
 
     def sign_tx(self, details: Dict) -> Dict:
-        txhex = details['transaction']['transaction']
+        txhex = details['transaction']
         signing_transactions = details['signing_transactions']
         signing_inputs = details['signing_inputs']
         use_ae_protocol = details['use_ae_protocol']
@@ -314,9 +314,10 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
         return self.jade.get_blinding_factor(hash_prevouts, output_index, 'ASSET_AND_VALUE')
 
     def sign_tx(self, details: Dict) -> Dict:
-        txhex = details['transaction']['transaction']
+        txhex = details['transaction']
         signing_inputs = details['signing_inputs']
         use_ae_protocol = details['use_ae_protocol']
+        is_partial = details['is_partial']
         transaction_outputs = details['transaction_outputs']
         logging.debug('sign liquid txn with %d inputs and %d outputs',
                       len(signing_inputs), len(transaction_outputs))
@@ -412,7 +413,7 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
 
         additional_info = {
             'tx_type': self._get_tx_type(txtype),
-            'is_partial': details['transaction'].get('is_partial', False),
+            'is_partial': is_partial,
             'wallet_input_summary': _mksummary(signing_input_amounts),
             'wallet_output_summary': _mksummary(wallet_output_amounts)
         } if txtype != tx.TxType.SEND_PAYMENT else None

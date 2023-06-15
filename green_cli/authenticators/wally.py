@@ -151,7 +151,7 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
 
     def sign_tx(self, details: Dict) -> Dict:
         tx_flags = wally.WALLY_TX_FLAG_USE_WITNESS
-        wally_tx = wally.tx_from_hex(details['transaction']['transaction'], tx_flags)
+        wally_tx = wally.tx_from_hex(details['transaction'], tx_flags)
         return json.dumps(self._sign_tx(details, wally_tx))
 
 
@@ -205,7 +205,7 @@ class WallyAuthenticatorLiquid(WallyAuthenticator):
 
     def sign_tx(self, details: Dict) -> Dict:
         tx_flags = wally.WALLY_TX_FLAG_USE_WITNESS | wally.WALLY_TX_FLAG_USE_ELEMENTS
-        wally_tx = wally.tx_from_hex(details['transaction']['transaction'], tx_flags)
+        wally_tx = wally.tx_from_hex(details['transaction'], tx_flags)
         return json.dumps(self._sign_tx(details, wally_tx))
 
 
