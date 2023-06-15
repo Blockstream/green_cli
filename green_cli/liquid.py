@@ -171,7 +171,7 @@ def _print_tx_output(options, output):
         fg = 'red'
         if not options['show_all'] and not options['show_fee']:
             return
-    elif output['is_change']:
+    elif output.get('is_change', False):
         fg = 'green'
         if not options['show_all'] and not options['show_change']:
             return

@@ -190,7 +190,7 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
     def _map_wallet_outputs(cls, output: Dict) -> Dict:
         wallet_output = None
         if 'user_path' in output:
-            wallet_output = {'is_change': output['is_change'],
+            wallet_output = {'is_change': output.get('is_change', False),
                              'path': output['user_path']}
 
             if output.get('recovery_xpub'):
@@ -379,7 +379,7 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
             # NOTE: 'is_change' outputs are reversed from the inputs amount, so these
             #       totals represent net movements in and out of the wallet
             if 'user_path' in output:
-                if output['is_change']:
+                if output.get('is_change', False):
                     signing_input_amounts[output['asset_id']] -= output['satoshi']
                 else:
                     wallet_output_amounts[output['asset_id']] += output['satoshi']

@@ -238,8 +238,8 @@ def setsignwith(session, sign_with):
         tx['sign_with'] = sign_with.split(';')
 
 def _print_tx_output(options, output):
-    if options['show_all'] or (output['is_change'] == options['show_change']):
-        fg = 'green' if output['is_change'] else None
+    if options['show_all'] or (output.get('is_change', False) == options['show_change']):
+        fg = 'green' if output.get('is_change', False) else None
         click.secho(f"{output['satoshi']} {output['address']}", fg=fg, color=context.color())
 
 @tx.group(invoke_without_command=True)
