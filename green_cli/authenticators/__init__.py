@@ -176,8 +176,8 @@ class HardwareDevice(Authenticator):
         b2h_rev = lambda b: b[::-1].hex()
 
         # Compute hashPrevouts to derive deterministic blinding factors from
-        txhashes = b''.join([h2b_rev(u['txhash']) for u in details['used_utxos']])
-        output_indices = [u['pt_idx'] for u in details['used_utxos']]
+        txhashes = b''.join([h2b_rev(u['txhash']) for u in details['transaction_inputs']])
+        output_indices = [u['pt_idx'] for u in details['transaction_inputs']]
         hash_prevouts = bytes(libwally.get_hash_prevouts(txhashes, output_indices))
         is_partial = details.get('is_partial', False)
         abfs, vbfs = [], []

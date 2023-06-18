@@ -147,8 +147,8 @@ def _print_tx_summary(tx):
     for asset in tx['utxos']:
         available = sum([utxo['satoshi'] for utxo in tx['utxos'][asset]])
         available_per_asset[_asset_name(asset)] += available
-    for utxo in tx['used_utxos']:
-        used_per_asset[_asset_name(utxo['asset_id'])] += utxo['satoshi']
+    for tx_input in tx['transaction_inputs']:
+        used_per_asset[_asset_name(tx_input['asset_id'])] += tx_input['satoshi']
     for asset in tx['change_amount']:
         change_per_asset[_asset_name(asset)] += tx['change_amount'][asset]
 

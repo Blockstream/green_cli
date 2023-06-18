@@ -101,8 +101,8 @@ def _add_input_addresses(tx):
     for asset in tx['utxos']:
         for utxo in tx['utxos'][asset]:
             _add_input_address(utxo)
-    for utxo in tx['used_utxos']:
-        _add_input_address(utxo)
+    for tx_input in tx['transaction_inputs']:
+        _add_input_address(tx_input)
 
 def _create_tx(tx):
     add_utxos_to_transaction(context.session, tx)
@@ -114,7 +114,8 @@ def _print_tx_summary(tx):
     click.echo(f"is_partial: {tx.get('is_partial', False)}")
     click.echo(f"randomize_inputs: {tx['randomize_inputs']}")
     click.echo(f"available inputs: {tx['available_total']}")
-    click.echo(f"selected inputs: {sum([utxo['satoshi'] for utxo in tx['used_utxos']])}")
+    input_sum = sum([utxo['satoshi'] for tx_input in tx['transaction_inputs']])
+    click.echo(f"selected inputs: {input_sum}")
     click.echo(f"total outputs: {tx['satoshi']['btc']}")
     click.echo(f"change: {tx['change_amount']['btc']}")
     click.echo(f"vsize: {tx['transaction_vsize']}")
@@ -322,13 +323,13 @@ def inputs(ctx, session, show_all, show_unused):
     tx = _load_tx(allow_errors=True)
 
     if show_all or not show_unused:
-        for utxo in tx['used_utxos']:
-            click.echo(f"{format_utxo(utxo)}")
+        for tx_input in tx['transaction_inputs']:
+            click.echo(f"{format_utxo(tx_input)}")
 
     if show_all or show_unused:
         for asset, utxos in tx['utxos'].items():
             for utxo in utxos:
-                if not _filter_utxos(f"{utxo['txhash']}:{utxo['pt_idx']}", tx['used_utxos']):
+                if not _filter_utxos(f"{utxo['txhash']}:{utxo['pt_idx']}", tx['transaction_inputs']):
                     click.secho(f"{format_utxo(utxo)}", fg='red', color=context.color())
 
 @inputs.command()
@@ -358,11 +359,11 @@ def add(session, utxo_filter, sighash):
             filtered.extend(_filter_utxos(utxo_filter, tx['utxos'][asset]))
         if not filtered:
             raise click.ClickException(f"No inputs match {utxo_filter}")
-        to_add = [utxo for utxo in filtered if not _filter_utxos(f"{utxo['txhash']}:{utxo['pt_idx']}", tx['used_utxos'])]
+        to_add = [utxo for utxo in filtered if not _filter_utxos(f"{utxo['txhash']}:{utxo['pt_idx']}", tx['transaction_inputs'])]
         if not to_add:
             raise click.ClickException("Inputs already selected")
-        tx['used_utxos'].extend(to_add)
-        tx['used_utxos'][-1]['user_sighash'] = user_sighash
+        tx['transaction_inputs'].extend(to_add)
+        tx['transaction_inputs'][-1]['user_sighash'] = user_sighash
 
 @inputs.command()
 @click.argument('utxo_filter')
@@ -371,11 +372,11 @@ def rm(session, utxo_filter):
     """Remove transaction inputs."""
     with Tx(allow_errors=True) as tx:
         tx['utxo_strategy'] = 'manual'
-        filtered = _filter_utxos(utxo_filter, tx['used_utxos'])
+        filtered = _filter_utxos(utxo_filter, tx['transaction_inputs'])
         if not filtered:
             raise click.ClickException(f"No selected inputs match {utxo_filter}")
         for utxo in filtered:
-            tx['used_utxos'].remove(utxo)
+            tx['transaction_inputs'].remove(utxo)
 
 @inputs.command()
 @with_login
@@ -383,7 +384,7 @@ def clear(session):
     """Remove all transaction inputs."""
     with Tx(allow_errors=True) as tx:
         tx['utxo_strategy'] = 'manual'
-        tx['used_utxos'] = []
+        tx['transaction_inputs'] = []
 
 @tx.command()
 @with_login
