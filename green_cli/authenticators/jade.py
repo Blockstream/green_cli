@@ -208,11 +208,11 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
     def sign_tx(self, details: Dict) -> Dict:
         txhex = details['transaction']
         signing_transactions = details['signing_transactions']
-        signing_inputs = details['signing_inputs']
+        transaction_inputs = details['transaction_inputs']
         use_ae_protocol = details['use_ae_protocol']
         transaction_outputs = details['transaction_outputs']
         logging.debug('sign txn with %d inputs and %d outputs',
-                      len(signing_inputs), len(transaction_outputs))
+                      len(transaction_inputs), len(transaction_outputs))
 
         # Does this tx represent a simple send payment, a swap, etc
         txtype = tx.get_tx_type(details)
@@ -245,7 +245,7 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
             # input tx so the hw can verify the utxo amount from the output.
             # NOTE: this is optional, and we should get the same signature if
             # passed in the full input txn.
-            if is_segwit and len(signing_inputs) == 1:
+            if is_segwit and len(transaction_inputs) == 1:
                 mapped['satoshi'] = input['satoshi']
             else:
                 input_txhex = signing_transactions[input['txhash']]
@@ -254,13 +254,13 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
             return mapped
 
         # Get inputs and change outputs in form Jade expects
-        jade_inputs = list(map(_map_input, signing_inputs))
+        jade_inputs = list(map(_map_input, transaction_inputs))
         wallet_outputs = list(map(self._map_wallet_outputs, transaction_outputs))
 
         # Sign!
         txn = bytes.fromhex(txhex)
         signatures = self.jade.sign_tx(self.network, txn, jade_inputs, wallet_outputs, use_ae_protocol)
-        assert len(signatures) == len(signing_inputs)
+        assert len(signatures) == len(transaction_inputs)
 
         result = {}
         if use_ae_protocol:
@@ -315,12 +315,12 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
 
     def sign_tx(self, details: Dict) -> Dict:
         txhex = details['transaction']
-        signing_inputs = details['signing_inputs']
+        transaction_inputs = details['transaction_inputs']
         use_ae_protocol = details['use_ae_protocol']
         is_partial = details['is_partial']
         transaction_outputs = details['transaction_outputs']
         logging.debug('sign liquid txn with %d inputs and %d outputs',
-                      len(signing_inputs), len(transaction_outputs))
+                      len(transaction_inputs), len(transaction_outputs))
 
         # Does this tx represent a simple send payment, a swap, etc
         txtype = tx.get_tx_type(details)
@@ -368,7 +368,7 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
             return mapped
 
         # Get inputs and wallet outputs in form Jade expects
-        jade_inputs = list(map(_map_input, signing_inputs))
+        jade_inputs = list(map(_map_input, transaction_inputs))
         wallet_outputs = list(map(self._map_wallet_outputs, transaction_outputs))
 
         # Get the output blinding info
@@ -422,7 +422,7 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
         txn = bytes.fromhex(txhex)
         signatures = self.jade.sign_liquid_tx(self.network, txn, jade_inputs, commitments, wallet_outputs, use_ae_protocol,
                                               tx_assets_sanitised, additional_info)
-        assert len(signatures) == len(signing_inputs)
+        assert len(signatures) == len(transaction_inputs)
 
         result = {}
         if use_ae_protocol:

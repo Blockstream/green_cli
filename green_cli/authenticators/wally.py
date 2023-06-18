@@ -98,21 +98,20 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
         result['signature'] = wally.ec_sig_to_der(signature).hex()
         return result
 
-    def _get_signature_hash(self, wally_tx, index: int, utxo: Dict, sighash: int, flags: int) -> bytes:
+    def _get_signature_hash(self, wally_tx, index: int, txin: Dict, sighash: int, flags: int) -> bytes:
         # Only SIGHASH_ALL is currently allowed for BTC signing
         assert sighash == wally.WALLY_SIGHASH_ALL
-        prevout_script = wally.hex_to_bytes(utxo['prevout_script'])
+        prevout_script = wally.hex_to_bytes(txin['prevout_script'])
         return wally.tx_get_btc_signature_hash(
-            wally_tx, index, prevout_script, utxo['satoshi'], sighash, flags)
+            wally_tx, index, prevout_script, txin['satoshi'], sighash, flags)
 
     def _sign_tx(self, details, wally_tx):
-        utxos = details['signing_inputs']
         use_ae_protocol = details['use_ae_protocol']
 
         signatures = []
         signer_commitments = []
-        for index, utxo in enumerate(utxos):
-            if utxo.get('skip_signing', False):
+        for index, txin in enumerate(details['transaction_inputs']):
+            if txin.get('skip_signing', False):
                 # Not signing this input (may not belong to this signer)
                 logging.debug(f'Not signing input {index}: skip_signing=True')
                 if use_ae_protocol:
@@ -120,17 +119,17 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
                 signatures.append('')
                 continue
 
-            is_segwit = utxo['address_type'] in ['p2wsh', 'csv', 'p2wpkh', 'p2sh-p2wpkh']
+            is_segwit = txin['address_type'] in ['p2wsh', 'csv', 'p2wpkh', 'p2sh-p2wpkh']
             flags = wally.WALLY_TX_FLAG_USE_WITNESS if is_segwit else 0
 
-            sighash = utxo.get('user_sighash', wally.WALLY_SIGHASH_ALL)
-            txhash = self._get_signature_hash(wally_tx, index, utxo, sighash, flags)
-            path = utxo['user_path']
+            sighash = txin.get('user_sighash', wally.WALLY_SIGHASH_ALL)
+            txhash = self._get_signature_hash(wally_tx, index, txin, sighash, flags)
+            path = txin['user_path']
             privkey = self.get_privkey(path)
             logging.debug('Processing input %s, path %s', index, path)
 
             if use_ae_protocol:
-                signer_commitment, signature = self._make_ae_signature(privkey, txhash, utxo)
+                signer_commitment, signature = self._make_ae_signature(privkey, txhash, txin)
 
                 signer_commitment = signer_commitment.hex()
                 logging.debug('Signer commitment: %s', signer_commitment)
@@ -191,15 +190,15 @@ class WallyAuthenticatorLiquid(WallyAuthenticator):
     def get_blinding_factor(self, hash_prevouts: bytes, output_index: int) -> bytes:
         return wally.asset_blinding_key_to_abf_vbf(self.master_blinding_key, hash_prevouts, output_index)
 
-    def _get_signature_hash(self, wally_tx, index: int, utxo: Dict, sighash: int, flags: int) -> bytes:
+    def _get_signature_hash(self, wally_tx, index: int, txin: Dict, sighash: int, flags: int) -> bytes:
         # Allowed sighash types are limited; check that here
         assert sighash in [wally.WALLY_SIGHASH_ALL,
                            wally.WALLY_SIGHASH_SINGLE | wally.WALLY_SIGHASH_ANYONECANPAY]
-        prevout_script = wally.hex_to_bytes(utxo['prevout_script'])
-        if utxo['is_blinded']:
-            value = bytes.fromhex(utxo['commitment'])
+        prevout_script = wally.hex_to_bytes(txin['prevout_script'])
+        if txin['is_blinded']:
+            value = bytes.fromhex(txin['commitment'])
         else:
-            value = wally.tx_confidential_value_from_satoshi(utxo['satoshi'])
+            value = wally.tx_confidential_value_from_satoshi(txin['satoshi'])
         return wally.tx_get_elements_signature_hash(
             wally_tx, index, prevout_script, value, sighash, flags)
 
