@@ -1,3 +1,5 @@
+-r requirements-wally.txt
+
 https://github.com/Blockstream/gdk/releases/download/release_0.0.63/greenaddress-0.0.63-cp39-cp39-linux_x86_64.whl; 'linux' in sys_platform and python_version == '3.9' --hash=sha256:db4d3ea42568a54be13972c64954d75d8e93eb3ddc795237ba4c5827a3a5c95b
 https://github.com/Blockstream/gdk/releases/download/release_0.0.63/greenaddress-0.0.63-cp311-cp311-macosx_12_0_arm64.whl; 'darwin' in sys_platform and platform_machine == 'arm64' and python_version == '3.11' --hash=sha256:aeccef8e71a3673cfbd556a6dcb725da98119090140e1798a2214d3d8cdbddd5
 https://github.com/Blockstream/gdk/releases/download/release_0.0.63/greenaddress-0.0.63-cp311-cp311-macosx_12_0_x86_64.whl; 'darwin' in sys_platform and platform_machine != 'arm64' and python_version == '3.11' --hash=sha256:8f707d3f5a1d0058cae555c7143ea405626a117f8055167aacc225700cfc8c67

@@ -112,7 +112,7 @@ $ eval "$(_GREEN_CLI_COMPLETE=source green-cli)"
 
 To enable support for the Blockstream Jade hardware wallet (via
 the `--auth jade` option) additional dependencies must be installed
-from requirements-wally.txt and requirements-jade.txt.
+from requirements-jade.txt.
 
 1) Install libudev and libusb. This is platform specific but for
 debian-based systems:
@@ -122,7 +122,6 @@ $ sudo apt-get install libudev-dev libusb-1.0-0-dev
 
 2) Install extra requirements
 ```
-$ pip install -r requirements-wally.txt
 $ pip install -r requirements-jade.txt
 ```
 NOTE: this must be two separate invocations, as the jade python api is installed from github sources, and does not have a sha hash.
@@ -147,18 +146,6 @@ $ pip install -r requirements-hwi.txt
 
 You can now run green-cli (or green-liquid-cli) passing the `--auth
 hardware` option.
-
-### Installing the wally authenticator
-
-There is another authenticator option `--auth wally` which delegates the
-possession of key material (the mnemonic) and authentication services to
-python code external to the gdk using the hardware wallet interface.
-This is useful for testing and as a demonstration of the technique. In
-order to enable this option libwally must be installed:
-
-```
-$ pip install -r requirements-wally.txt
-```
 
 ### Example usage
 
