@@ -9,7 +9,7 @@ from getpass import getpass
 
 import click
 
-import wallycore as libwally
+import wallycore as wally
 import greenaddress as gdk
 
 
@@ -178,7 +178,7 @@ class HardwareDevice(Authenticator):
         # Compute hashPrevouts to derive deterministic blinding factors from
         txhashes = b''.join([h2b_rev(u['txhash']) for u in details['used_utxos']])
         output_indices = [u['pt_idx'] for u in details['used_utxos']]
-        hash_prevouts = bytes(libwally.get_hash_prevouts(txhashes, output_indices))
+        hash_prevouts = bytes(wally.get_hash_prevouts(txhashes, output_indices))
         is_partial = details.get('is_partial', False)
         abfs, vbfs = [], []
 
