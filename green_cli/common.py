@@ -408,13 +408,15 @@ def getunspentoutputs(session, details):
     """Get unspent outputs (utxos)."""
     return gdk.get_unspent_outputs(session.session_obj, json.dumps(details))
 
+
 @green.command()
-@click.argument('privatekey', type=str)
-@click.argument('password', default='')
+@click.option('--private-key', expose_value=False, callback=details_json)
+@click.option('--password', default="", expose_value=False, callback=details_json)
 @with_login
 @print_result
-def getunspentoutputsforprivatekey(session, privatekey, password):
-    return session.get_unspent_outputs_for_private_key(privatekey, password, 0)
+@with_gdk_resolve
+def getunspentoutputsforprivatekey(session, details):
+    return gdk.get_unspent_outputs_for_private_key(session.session_obj, json.dumps(details))
 
 @green.command()
 @click.argument('status', type=(UtxoUserStatus()), expose_value=False, nargs=-1)
