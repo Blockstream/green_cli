@@ -91,11 +91,14 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
             signer_commitment = signer_commitment.hex()
             logging.debug('Signer commitment: %s', signer_commitment)
             result['signer_commitment'] = signer_commitment
+            result['signature'] = wally.ec_sig_to_der(signature).hex()
         else:
-            signature = wally.ec_sig_from_bytes(privkey, formatted,
-                                                wally.EC_FLAG_ECDSA | wally.EC_FLAG_GRIND_R)
+            recoverable = details.get('create_recoverable_sig', False)
+            flags = wally.EC_FLAG_ECDSA
+            flags |= wally.EC_FLAG_RECOVERABLE if recoverable else wally.EC_FLAG_GRIND_R
+            signature = wally.ec_sig_from_bytes(privkey, formatted, flags)
+            result['signature'] = signature.hex() if recoverable else wally.ec_sig_to_der(signature).hex()
 
-        result['signature'] = wally.ec_sig_to_der(signature).hex()
         return result
 
     def _get_signature_hash(self, wally_tx, index: int, txin: Dict, sighash: int, flags: int) -> bytes:
