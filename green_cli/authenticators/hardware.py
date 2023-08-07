@@ -50,10 +50,15 @@ class HWIDevice(HardwareDevice):
 
         signature = hwilib.commands.signmessage(self._device, message, path)['signature']
         signature = base64.b64decode(signature)
-        if len(signature) == wally.EC_SIGNATURE_RECOVERABLE_LEN:
-            signature = signature[1:]
 
-        return {'signature': wally.ec_sig_to_der(signature).hex()}
+        if details['create_recoverable_sig']:
+            sig_hex = signature.hex()
+        else:
+            if len(signature) == wally.EC_SIGNATURE_RECOVERABLE_LEN:
+                signature = signature[1:]
+            sig_hex = wally.ec_sig_to_der(signature).hex()
+
+        return {'signature': sig_hex}
 
     def sign_tx(self, details: Dict):
         raise NotImplementedError("hwi sign tx not implemented")
