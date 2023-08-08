@@ -516,6 +516,16 @@ def signtransaction(session, details):
 
 @green.command()
 @click.argument('details', type=click.File('rb'))
+@with_login
+@print_result
+@with_gdk_resolve
+def psbtsign(session, details):
+    """Sign a psbt. For Liquid, the psbt must be blinded."""
+    details = details.read().decode('utf-8')
+    return gdk.psbt_sign(session.session_obj, details)
+
+@green.command()
+@click.argument('details', type=click.File('rb'))
 @click.option('--timeout', default=0, type=int, help='Maximum number of seconds to wait')
 @with_login
 @print_result
