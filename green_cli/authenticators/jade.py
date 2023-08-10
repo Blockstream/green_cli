@@ -178,15 +178,11 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
 
         sig_decoded = base64.b64decode(sig_encoded)
 
-        if details['create_recoverable_sig'] and not details['use_ae_protocol']:
-            sig_hex = sig_decoded.hex()
-        else:
-            # Need to truncate lead byte if recoverable signature
-            if len(sig_decoded) == wally.EC_SIGNATURE_RECOVERABLE_LEN:
-                sig_decoded = sig_decoded[1:]
-            sig_hex = wally.ec_sig_to_der(sig_decoded).hex()
+        # Need to truncate lead byte if recoverable signature
+        if len(sig_decoded) == wally.EC_SIGNATURE_RECOVERABLE_LEN:
+            sig_decoded = sig_decoded[1:]
 
-        result['signature'] = sig_hex
+        result['signature'] = wally.ec_sig_to_der(sig_decoded).hex()
         return result
 
     @classmethod
