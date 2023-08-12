@@ -289,7 +289,7 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
                 'supports_liquid': 1,
                 'supports_host_unblinding': True,
                 'supports_external_blinding': True,
-                'supports_arbitrary_scripts': True
+                'supports_arbitrary_scripts': True,
                 'supports_ae_protocol': 1,
             }
         }
