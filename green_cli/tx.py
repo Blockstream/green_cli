@@ -50,7 +50,7 @@ def get_tx_type(tx):
     # b) all the inputs belong to this wallet/signer
     # c) for each asset, the net amounts in the outputs into the wallet are not
     #    greater than the net amounts in the inputs from the wallet
-    if not tx['transaction'].get('is_partial', False) and \
+    if not tx.get('is_partial', False) and \
             wallet_inputs and len(wallet_inputs) == len(tx['transaction_inputs']) and \
             not any(outsats > wallet_input_assets.get(asset, 0) for asset, outsats in wallet_output_assets.items()):
         return TxType.SEND_PAYMENT
