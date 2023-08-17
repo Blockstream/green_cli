@@ -348,14 +348,20 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
             }
 
             # If non-trivial tx, also send any blinding information per input
-            if txtype != tx.TxType.SEND_PAYMENT and 'assetblinder' in input:
-                mapped['abf'] = bytes.fromhex(input['assetblinder'])[::-1]
+            if txtype != tx.TxType.SEND_PAYMENT and input.get('is_blinded'):
                 mapped['asset_id'] = bytes.fromhex(input['asset_id'])
                 mapped['asset_generator'] = bytes.fromhex(input['asset_tag'])
+
+                if 'assetblinder' in input:
+                    mapped['abf'] = bytes.fromhex(input['assetblinder'])[::-1]
+                if 'asset_blind_proof' in input:
+                    mapped['asset_blind_proof'] = bytes.fromhex(input['asset_blind_proof'])
+
                 if 'amountblinder' in input:
                     mapped['vbf'] = bytes.fromhex(input['amountblinder'])[::-1]
-                elif 'value_blind_proof' in input:
+                if 'value_blind_proof' in input:
                     mapped['value_blind_proof'] = bytes.fromhex(input['value_blind_proof'])
+
                 mapped['value'] = input['satoshi']
                 # value_commitment sent in any case
 
@@ -383,18 +389,28 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
                 else:
                     wallet_output_amounts[output['asset_id']] += output['satoshi']
 
-            if 'assetblinder' not in output or 'amountblinder' not in output:
-                # Output not blinded (or not by us), return null placeholder
+            if 'commitment' not in output:
+                # Output not blinded, return null placeholder
                 return None
 
             # Return blinding data
-            return {
+            mapped = {
                 'asset_id': bytes.fromhex(output['asset_id']),
-                'abf': bytes.fromhex(output['assetblinder'])[::-1],
                 'value': output['satoshi'],
-                'vbf': bytes.fromhex(output['amountblinder'])[::-1],
                 'blinding_key': bytes.fromhex(output['blinding_key'])
             }
+
+            if 'assetblinder' in output:
+                mapped['abf'] = bytes.fromhex(output['assetblinder'])[::-1]
+            if 'asset_blind_proof' in output:
+                mapped['asset_blind_proof'] = bytes.fromhex(output['asset_blind_proof'])
+
+            if 'amountblinder' in output:
+                mapped['vbf'] = bytes.fromhex(output['amountblinder'])[::-1]
+            if 'value_blind_proof' in output:
+                mapped['value_blind_proof'] = bytes.fromhex(output['value_blind_proof'])
+
+            return mapped
 
         # Get inputs and change outputs in form Jade expects
         commitments = list(map(_map_commitments_info, transaction_outputs))
