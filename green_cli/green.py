@@ -77,6 +77,7 @@ def _resolve_network_options(options):
 @click.option('--cert-expiry-threshold', type=int, hidden=True)
 @click.option('--datadir', help='A directory which gdk will use to store encrypted data relating to sessions')
 @click.option('--tordir', help='An optional directory for tor state data')
+@click.option('--no-sync', is_flag=True, default=False, help='Supress initial subaccount sync')
 def green(**options):
     """Command line interface for Blockstream Green."""
     if context.configured:

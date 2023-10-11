@@ -53,8 +53,37 @@ def no_warn_sysmsg(fn):
         return fn(*args, **kwargs)
     return inner
 
+def sync_subaccount(session, subaccount, already_synced=set()):
+    """Wait for a synced notification for `subaccount`.
+
+    The default value of `already_synced` is intentionally bound
+    to a mutable global set which is updated to contain each
+    subaccount that has already been synced.
+    """
+
+    # In repl mode sync_subaccount may be called multiple times in
+    # the same session, but there will be one notification to wait
+    # for
+    if subaccount in already_synced:
+        return
+
+    logging.debug(f'Waiting for sync subccount {subaccount}')
+    is_synced = lambda n: (
+        'subaccount' in n and
+        n['subaccount']['event_type'] == 'synced' and
+        n['subaccount']['pointer'] == subaccount
+    )
+    # Wait for the first notification to match is_synced
+    any(is_synced(n) for n in notifications(session))
+    already_synced.add(subaccount)
+    logging.info(f'Synced subaccount {subaccount}')
+
 def with_login(fn):
     """Pass a logged in session to a function"""
+
+    click_params = getattr(fn, '__click_params__', [])
+    have_subaccount_param = any((p.name == 'subaccount' for p in click_params))
+
     @functools.wraps(fn)
     def inner(session, *args, **kwargs):
         if not context.logged_in:
@@ -68,6 +97,12 @@ def with_login(fn):
                 system_message = gdk.get_system_message(session.session_obj)
                 if system_message:
                     click.echo("You have unread system messages, please call getsystemmessages")
+
+        # Optionally wait for intital subaccount synced notification
+        # Without this the execution of the command will potentially race
+        # with background gdk sync threads and you'll get stale results
+        if not context.no_sync and have_subaccount_param:
+            sync_subaccount(session, kwargs['details']['subaccount'])
 
         return fn(session, *args, **kwargs)
     return with_session(inner)
