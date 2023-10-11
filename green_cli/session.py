@@ -11,6 +11,8 @@ class Session(gdk.Session):
         self.current_block_height = None
         self.latest_events = {}
         self.event_cv = threading.Condition()
+        self.synced_subaccounts = set()
+        self.synced_subaccounts_lock = threading.Lock()
         super().__init__(net_params)
 
     def getlatestevent(self, event_type, timeout):
@@ -32,6 +34,12 @@ class Session(gdk.Session):
             if event_type == 'block':
                 self.current_block_height = event_body['block_height']
                 logging.debug(f"Updated current block height to {self.current_block_height}")
+
+            if event_type == 'subaccount' and event_body.get('event_type') == 'synced':
+                pointer = event_body.get('pointer')
+                if pointer is not None:
+                    with self.synced_subaccounts_lock:
+                        self.synced_subaccounts.add(pointer)
 
             self.latest_events[event_type] = event_body
             with self.event_cv:

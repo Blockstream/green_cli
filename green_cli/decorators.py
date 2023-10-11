@@ -8,7 +8,6 @@ import green_gdk as gdk
 
 from green_cli import context
 from green_cli.gdk_resolve import gdk_resolve
-from green_cli.notifications import notifications
 
 def format_output(value):
     """Return pretty string representation of value suitable for displaying
@@ -53,8 +52,57 @@ def no_warn_sysmsg(fn):
         return fn(*args, **kwargs)
     return inner
 
+def subaccount_exists(session, subaccount):
+    """Check if a subaccount exists by attempting to get it from the session"""
+    try:
+        gdk_resolve(gdk.get_subaccount(session.session_obj, subaccount))
+        return True
+    except RuntimeError as e:
+        status = e.args[0] if e.args else None
+        if isinstance(status, dict) and status.get('error') == 'Unknown subaccount':
+            logging.warning('Subaccount %s does not exist', subaccount)
+            return False
+        raise
+
+
+def sync_subaccount(session, subaccount):
+    """Wait for a synced notification for `subaccount`."""
+
+    # Check if already synced (eg. if in repl mode)
+    with session.synced_subaccounts_lock:
+        if subaccount in session.synced_subaccounts:
+            return
+
+    # If the subaccount does not exist then avoid waiting forever
+    # (note that subaccount 0 always exists).
+    if subaccount != 0 and not subaccount_exists(session, subaccount):
+        return
+
+    # Wait until the subaccount appears in the synced_subaccounts set.
+    logging.debug(f'Waiting for sync subccount {subaccount}')
+    while True:
+        with session.event_cv:
+            session.event_cv.wait(timeout=1)
+
+        with session.synced_subaccounts_lock:
+            if subaccount in session.synced_subaccounts:
+                logging.info(f'Synced subaccount {subaccount}')
+                return
+
 def with_login(fn):
     """Pass a logged in session to a function"""
+
+    have_sync_option = False
+    for p in getattr(fn, '__click_params__', []):
+        if p.name == 'subaccount':
+            # Functions with a --subaccount argument are wrapped to wait for
+            # the subaccount to be synced before starting, so that returned
+            # data represents the current state of the subaccount.
+            # We also add a --no-sync option to disable this behaviour.
+            fn = click.option('--no-sync', is_flag=True, help='Return cached values, do not wait to sync')(fn)
+            have_sync_option = True
+            break
+
     @functools.wraps(fn)
     def inner(session, *args, **kwargs):
         if not context.logged_in:
@@ -67,6 +115,18 @@ def with_login(fn):
                 system_message = gdk.get_system_message(session.session_obj)
                 if system_message:
                     click.echo("You have unread system messages, please call getsystemmessages")
+
+        # Optionally sync the subaccount and then remove the `no_sync` kwarg
+        # as it's not expected by or useful to the wrapped `fn`
+        if 'no_sync' in kwargs:
+            if not kwargs['no_sync']:
+                # TODO: We could skip syncing for multisig as it's not needed
+                if 'subaccount' in kwargs:
+                    subaccount = kwargs['subaccount']
+                else:
+                    subaccount = kwargs['details']['subaccount']
+                sync_subaccount(session, subaccount)
+            del kwargs['no_sync']
 
         return fn(session, *args, **kwargs)
     return with_session(inner)
