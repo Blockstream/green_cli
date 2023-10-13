@@ -68,9 +68,9 @@ def getnetwork():
     return _get_network()
 
 @green.command()
-@click.option('--words', type=click.Choice(['12', '24']), default='24', help="Mnemonic length")
 @with_session
 @with_gdk_resolve
+@click.option('--words', type=click.Choice(['12', '24']), default='24', help="Mnemonic length")
 def create(session, words):
     """Create a new wallet."""
     if not getattr(context.authenticator, 'create', None):
@@ -121,8 +121,8 @@ def getsystemmessages(session):
 @green.command()
 @with_login
 @click.argument('event_type')
-@click.option('--timeout', default=-1, type=int, help='Maximum number of seconds to wait')
 @print_result
+@click.option('--timeout', default=-1, type=int, help='Maximum number of seconds to wait')
 def getlatestevent(session, event_type, timeout):
     """Get the most recent of some event type.
 
@@ -182,9 +182,9 @@ def listen(session, ignore):
 
 @green.command()
 @with_login
+@print_result
 @click.argument('amount', type=str)
 @click.argument('unit', type=click.Choice(['bits', 'btc', 'mbtc', 'ubtc', 'satoshi', 'sats']))
-@print_result
 def convertamount(session, amount, unit):
     """Show an amount in different units."""
     # satoshi is unfortunately different from the others as it is an int, not a str
@@ -194,48 +194,48 @@ def convertamount(session, amount, unit):
 _SUBACCOUNT_TYPES = ['2of2', '2of3', 'p2pkh', 'p2sh-p2wpkh', 'p2wpkh']
 
 @green.command()
+@with_login
+@print_result
+@with_gdk_resolve
 @click.argument('name', expose_value=False, callback=details_json)
 @click.argument('type', type=click.Choice(_SUBACCOUNT_TYPES), expose_value=False, callback=details_json)
 @click.option('--recovery-mnemonic', type=str, expose_value=False, callback=details_json)
 @click.option('--recovery-xpub', type=str, expose_value=False, callback=details_json)
-@with_login
-@print_result
-@with_gdk_resolve
 def createsubaccount(session, details):
     """Create a subaccount."""
     return gdk.create_subaccount(session.session_obj, json.dumps(details))
 
 @green.command()
-@click.option('--refresh', is_flag=True, help='Refresh cached values', expose_value=False, callback=details_json)
 @with_login
 @print_result
 @with_gdk_resolve
+@click.option('--refresh', is_flag=True, help='Refresh cached values', expose_value=False, callback=details_json)
 def getsubaccounts(session, details):
     """Show all subaccounts for the wallet."""
     return gdk.get_subaccounts(session.session_obj, json.dumps(details))
 
 @green.command()
-@click.argument('pointer', type=int)
 @with_login
 @print_result
 @with_gdk_resolve
+@click.argument('pointer', type=int)
 def getsubaccount(session, pointer):
     """Show details of specific subaccount."""
     return gdk.get_subaccount(session.session_obj, pointer)
 
 @green.command()
+@with_login
+@with_gdk_resolve
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--name', expose_value=False, callback=details_json)
 @click.option('--hidden', type=bool, expose_value=False, callback=details_json)
-@with_login
-@with_gdk_resolve
 def updatesubaccount(session, details):
     return gdk.update_subaccount(session.session_obj, json.dumps(details))
 
 @green.command()
+@with_login
 @click.argument('pin')
 @click.argument('device_id')
-@with_login
 def setpin(session, pin, device_id):
     """Set a PIN for logging in.
 
@@ -247,10 +247,10 @@ def setpin(session, pin, device_id):
     return context.authenticator.setpin(session, pin, device_id)
 
 @green.command()
-@click.option('--password', default="", expose_value=False, callback=details_json)
 @with_login
 @print_result
 @with_gdk_resolve
+@click.option('--password', default="", expose_value=False, callback=details_json)
 def getcredentials(session, details):
     """Get the wallet credentials.
 
@@ -259,9 +259,9 @@ def getcredentials(session, details):
     return gdk.get_credentials(session.session_obj, json.dumps(details))
 
 @green.command()
+@with_login
 @click.argument('username')
 @click.argument('password')
-@with_login
 def setwatchonly(session, username, password):
     """Enable watch-only login with the supplied username and password."""
     return session.set_watch_only(username, password)
@@ -279,26 +279,26 @@ def sendnlocktimes(session):
     return gdk.send_nlocktimes(session.session_obj)
 
 @green.command()
-@click.argument('value', type=int, expose_value=False, callback=details_json)
 @with_login
 @with_gdk_resolve
+@click.argument('value', type=int, expose_value=False, callback=details_json)
 def setnlocktime(session, details):
     """Set number of blocks for nlocktime."""
     return gdk.set_nlocktime(session.session_obj, json.dumps(details))
 
 @green.command()
-@click.argument('value', type=int, expose_value=False, callback=details_json)
 @with_login
 @with_gdk_resolve
+@click.argument('value', type=int, expose_value=False, callback=details_json)
 def setcsvtime(session, details):
     """Set number of blocks for csvtime."""
     return gdk.set_csvtime(session.session_obj, json.dumps(details))
 
 @green.command()
+@with_login
 @click.argument('txid', type=str)
 @click.argument('memo', type=str)
 @click.option('--bip70', is_flag=True, help='Set a bip70 memo')
-@with_login
 def settransactionmemo(session, txid, memo, bip70):
     """Set a memo on a wallet transaction."""
     memo_type = gdk.GA_MEMO_BIP70 if bip70 else gdk.GA_MEMO_USER
@@ -326,9 +326,9 @@ def getsettings(session):
     return session.get_settings()
 
 @green.command()
-@click.argument('settings', type=click.File('rb'))
 @with_login
 @with_gdk_resolve
+@click.argument('settings', type=click.File('rb'))
 def changesettings(session, settings):
     """Change wallet settings."""
     settings = settings.read().decode('utf-8')
@@ -342,32 +342,32 @@ def getavailablecurrencies(session):
     return session.get_available_currencies()
 
 @green.command()
-@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
-@click.option('--address_type', default="", expose_value=False, callback=details_json)
 @with_login
 @print_result
+@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
+@click.option('--address_type', default="", expose_value=False, callback=details_json)
 def getnewaddress(session, details):
     """Get a new receive address."""
     auth_handler = gdk.get_receive_address(session.session_obj, json.dumps(details))
     return gdk_resolve(auth_handler)["address"]
 
 @green.command()
-@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
-@click.option('--address_type', default="", expose_value=False, callback=details_json)
 @with_login
 @print_result
 @with_gdk_resolve
+@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
+@click.option('--address_type', default="", expose_value=False, callback=details_json)
 def getreceiveaddress(session, details):
     """Get a new receive address."""
     return gdk.get_receive_address(session.session_obj, json.dumps(details))
 
 @green.command()
-@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
-@click.option('--last-pointer', type=int, expose_value=False, callback=details_json)
-@click.option('--is-internal', is_flag=True, expose_value=False, callback=details_json)
 @with_login
 @print_result
 @with_gdk_resolve
+@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
+@click.option('--last-pointer', type=int, expose_value=False, callback=details_json)
+@click.option('--is-internal', is_flag=True, expose_value=False, callback=details_json)
 def getpreviousaddresses(session, details):
     """Get previously generated addresses."""
     return gdk.get_previous_addresses(session.session_obj, json.dumps(details))
@@ -380,14 +380,14 @@ def getfeeestimates(session):
     return session.get_fee_estimates()
 
 @green.command()
+@with_login
+@print_result
+@with_gdk_resolve
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--num-confs', default=0, expose_value=False, callback=details_json)
 @click.option('--all-coins', is_flag=True, expose_value=False, callback=details_json)
 @click.option('--expired-at', type=int, expose_value=False, callback=details_json)
 @click.option('--dust-limit', type=int, expose_value=False, callback=details_json)
-@with_login
-@print_result
-@with_gdk_resolve
 def getbalance(session, details):
     """Get balance."""
     return gdk.get_balance(context.session.session_obj, json.dumps(details))
@@ -395,34 +395,34 @@ def getbalance(session, details):
 _UTXO_SORT_TYPES = ['oldest', 'newest', 'largest', 'smallest']
 
 @green.command()
+@with_login
+@print_result
+@with_gdk_resolve
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--num-confs', default=0, expose_value=False, callback=details_json)
 @click.option('--all-coins', is_flag=True, expose_value=False, callback=details_json)
 @click.option('--expired-at', type=int, expose_value=False, callback=details_json)
 @click.option('--dust-limit', type=int, expose_value=False, callback=details_json)
 @click.option('--sort-by', type=click.Choice(_UTXO_SORT_TYPES), expose_value=False, callback=details_json)
-@with_login
-@print_result
-@with_gdk_resolve
 def getunspentoutputs(session, details):
     """Get unspent outputs (utxos)."""
     return gdk.get_unspent_outputs(session.session_obj, json.dumps(details))
 
 
 @green.command()
-@click.option('--private-key', expose_value=False, callback=details_json)
-@click.option('--password', default="", expose_value=False, callback=details_json)
 @with_login
 @print_result
 @with_gdk_resolve
+@click.option('--private-key', expose_value=False, callback=details_json)
+@click.option('--password', default="", expose_value=False, callback=details_json)
 def getunspentoutputsforprivatekey(session, details):
     return gdk.get_unspent_outputs_for_private_key(session.session_obj, json.dumps(details))
 
 @green.command()
-@click.argument('status', type=(UtxoUserStatus()), expose_value=False, nargs=-1)
 @with_login
 @print_result
 @with_gdk_resolve
+@click.argument('status', type=(UtxoUserStatus()), expose_value=False, nargs=-1)
 def setunspentoutputsstatus(session, details):
     """Set unspent outputs status.
 
@@ -446,19 +446,19 @@ def _txlist_summary(txlist):
     return '\n'.join(lines)
 
 @green.command()
-@click.argument('txid', type=str)
 @with_login
 @print_result
+@click.argument('txid', type=str)
 def gettransactiondetails(session, txid):
     """Get transaction details of an arbitrary transaction."""
     return session.get_transaction_details(txid)
 
 @green.command()
+@with_login
 @click.option('--subaccount', type=int, default=0, expose_value=False, callback=details_json)
 @click.option('--first', type=int, default=0, expose_value=False, callback=details_json)
 @click.option('--count', type=int, default=30, expose_value=False, callback=details_json)
 @click.option('--summary', is_flag=True, help='Print human-readable summary')
-@with_login
 def gettransactions(session, summary, details):
     """Get transactions associated with the wallet."""
     result = gdk.get_transactions(session.session_obj, json.dumps(details))
@@ -467,21 +467,21 @@ def gettransactions(session, summary, details):
     click.echo(result)
 
 @green.command()
+@with_login
+@print_result
 @click.option('--addressee', '-a', type=(Address(), Amount()), expose_value=False, multiple=True)
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--fee-rate', '-f', type=int, expose_value=False, callback=details_json)
-@with_login
-@print_result
 def createtransaction(session, details):
     """Create an outgoing transaction."""
     add_utxos_to_transaction(session, details)
     return gdk_resolve(gdk.create_transaction(session.session_obj, json.dumps(details)))
 
 @green.command()
-@click.argument('details', type=click.File('rb'))
 @with_login
 @print_result
 @with_gdk_resolve
+@click.argument('details', type=click.File('rb'))
 def blindtransaction(session, details):
     """Blind a transaction.
 
@@ -494,10 +494,10 @@ def blindtransaction(session, details):
     return gdk.blind_transaction(session.session_obj, details)
 
 @green.command()
-@click.argument('details', type=click.File('rb'))
 @with_login
 @print_result
 @with_gdk_resolve
+@click.argument('details', type=click.File('rb'))
 def signtransaction(session, details):
     """Sign a transaction. For Liquid, blinds first if not blinded.
 
@@ -515,30 +515,30 @@ def signtransaction(session, details):
     return gdk.sign_transaction(session.session_obj, details)
 
 @green.command()
-@click.argument('details', type=click.File('rb'))
 @with_login
 @print_result
 @with_gdk_resolve
+@click.argument('details', type=click.File('rb'))
 def psbtsign(session, details):
     """Sign a psbt. For Liquid, the psbt must be blinded."""
     details = details.read().decode('utf-8')
     return gdk.psbt_sign(session.session_obj, details)
 
 @green.command()
-@click.argument('details', type=click.File('rb'))
 @with_login
 @print_result
 @with_gdk_resolve
+@click.argument('details', type=click.File('rb'))
 def psbtgetdetails(session, details):
     """Get wallet information from a psbt."""
     details = details.read().decode('utf-8')
     return gdk.psbt_get_details(session.session_obj, details)
 
 @green.command()
-@click.argument('details', type=click.File('rb'))
-@click.option('--timeout', default=0, type=int, help='Maximum number of seconds to wait')
 @with_login
 @print_result
+@click.argument('details', type=click.File('rb'))
+@click.option('--timeout', default=0, type=int, help='Maximum number of seconds to wait')
 def sendtransaction(session, details, timeout):
     """Send a transaction.
 
@@ -552,10 +552,10 @@ def sendtransaction(session, details, timeout):
     return get_txhash_with_sync(session, details, timeout)
 
 @green.command()
-@click.argument('details', type=click.File('rb'))
-@click.option('--timeout', default=0, type=int, help='Maximum number of seconds to wait')
 @with_login
 @print_result
+@click.argument('details', type=click.File('rb'))
+@click.option('--timeout', default=0, type=int, help='Maximum number of seconds to wait')
 def broadcasttransaction(session, details, timeout):
     """Broadcast a transaction directly to the network."""
     details = details.read().decode('utf-8')
@@ -575,23 +575,23 @@ def _send_transaction(session, details, timeout):
     return get_txhash_with_sync(session, details, timeout)
 
 @green.command()
+@with_login
+@print_result
 @click.argument('address', type=Address(), expose_value=False)
 @click.argument('amount', type=Amount(precision=8), expose_value=False)
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--timeout', default=0, type=int, help='Maximum number of seconds to wait')
-@with_login
-@print_result
 def sendtoaddress(session, details, timeout):
     """Send funds to an address."""
     return _send_transaction(session, details, timeout)
 
 @green.command()
+@with_login
+@print_result
 @click.argument('previous_txid', type=str)
 @click.argument('fee_multiplier', default=2, type=float)
 @click.option('--subaccount', default=0, type=int)
 @click.option('--timeout', default=0, type=int, help='Maximum number of seconds to wait')
-@with_login
-@print_result
 def bumpfee(session, previous_txid, fee_multiplier, subaccount, timeout):
     """Increase the fee of an unconfirmed transaction."""
     previous_transaction = get_user_transaction(session, subaccount, previous_txid)
@@ -603,11 +603,11 @@ def bumpfee(session, previous_txid, fee_multiplier, subaccount, timeout):
     return _send_transaction(session, details, timeout)
 
 @green.command()
-@click.argument('address', type=str, expose_value=False, callback=details_json)
-@click.argument('message', type=str, expose_value=False, callback=details_json)
 @with_login
 @print_result
 @with_gdk_resolve
+@click.argument('address', type=str, expose_value=False, callback=details_json)
+@click.argument('message', type=str, expose_value=False, callback=details_json)
 def signmessage(session, details):
     """Sign a message"""
     return gdk.sign_message(session.session_obj, json.dumps(details))

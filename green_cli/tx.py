@@ -180,8 +180,8 @@ class Tx:
         return False
 
 @tx.command()
-@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @with_login
+@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 def new(session, details):
     """Create a new transaction.
 
@@ -191,48 +191,48 @@ def new(session, details):
     return _save_tx(tx)
 
 @tx.command()
-@click.argument('feerate', type=int)
 @with_login
+@click.argument('feerate', type=int)
 def setfeerate(session, feerate):
     """Set the fee rate (satoshi/kB)."""
     with Tx(allow_errors=True) as tx:
         tx['fee_rate'] = feerate
 
 @tx.command()
-@click.argument('version', type=int)
 @with_login
+@click.argument('version', type=int)
 def setversion(session, version):
     """Set the version number of the created transaction."""
     with Tx(allow_errors=True) as tx:
         tx['transaction_version'] = version
 
 @tx.command()
-@click.argument('locktime', type=int)
 @with_login
+@click.argument('locktime', type=int)
 def setlocktime(session, locktime):
     """Set the transaction locktime of the created transaction."""
     with Tx(allow_errors=True) as tx:
         tx['transaction_locktime'] = locktime
 
 @tx.command()
-@click.argument('randomize-inputs', type=bool)
 @with_login
+@click.argument('randomize-inputs', type=bool)
 def setrandomizeinputs(session, randomize_inputs):
     """Set whether the created transaction should have its inputs randomized."""
     with Tx(allow_errors=True) as tx:
         tx['randomize_inputs'] = randomize_inputs
 
 @tx.command()
-@click.argument('partial', type=bool)
 @with_login
+@click.argument('partial', type=bool)
 def setpartial(session, partial):
     """Set whether the created transaction is a partial transaction."""
     with Tx(allow_errors=True) as tx:
         tx['is_partial'] = partial
 
 @tx.command()
-@click.argument('sign-with', type=click.Choice(['user', 'green-backend', 'user;green-backend']))
 @with_login
+@click.argument('sign-with', type=click.Choice(['user', 'green-backend', 'user;green-backend']))
 def setsignwith(session, sign_with):
     """Set the signers a transaction should be signed with."""
     with Tx(allow_errors=True) as tx:
@@ -244,10 +244,10 @@ def _print_tx_output(options, output):
         click.secho(f"{output['satoshi']} {output['address']}", fg=fg, color=context.color())
 
 @tx.group(invoke_without_command=True)
-@click.option('-a', '--show-all', '--all', is_flag=True)
-@click.option('-c', '--show-change', '--change', is_flag=True)
 @with_login
 @click.pass_context
+@click.option('-a', '--show-all', '--all', is_flag=True)
+@click.option('-c', '--show-change', '--change', is_flag=True)
 def outputs(ctx, session, **options):
     """Show and modify transaction outputs.
 
@@ -260,9 +260,9 @@ def outputs(ctx, session, **options):
         _print_tx_output(options, output)
 
 @outputs.command(name='add')
+@with_login
 @click.argument('address', type=Address(), expose_value=False)
 @click.argument('amount', type=Amount(), default='0', expose_value=False)
-@with_login
 def add_outputs(session, details, **options):
     """Add a transaction output."""
     with Tx(allow_errors=True) as tx:
@@ -273,8 +273,8 @@ def add_outputs(session, details, **options):
         tx['addressees'].extend(details['addressees'])
 
 @outputs.command()
-@click.argument('address', type=str)
 @with_login
+@click.argument('address', type=str)
 def rm(session, address):
     """Remove transaction outputs."""
     with Tx(allow_errors=True) as tx:
@@ -309,10 +309,10 @@ def format_utxo(utxo):
     return s
 
 @tx.group(invoke_without_command=True)
-@click.option('-a', '--show-all', '--all', is_flag=True)
-@click.option('-u', '--show-unused', '--unused', is_flag=True)
 @with_login
 @click.pass_context
+@click.option('-a', '--show-all', '--all', is_flag=True)
+@click.option('-u', '--show-unused', '--unused', is_flag=True)
 def inputs(ctx, session, show_all, show_unused):
     """Show and modify transaction inputs.
 
@@ -343,9 +343,9 @@ def auto(session):
         tx['utxo_strategy'] = 'default'
 
 @inputs.command()
+@with_login
 @click.argument('utxo_filter')
 @click.option('--sighash', type=click.Choice(['ALL', 'S_ACP']), default='ALL', help="SIGHASH type")
-@with_login
 def add(session, utxo_filter, sighash):
     """Add transaction inputs."""
     user_sighash = {
@@ -366,8 +366,8 @@ def add(session, utxo_filter, sighash):
         tx['transaction_inputs'][-1]['user_sighash'] = user_sighash
 
 @inputs.command()
-@click.argument('utxo_filter')
 @with_login
+@click.argument('utxo_filter')
 def rm(session, utxo_filter):
     """Remove transaction inputs."""
     with Tx(allow_errors=True) as tx:

@@ -48,10 +48,10 @@ def _get_assets(session):
 
 # Add getassetinfo command
 @green.command()
-@click.option('--refresh', is_flag=True, default=False, expose_value=False, callback=details_json)
-@click.option('--icons', is_flag=True, default=False, expose_value=False, callback=details_json)
 @with_login
 @print_result
+@click.option('--refresh', is_flag=True, default=False, expose_value=False, callback=details_json)
+@click.option('--icons', is_flag=True, default=False, expose_value=False, callback=details_json)
 def getassetinfo(session, details):
     if details['refresh']:
         session.refresh_assets({'assets': True, 'icons': details['icons']})
@@ -114,13 +114,13 @@ green_cli.tx.add_outputs.params.insert(1, asset_arg)
 
 # Add asset parameter to sendtoaddress but also check for unsafe usage
 @green.command()
+@with_login
+@print_result
 @click.argument('address', type=Address(), expose_value=False)
 @click.argument('asset', type=Asset(), expose_value=False)
 @click.argument('amount', type=Amount(precision=8), expose_value=False)
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--timeout', default=0, type=int, help='Maximum number of seconds to wait')
-@with_login
-@print_result
 def sendtoaddress(session, details, timeout):
     assets = set([a['asset_id'] for a in details['addressees']])
     btc = _get_assets_by_name(context.session)['btc']['asset_id']
@@ -198,20 +198,20 @@ green_cli.tx.outputs.params.append(click.Option(['-f', '--show-fee', '--fee'], i
 green_cli.tx._print_tx_output = _print_tx_output
 
 @green.command()
-@click.argument('details', type=click.File('rb'))
 @with_login
 @print_result
 @with_gdk_resolve
+@click.argument('details', type=click.File('rb'))
 def createswaptransaction(session, details):
     """Create a swap proposal from initial 'maker' details json"""
     maker_details = details.read().decode('utf-8')
     return gdk.create_swap_transaction(session.session_obj, maker_details)
 
 @green.command()
-@click.argument('details', type=click.File('rb'))
 @with_login
 @print_result
 @with_gdk_resolve
+@click.argument('details', type=click.File('rb'))
 def completeswaptransaction(session, details):
     """Create a complete swap transaction from the 'taker' details"""
     taker_details = details.read().decode('utf-8')
