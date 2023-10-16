@@ -57,6 +57,15 @@ def getassetinfo(session, details):
         session.refresh_assets({'assets': True, 'icons': details['icons']})
     return session.get_assets({'category': 'all'})
 
+# Add validateassetdomainname command
+@green.command()
+@click.option('--asset_id', expose_value=False, callback=details_json)
+@click.option('--domain', expose_value=False, callback=details_json)
+@with_login
+@print_result
+def validateassetdomainname(session, details):
+    return session.validate_asset_domain_name(details)
+
 @functools.lru_cache(maxsize=None)
 def _get_assets_by_name(session):
     """Get asset registry indexed by name."""
