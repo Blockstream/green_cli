@@ -27,8 +27,10 @@ def getconfig(session):
 def enabletwofa():
     """Enable an authentication factor."""
 
-def _enable_2fa(session, factor, data):
+def _enable_2fa(session, factor, data, extra=None):
     details = {'confirmed': True, 'enabled': True, 'data': data}
+    if extra:
+        details.update(extra)
     logging.debug("_enable_2fa factor='{}', details={}".format(factor, details))
     return gdk.change_settings_twofactor(session.session_obj, factor, json.dumps(details))
 
@@ -50,11 +52,12 @@ def sms(session, number):
 
 @enabletwofa.command()
 @click.argument('number')
+@click.option('--sms-backup', is_flag=True, default=False, help='Enable phone as backup for existing SMS')
 @with_login
 @with_gdk_resolve
-def phone(session, number):
+def phone(session, number, sms_backup):
     """Enable phone 2fa."""
-    return _enable_2fa(session, 'phone', number)
+    return _enable_2fa(session, 'phone', number, {'is_sms_backup': True} if sms_backup else None)
 
 @enabletwofa.command()
 @with_login
