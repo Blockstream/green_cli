@@ -25,6 +25,7 @@ from green_cli.decorators import (
     with_login,
     with_session,
 )
+from green_cli.notifications import notifications
 from green_cli.authenticators.default import DefaultAuthenticator
 from green_cli.authenticators.watchonly import WatchOnlyAuthenticator
 from green_cli.param_types import (
@@ -166,19 +167,11 @@ def listen(session, ignore):
     Wait indefinitely for notifications from the gdk and print then to the console. ctrl-c to stop.
     """
     ignore = [s.strip() for s in ignore.split(',')] if ignore else []
-    while True:
-        try:
-            n = session.notifications.get(block=True, timeout=1)
-            if n.get('event', None) in ignore:
-                logging.debug("Ignoring filtered notification")
-            else:
-                click.echo(format_output(n))
-        except queue.Empty:
-            logging.debug("queue.Empty, passing")
-            pass
-        except KeyboardInterrupt:
-            logging.debug("KeyboardInterrupt during listen, returning")
-            break
+    for n in notifications(session):
+        if n.get('event', None) in ignore:
+            logging.debug("Ignoring filtered notification")
+        else:
+            click.echo(format_output(n))
 
 @green.command()
 @with_login
