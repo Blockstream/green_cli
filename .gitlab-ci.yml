@@ -1,5 +1,3 @@
-variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip-cache"
 image: greenaddress/ci@sha256:ba2a76bb933f1da6573631597f947b1ff2f47e772674ab38c4e87e0eac6861b2
 
 .smoke_test:
@@ -16,17 +14,9 @@ image: greenaddress/ci@sha256:ba2a76bb933f1da6573631597f947b1ff2f47e772674ab38c4
 
 smoke_test_bullseye:
   extends: .smoke_test
-  cache:
-    paths:
-      - "$PIP_CACHE_DIR"
-    key: "$CI_PROJECT_ID"
   before_script:
     - pip install pycodestyle
     - pycodestyle */*.py */*/*.py --ignore=E501,E731,E302,E305
-    - echo "Dir{Cache $PIP_CACHE_DIR}" >> /etc/apt/apt.conf
-    - echo "Dir::Cache $PIP_CACHE_DIR;" >> /etc/apt/apt.conf
-    - mkdir -p ${PIP_CACHE_DIR}/archives/partial
-    - apt-get install --no-install-recommends -y -qq libusb-1.0-0-dev libudev-dev
 
 smoke_test_fedora:
   image: fedora:34@sha256:55a74d948c47bb002edff3c7a9a7e864152c686d7c2dc8e3df1ac4d611a20898
