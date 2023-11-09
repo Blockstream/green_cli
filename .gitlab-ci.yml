@@ -3,10 +3,6 @@ variables:
 image: greenaddress/ci@sha256:ba2a76bb933f1da6573631597f947b1ff2f47e772674ab38c4e87e0eac6861b2
 
 .smoke_test:
-  cache:
-    paths:
-      - "$PIP_CACHE_DIR"
-    key: "$CI_PROJECT_ID"
   tags:
     - ga
   script:
@@ -20,6 +16,10 @@ image: greenaddress/ci@sha256:ba2a76bb933f1da6573631597f947b1ff2f47e772674ab38c4
 
 smoke_test_bullseye:
   extends: .smoke_test
+  cache:
+    paths:
+      - "$PIP_CACHE_DIR"
+    key: "$CI_PROJECT_ID"
   before_script:
     - pip install pycodestyle
     - pycodestyle */*.py */*/*.py --ignore=E501,E731,E302,E305
@@ -29,13 +29,11 @@ smoke_test_bullseye:
     - apt-get install --no-install-recommends -y -qq libusb-1.0-0-dev libudev-dev
 
 smoke_test_fedora:
-  image: fedora:33@sha256:46e6c941bb536f6a54390f9956e2566fde0738c28d21c16eb8daa16c22d13410
+  image: fedora:34@sha256:55a74d948c47bb002edff3c7a9a7e864152c686d7c2dc8e3df1ac4d611a20898
   extends: .smoke_test
   before_script:
-    - rm -fr /var/cache/dnf
-    - mkdir -p $PIP_CACHE_DIR
-    - ln -s $PIP_CACHE_DIR /var/cache/dnf
-    - dnf -y install libusb-devel libudev-devel python-virtualenv
+    - dnf update -yq
+    - dnf install -yq python-virtualenv python3-pip
 
 smoke_test_osx:
   extends: .smoke_test
