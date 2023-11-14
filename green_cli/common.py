@@ -86,6 +86,15 @@ def create(session, words):
     return context.authenticator.create(session.session_obj, int(words))
 
 @green.command()
+@click.option('--words', type=click.Choice(['12', '24']), default='24', help="Mnemonic length")
+def generatemnemonic(words):
+    """Generate and print a new mnemonic.
+
+    Should only be used for testing or on an air-gapped device."""
+    fn = gdk.generate_mnemonic if words == '24' else gdk.generate_mnemonic_12
+    click.echo(fn())
+
+@green.command()
 @with_login
 @with_gdk_resolve
 def removeaccount(session):
