@@ -402,6 +402,7 @@ _UTXO_SORT_TYPES = ['oldest', 'newest', 'largest', 'smallest']
 @with_gdk_resolve
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--num-confs', default=0, expose_value=False, callback=details_json)
+@click.option('--address-type', default='', expose_value=False, callback=details_json)
 @click.option('--all-coins', is_flag=True, expose_value=False, callback=details_json)
 @click.option('--expired-at', type=int, expose_value=False, callback=details_json)
 @click.option('--dust-limit', type=int, expose_value=False, callback=details_json)
