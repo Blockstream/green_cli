@@ -59,7 +59,7 @@ def getassetinfo(session, details):
 
 # Add validateassetdomainname command
 @green.command()
-@click.option('--asset_id', expose_value=False, callback=details_json)
+@click.option('--asset-id', expose_value=False, callback=details_json)
 @click.option('--domain', expose_value=False, callback=details_json)
 @with_login
 @print_result
