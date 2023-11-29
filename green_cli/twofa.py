@@ -74,9 +74,12 @@ def gauth(session):
 @with_gdk_resolve
 def telegram(session):
     """Enable telegram 2fa"""
-    config = session.get_twofactor_config()
-    if 'telegram' not in config:
-        raise click.ClickException("Telegram not available")
+    # Disallow enabling Telegram on its own
+    # This client side check is racy but avoids a server call
+    # The server will also make a non-racy check
+    if not session.get_twofactor_config()['any_enabled']:
+        raise click.ClickException(f"You cannot enable only Telegram")
+
     return _enable_2fa(session, 'telegram', '')
 
 @twofa.command()
