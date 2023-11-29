@@ -88,6 +88,16 @@ def telegram(session):
 @with_gdk_resolve
 def disable(session, factor):
     """Disable an authentication factor."""
+    # Disallow leaving Telegram on its own
+    # This client side check is racy but avoids a server call
+    # The server will also make a non-racy check
+    enabled_methods = set(session.get_twofactor_config()['enabled_methods'])
+    if factor not in enabled_methods:
+        raise click.ClickException(f'{factor} not enabled')
+    enabled_methods.remove(factor)
+    if enabled_methods == {'telegram'}:
+        raise click.ClickException('You cannot leave only Telegram enabled')
+
     details = {'confirmed': True, 'enabled': False}
     return gdk.change_settings_twofactor(session.session_obj, factor, json.dumps(details))
 
