@@ -232,7 +232,7 @@ def setpartial(session, partial):
 
 @tx.command()
 @with_login
-@click.argument('sign-with', type=click.Choice(['user', 'green-backend', 'user;green-backend']))
+@click.argument('sign-with', type=click.Choice(['all', 'user', 'green-backend', 'user;green-backend']))
 def setsignwith(session, sign_with):
     """Set the signers a transaction should be signed with."""
     with Tx(allow_errors=True) as tx:
