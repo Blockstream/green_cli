@@ -523,7 +523,7 @@ def signtransaction(session, details):
 @with_gdk_resolve
 @click.argument('details', type=click.File('rb'))
 def psbtsign(session, details):
-    """Sign a psbt. For Liquid, the psbt must be blinded."""
+    """Sign a PSBT/PSET. For Liquid, the PSET must be blinded."""
     details = details.read().decode('utf-8')
     return gdk.psbt_sign(session.session_obj, details)
 
@@ -533,9 +533,19 @@ def psbtsign(session, details):
 @with_gdk_resolve
 @click.argument('details', type=click.File('rb'))
 def psbtgetdetails(session, details):
-    """Get wallet information from a psbt."""
+    """Get wallet information from a PSBT/PSET."""
     details = details.read().decode('utf-8')
     return gdk.psbt_get_details(session.session_obj, details)
+
+@green.command()
+@with_login
+@print_result
+@with_gdk_resolve
+@click.argument('details', type=click.File('rb'))
+def psbtfromjson(session, details):
+    """Get a PSBT/PSET from the JSON output of createtransaction/signtransaction."""
+    details = details.read().decode('utf-8')
+    return gdk.psbt_from_json(session.session_obj, details)
 
 @green.command()
 @with_login
