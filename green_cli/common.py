@@ -244,7 +244,7 @@ def setpin(session, pin, device_id):
     Replace the locally stored plaintext mnemonic with one encrypted with a PIN.
 
     The key to decrypt the mnemonic is stored on the server and will be permanently deleted after
-    too many PIN attempts.
+    three failed PIN attempts.
     """
     return context.authenticator.setpin(session, pin, device_id)
 

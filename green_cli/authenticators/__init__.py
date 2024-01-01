@@ -11,6 +11,7 @@ import click
 
 import wallycore as libwally
 import greenaddress as gdk
+from green_cli.gdk_resolve import gdk_resolve
 
 
 class Authenticator:
@@ -29,7 +30,7 @@ class Authenticator:
         return json.dumps(credentials)
 
     def login(self, session_obj):
-        return gdk.login_user(session_obj, self.hw_device, self.get_credentials())
+        return gdk_resolve(gdk.login_user(session_obj, self.hw_device, self.get_credentials()))
 
     def register(self, session_obj):
         return gdk.register_user(session_obj, self.hw_device, self.get_credentials())

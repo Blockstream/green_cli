@@ -60,7 +60,6 @@ def with_login(fn):
         if not context.logged_in:
             logging.info("Logging in")
             result = context.authenticator.login(session.session_obj)
-            gdk_resolve(result)
             context.logged_in = True
 
             if not context.no_warn_sysmsg:

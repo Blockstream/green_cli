@@ -11,11 +11,28 @@ class DefaultAuthenticator(SoftwareAuthenticator):
     def login(self, session_obj):
         """Perform login with either mnemonic or pin data from local storage"""
         try:
-            pin_data = open(self.pin_data_filename).read()
-            pin = getpass("PIN: ")
-            credentials = {'pin': pin, 'pin_data': json.loads(pin_data)}
-            return gdk.login_user(session_obj, '{}', json.dumps(credentials))
+            with open(self.pin_data_filename) as f:
+                pin_data = json.loads(f.read())
+
+            for i in range(3):
+                pin = getpass("PIN: ")
+                credentials = json.dumps({'pin': pin, 'pin_data': pin_data})
+                try:
+                    return gdk_resolve(gdk.login_user(session_obj, '{}', credentials))
+                except Exception as e:
+                    if 'id_invalid_pin' in str(e):
+                        click.echo('Invalid PIN, please try again')
+                        continue
+                    raise  # Some other error such as connection failed
+
+            click.echo('Invalid PIN, no attempts remaining')
+            # PIN is now invalid, remove pin_data and any saved PIN to
+            # avoid re-prompting
+            os.remove(self.pin_data_filename)
+            os.remove(self.mnemonic_prop.filename)
+            # Fall through to attempt mnemonic login below
         except (IOError, FileNotFoundError):
+            # No PIN data found, login with mnemonic below
             pass
         return super().login(session_obj)
 
@@ -24,7 +41,8 @@ class DefaultAuthenticator(SoftwareAuthenticator):
         assert credentials['mnemonic'] == self.mnemonic
         details = {'pin': pin, 'device_id': device_id, 'plaintext': credentials}
         pin_data = json.dumps(session.encrypt_with_pin(details).resolve()['pin_data'])
-        open(self.pin_data_filename, 'w').write(pin_data)
+        with open(self.pin_data_filename, 'w') as f:
+            f.write(pin_data)
         os.remove(self.mnemonic_prop.filename)
         return pin_data
 
