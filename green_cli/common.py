@@ -316,7 +316,7 @@ def getwatchonly(session):
 @green.command()
 @with_login
 @print_result
-def getavailablecurrencies(session, txid):
+def getavailablecurrencies(session):
     """Get supported currencies and their associated pricing source."""
     return session.get_available_currencies()
 
@@ -335,13 +335,6 @@ def changesettings(session, settings):
     """Change wallet settings."""
     settings = settings.read().decode('utf-8')
     return gdk.change_settings(session.session_obj, settings)
-
-@green.command()
-@with_login
-@print_result
-def getavailablecurrencies(session):
-    """Get available currencies."""
-    return session.get_available_currencies()
 
 @green.command()
 @with_login
