@@ -112,9 +112,6 @@ def green(**options):
         'log_level': options['gdk_log'],
         'datadir': options['datadir'],
         'tordir': options['tordir'],
-        # Explicitly enable Singlesig Liquid HWW support
-        # TODO: Remove this line once this is the default
-        'enable_ss_liquid_hww': True
     }
     gdk.init(init_config)
 
