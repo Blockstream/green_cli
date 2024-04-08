@@ -65,6 +65,7 @@ def _resolve_network_options(options):
 @click.option('--no-color', is_flag=True, help='Do not color text output')
 @click.option('--auth', default='default', type=click.Choice(['default', 'hardware', 'jade', 'wally', 'watchonly']))
 @click.option('--auth-config', default=None, help='Additional json config passed to the authenticator')
+@click.option('--blob-server-url', default=None, type=str, hidden=True)
 @click.option('--config-dir', '-C', default=None, help='Override config directory.')
 @click.option('--compact', '-c', is_flag=True, help='Compact json output (no pretty printing)')
 @click.option('--electrum-url', default=None, type=str, help='Use the given Electrum server')
