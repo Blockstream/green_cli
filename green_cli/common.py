@@ -39,16 +39,6 @@ from green_cli.utils import (
     get_user_transaction,
 )
 
-# In older verions of python (<3.6?) json.loads does not respect the order of the input
-# unless specifically passed object_pairs_hook=collections.OrderedDict
-# Monkey patch here to force consistent ordering on all python versions (otherwise for example every
-# time you call getbalance the keys will be in an arbitrarily different order in the output).
-_json_loads = json.loads
-def ordered_json_loads(*args, **kwargs):
-    kwargs['object_pairs_hook'] = collections.OrderedDict
-    return _json_loads(*args, **kwargs)
-json.loads = ordered_json_loads
-
 @green.command()
 @print_result
 def getnetworks():
