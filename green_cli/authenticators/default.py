@@ -43,7 +43,10 @@ class DefaultAuthenticator(SoftwareAuthenticator):
         pin_data = json.dumps(session.encrypt_with_pin(details).resolve()['pin_data'])
         with open(self.pin_data_filename, 'w') as f:
             f.write(pin_data)
-        os.remove(self.mnemonic_prop.filename)
+        if self.memory_only:
+            assert not os.path.exists(self.mnemonic_prop.filename)
+        else:
+            os.remove(self.mnemonic_prop.filename)
         return pin_data
 
 

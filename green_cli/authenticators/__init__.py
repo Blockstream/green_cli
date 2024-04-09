@@ -71,20 +71,26 @@ class MnemonicOnDisk:
         prompt_fn = lambda: getpass('Mnemonic: ')
         config_dir = options['config_dir']
         self.mnemonic_prop = ConfigProperty(config_dir, 'mnemonic', prompt_fn, stat.S_IRUSR)
+        self.memory_only = False  # Set to True to avoid storing our mnemonic
+        self.memory_only_mnemonic = None  # Actual mnemonic, held in memory only
 
     @staticmethod
-    def normalize_mnemonic(mnemonic):
+    def normalize(mnemonic):
         return ' '.join(mnemonic.split())
 
     @property
     def _mnemonic(self):
-        return MnemonicOnDisk.normalize_mnemonic(self.mnemonic_prop.get())
+        mnemonic = self.memory_only_mnemonic if self.memory_only else self.mnemonic_prop.get()
+        return MnemonicOnDisk.normalize(mnemonic)
 
     @_mnemonic.setter
     def _mnemonic(self, mnemonic):
         """Write mnemonic to config file"""
+        if self.memory_only:
+            self.memory_only_mnemonic = MnemonicOnDisk.normalize(mnemonic)
+            return
         try:
-            self.mnemonic_prop.set(MnemonicOnDisk.normalize_mnemonic(mnemonic))
+            self.mnemonic_prop.set(MnemonicOnDisk.normalize(mnemonic))
         except PermissionError:
             message = (
                 "Refusing to overwrite mnemonic file {}\n"
@@ -124,7 +130,7 @@ class SoftwareAuthenticator(MnemonicOnDisk, Authenticator):
         return self.register(session_obj)
 
     def set_mnemonic(self, mnemonic):
-        mnemonic = MnemonicOnDisk.normalize_mnemonic(mnemonic)
+        mnemonic = MnemonicOnDisk.normalize(mnemonic)
         words = mnemonic.split()
         is_encrypted = len(words) == 27
         logging.debug("mnemonic: '{}'".format(mnemonic))

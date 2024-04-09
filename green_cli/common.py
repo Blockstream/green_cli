@@ -9,6 +9,7 @@ import queue
 import click
 from click_repl import register_repl
 from datetime import datetime, timezone
+from getpass import getpass
 
 import green_gdk as gdk
 
@@ -74,6 +75,40 @@ def create(session, words):
         raise click.ClickException("Wallet creation on mainnet disabled")
 
     return context.authenticator.create(session.session_obj, int(words))
+
+@green.command()
+@with_session
+@click.argument('device_id')
+@click.option('--skip-create', type=bool, default=False, help="Do not attempt to create a new wallet")
+def safecreate(session, device_id, skip_create):
+    """Create a new PIN login for an existing or new wallet.
+
+    Enter a mnemonic to use an existing wallet, or an empty mnemonic to create a new one.
+    Then enter a PIN to login to the wallet.
+    Only the encrypted PIN data is stored on disk; the mnemonic is held only in memory.
+
+    Use getcredentials to get the mnemonic for newly created wallets.
+    """
+    authenticator = context.authenticator
+    if not getattr(authenticator, 'create', None):
+        raise click.ClickException("{} does not support creating new wallets".format(authenticator.name))
+
+    authenticator.memory_only = True  # Do not store our mnemonic
+    authenticator._mnemonic = getpass("Mnemonic (Enter to create a new mnemonic): ")
+    if not authenticator.mnemonic:
+        authenticator._mnemonic = gdk.generate_mnemonic_12()
+    credentials = {'mnemonic': authenticator.mnemonic}
+    while True:
+        pin = getpass("PIN: ")
+        pin2 = getpass("Re-enter PIN: ")
+        if pin == pin2:
+            break
+        click.echo('PIN mismatch, please try again')
+
+    if not skip_create:
+        authenticator.register(session.session_obj)
+    authenticator.login(session.session_obj)
+    return authenticator.setpin(session, pin, device_id)
 
 @green.command()
 @click.option('--words', type=click.Choice(['12', '24']), default='24', help="Mnemonic length")
