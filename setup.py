@@ -11,7 +11,7 @@ setup(
     install_requires=[
         'Click',
         'click-repl',
-        'greenaddress',
+        'green_gdk',
     ],
     entry_points='''
         [console_scripts]
