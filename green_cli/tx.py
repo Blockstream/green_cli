@@ -7,7 +7,7 @@ from collections import defaultdict
 import click
 
 import wallycore as wally
-import greenaddress as gdk
+import green_gdk as gdk
 
 from green_cli import context
 from green_cli.gdk_resolve import gdk_resolve

@@ -10,7 +10,7 @@ import click
 from click_repl import register_repl
 from datetime import datetime, timezone
 
-import greenaddress as gdk
+import green_gdk as gdk
 
 from green_cli import context
 from green_cli.green import green

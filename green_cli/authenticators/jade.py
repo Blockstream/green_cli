@@ -1,5 +1,5 @@
 import wallycore as wally
-import greenaddress as gdk
+import green_gdk as gdk
 
 import base64
 import json

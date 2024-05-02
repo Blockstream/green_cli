@@ -1,7 +1,7 @@
 import logging
 import threading
 
-import greenaddress as gdk
+import green_gdk as gdk
 
 from green_cli import context
 
