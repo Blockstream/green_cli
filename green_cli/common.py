@@ -226,6 +226,15 @@ def updatesubaccount(session, details):
 
 @green.command()
 @with_login
+@print_result
+@with_gdk_resolve
+@click.option('--action', expose_value=False, callback=details_json)
+@click.option('--data-source', expose_value=False, callback=details_json)
+def cachecontrol(session, details):
+    return gdk.cache_control(session.session_obj, json.dumps(details))
+
+@green.command()
+@with_login
 @click.argument('pin')
 @click.argument('device_id')
 def setpin(session, pin, device_id):
