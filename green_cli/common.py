@@ -290,11 +290,9 @@ def setcsvtime(session, details):
 @with_login
 @click.argument('txid', type=str)
 @click.argument('memo', type=str)
-@click.option('--bip70', is_flag=True, help='Set a bip70 memo')
-def settransactionmemo(session, txid, memo, bip70):
+def settransactionmemo(session, txid, memo):
     """Set a memo on a wallet transaction."""
-    memo_type = gdk.GA_MEMO_BIP70 if bip70 else gdk.GA_MEMO_USER
-    return gdk.set_transaction_memo(session.session_obj, txid, memo, memo_type)
+    return gdk.set_transaction_memo(session.session_obj, txid, memo, gdk.GA_MEMO_USER)
 
 @green.command()
 @with_login
