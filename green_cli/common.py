@@ -210,15 +210,15 @@ def getsubaccounts(session, details):
 @with_login
 @print_result
 @with_gdk_resolve
-@click.argument('pointer', type=int)
-def getsubaccount(session, pointer):
+@click.argument('subaccount', type=int)
+def getsubaccount(session, subaccount):
     """Show details of specific subaccount."""
-    return gdk.get_subaccount(session.session_obj, pointer)
+    return gdk.get_subaccount(session.session_obj, subaccount)
 
 @green.command()
 @with_login
 @with_gdk_resolve
-@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
+@click.argument('subaccount', type=int, expose_value=False, callback=details_json)
 @click.option('--name', expose_value=False, callback=details_json)
 @click.option('--hidden', type=bool, expose_value=False, callback=details_json)
 def updatesubaccount(session, details):
