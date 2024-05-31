@@ -261,17 +261,21 @@ def getcredentials(session, details):
 
 @green.command()
 @with_login
-@click.argument('username')
-@click.argument('password')
-def setwatchonly(session, username, password):
+@print_result
+@click.argument('username', type=str, expose_value=False, callback=details_json)
+@click.argument('password', type=str, expose_value=False, callback=details_json)
+@with_gdk_resolve
+def setwatchonly(session, details):
     """Enable watch-only login with the supplied username and password."""
-    return session.set_watch_only(username, password)
+    return gdk.register_user(session.session_obj, '{}', json.dumps(details))
 
 @green.command()
 @with_login
+@with_gdk_resolve
 def disablewatchonly(session):
     """Disable watch-only logins for the wallet."""
-    return session.set_watch_only('', '')
+    empty_credentials = json.dumps({'username': '', 'password': ''})
+    return gdk.register_user(session.session_obj, '{}', empty_credentials)
 
 @green.command()
 @with_login
