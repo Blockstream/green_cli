@@ -636,6 +636,12 @@ def password(password):
     WatchOnlyAuthenticator(context.options).set_password(password)
 
 @set.command()
+@click.argument('watch-only-data', type=str)
+def watch_only_data(watch_only_data):
+    """Set watch_only_data key to use for watch-only login."""
+    WatchOnlyAuthenticator(context.options).set_watch_only_data(watch_only_data)
+
+@set.command()
 @click.argument('jade_serial_device', type=str)
 def jadeusbserialdevice(jade_serial_device):
     from green_cli.authenticators.jade import JadeAuthenticator
