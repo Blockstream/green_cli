@@ -389,7 +389,7 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
                 else:
                     wallet_output_amounts[output['asset_id']] += output['satoshi']
 
-            if 'commitment' not in output:
+            if 'blinding_key' not in output:
                 # Output not blinded, return null placeholder
                 return None
 
