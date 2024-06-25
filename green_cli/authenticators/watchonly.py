@@ -10,6 +10,10 @@ class WatchOnlyAuthenticator:
         if options['blob_server_url']:
             self._watch_only_data = ConfigProperty(config_dir, 'watch_only_data', lambda: input('watch_only_data: '))
 
+    @property
+    def name(self):
+        return 'watch-only signer'
+
     def set_username(self, username):
         self._username.set(username)
 
