@@ -30,7 +30,7 @@ class Context:
                 'spv_enabled': self.options['spv'],
             }
 
-            optional_keys = ['cert_expiry_threshold', 'electrum_url', 'electrum_tls']
+            optional_keys = ['cert_expiry_threshold', 'electrum_url', 'electrum_onion_url', 'electrum_tls']
             overrides = {k: v for (k, v) in self.options.items() if k in optional_keys and v is not None}
             session_params.update(overrides)
 

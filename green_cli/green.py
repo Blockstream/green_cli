@@ -68,6 +68,7 @@ def _resolve_network_options(options):
 @click.option('--config-dir', '-C', default=None, help='Override config directory.')
 @click.option('--compact', '-c', is_flag=True, help='Compact json output (no pretty printing)')
 @click.option('--electrum-url', default=None, type=str, help='Use the given Electrum server')
+@click.option('--electrum-onion-url', default=None, type=str, help='Use the given Electrum onion server')
 @click.option('--electrum-tls', default=None, type=bool, help='Connect to Electrum using TLS')
 @click.option('--watch-only', is_flag=True, help='Use watch-only login')
 @click.option('--spv', is_flag=True, help='Enable SPV verification')
