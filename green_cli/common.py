@@ -342,6 +342,7 @@ def changesettings(session, settings):
 @print_result
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--address-type', '--address_type', default="", expose_value=False, callback=details_json)
+@click.option('--ignore-gap-limit', is_flag=True, default=False, expose_value=False, callback=details_json)
 def getnewaddress(session, details):
     """Get a new receive address."""
     auth_handler = gdk.get_receive_address(session.session_obj, json.dumps(details))
@@ -353,6 +354,7 @@ def getnewaddress(session, details):
 @with_gdk_resolve
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--address-type', '--address_type', default="", expose_value=False, callback=details_json)
+@click.option('--ignore-gap-limit', is_flag=True, default=False, expose_value=False, callback=details_json)
 def getreceiveaddress(session, details):
     """Get a new receive address."""
     return gdk.get_receive_address(session.session_obj, json.dumps(details))
