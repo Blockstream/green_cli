@@ -568,9 +568,9 @@ def sendtransaction(session, details, timeout):
 def broadcasttransaction(session, details, timeout):
     """Broadcast a transaction directly to the network."""
     details = details.read().decode('utf-8')
-    details = json.loads(details)
-    txhash = gdk.broadcast_transaction(session.session_obj, details['transaction'])
-    return get_txhash_with_sync(session, details, timeout, txhash)
+    details = gdk_resolve(gdk.broadcast_transaction(session.session_obj, details))
+    get_txhash_with_sync(session, details, timeout)
+    return details
 
 def _send_transaction(session, details, timeout):
     add_utxos_to_transaction(session, details)
