@@ -59,6 +59,7 @@ def _resolve_network_options(options):
 @click.option('--gdk-log', default='none', type=click.Choice(['none', 'debug', 'warn', 'info', 'error']))
 @click.option('--network', default=None, help='gdk network option')
 @click.option('--liquid', '-L', is_flag=True, help='Use liquid network')
+@click.option('--discount-fees', is_flag=True, hidden=True)  # Dev only: will be removed in a future release
 @click.option('--singlesig', '-S', is_flag=True, help='Use singlesig wallet')
 @click.option('--mainnet', '-M', is_flag=True, help='Use mainnet')
 @click.option('--testnet', '-T', is_flag=True, help='Use testnet')
