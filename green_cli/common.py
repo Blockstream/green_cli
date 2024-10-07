@@ -468,13 +468,14 @@ def gettransactions(session, summary, details):
 @green.command()
 @with_login
 @print_result
+@with_gdk_resolve
 @click.option('--addressee', '-a', type=(Address(), Amount()), expose_value=False, multiple=True)
 @click.option('--subaccount', default=0, expose_value=False, callback=details_json)
 @click.option('--fee-rate', '-f', type=int, expose_value=False, callback=details_json)
 def createtransaction(session, details):
     """Create an outgoing transaction."""
     add_utxos_to_transaction(session, details)
-    return gdk_resolve(gdk.create_transaction(session.session_obj, json.dumps(details)))
+    return gdk.create_transaction(session.session_obj, json.dumps(details))
 
 @green.command()
 @with_login
