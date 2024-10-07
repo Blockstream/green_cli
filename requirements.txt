@@ -1,11 +1,11 @@
 -r requirements-wally.txt
 
-https://github.com/Blockstream/gdk/releases/download/release_0.72.2/green_gdk-0.72.2-cp38-cp38-manylinux_2_28_x86_64.whl; sys_platform == 'linux' and python_version == '3.8' --hash=sha256:1bb42d925f3e12e426462c4aa158d186545569edee81d1e0afb5628c2a156310
-https://github.com/Blockstream/gdk/releases/download/release_0.72.2/green_gdk-0.72.2-cp39-cp39-manylinux_2_28_x86_64.whl; sys_platform == 'linux' and python_version == '3.9' --hash=sha256:064d400d5396f8f8b795770b9119cd2f9a6fb57c369b81467c0321f99a38d567
-https://github.com/Blockstream/gdk/releases/download/release_0.72.2/green_gdk-0.72.2-cp310-cp310-manylinux_2_28_x86_64.whl; sys_platform == 'linux' and python_version == '3.10' --hash=sha256:f371ac0593018379cc0d3fb7e4fead41f1df9fc5def2f6dd0944f338c96c9804
-https://github.com/Blockstream/gdk/releases/download/release_0.72.2/green_gdk-0.72.2-cp311-cp311-manylinux_2_28_x86_64.whl; sys_platform == 'linux' and python_version == '3.11' --hash=sha256:38d6dccde446eaed87a0a02c69868f96fd99ef114ad7ab1dbb78949439686d26
-https://github.com/Blockstream/gdk/releases/download/release_0.72.2/green_gdk-0.72.2-cp39-cp39-macosx_14_0_arm64.whl; sys_platform == 'darwin' and platform_machine == 'arm64' and python_version == '3.9' --hash=sha256:b474415c84a99ce24cf8f8ac4de2ca692c722b5be91484a1b603209c849778ec
-https://github.com/Blockstream/gdk/releases/download/release_0.72.2/green_gdk-0.72.2-cp39-cp39-macosx_12_0_x86_64.whl; sys_platform == 'darwin' and platform_machine == 'x86_64' and python_version == '3.9' --hash=sha256:3147ad56882f1f3fdd0ccf5be2956dfab656efcf458129c4813cfa432f93431d
+https://github.com/Blockstream/gdk/releases/download/release_0.73.1/green_gdk-0.73.1-cp38-cp38-manylinux_2_28_x86_64.whl; sys_platform == 'linux' and python_version == '3.8' --hash=sha256:f7405dda7041b484fa0c1415572da8f76fa9951bb953bacca446257466f2c280
+https://github.com/Blockstream/gdk/releases/download/release_0.73.1/green_gdk-0.73.1-cp39-cp39-manylinux_2_28_x86_64.whl; sys_platform == 'linux' and python_version == '3.9' --hash=sha256:1dc0aaff422d8134b7c85ea523762d9a62a1be99fdc3cf7105ac5d70725c04c3
+https://github.com/Blockstream/gdk/releases/download/release_0.73.1/green_gdk-0.73.1-cp310-cp310-manylinux_2_28_x86_64.whl; sys_platform == 'linux' and python_version == '3.10' --hash=sha256:d528150207b864f58c2388be5248946d9806925a93468aa09677c0ba19c0755e
+https://github.com/Blockstream/gdk/releases/download/release_0.73.1/green_gdk-0.73.1-cp311-cp311-manylinux_2_28_x86_64.whl; sys_platform == 'linux' and python_version == '3.11' --hash=sha256:29dd42ecc5e4eff4201076500fcb8508308f706dcb555e3d7a317107e43412d3
+https://github.com/Blockstream/gdk/releases/download/release_0.73.1/green_gdk-0.73.1-cp39-cp39-macosx_14_0_arm64.whl; sys_platform == 'darwin' and platform_machine == 'arm64' and python_version == '3.9' --hash=sha256:544b844137ca30c05a79adb696f77c0bfe1726ef0c67c2aa3114a57e14fcbd74
+https://github.com/Blockstream/gdk/releases/download/release_0.73.1/green_gdk-0.73.1-cp39-cp39-macosx_12_0_x86_64.whl; sys_platform == 'darwin' and platform_machine == 'x86_64' and python_version == '3.9' --hash=sha256:39bd94ef6f009c598cdf06279ec4f78ed3ea0842b04bc6af1e2dfe49ce3ec51b
 
 click==8.1.7 \
     --hash=sha256:ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28 \
