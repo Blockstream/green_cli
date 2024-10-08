@@ -102,7 +102,7 @@ platform, but might look something like this:
 
 Activate the virtualenv before proceeding with the installation steps below
 
-`. /path/to/venv/green-cli`
+`. /path/to/venv/green-cli/bin/activate`
 
 Install the requirements:
 
@@ -179,7 +179,7 @@ $ green-cli --network liquid set mnemonic "liquid mnemonic here ..."
 $ green-cli --network liquid sendtoaddress
 ```
 
-For now wallet creation is disabled on use on mainnet/liquid mainnet
+NOTE: Wallet creation is currently only available on testnet networks.
 
 ## Hardware device capabilities
 
