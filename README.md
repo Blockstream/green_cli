@@ -138,8 +138,7 @@ $ pip install -r requirements-jade.txt
 ```
 NOTE: this must be two separate invocations, as the jade python api is installed from github sources, and does not have a sha hash.
 
-You can now run green-cli (or green-liquid-cli) passing the `--auth
-jade` option.
+You can now run green-cli passing the `--auth jade` option.
 
 ### Installing Generic hardware wallet support
 
@@ -156,8 +155,7 @@ $ sudo apt-get install libudev-dev libusb-1.0-0-dev
 $ pip install -r requirements-hwi.txt
 ```
 
-You can now run green-cli (or green-liquid-cli) passing the `--auth
-hardware` option.
+You can now run green-cli passing the `--auth hardware` option.
 
 ### Example usage
 

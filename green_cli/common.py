@@ -1,4 +1,4 @@
-"""Code common to green-cli and green-liquid-cli."""
+"""Code common to Bitcoin and Liquid networks."""
 import collections
 import fileinput
 import functools
