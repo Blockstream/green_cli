@@ -1,5 +1,24 @@
 image: greenaddress/ci@sha256:ba2a76bb933f1da6573631597f947b1ff2f47e772674ab38c4e87e0eac6861b2
 
+build_release_wheel:
+  tags:
+    - ga
+  script:
+    - cd $CI_PROJECT_DIR
+    - apt install -yqq python3-venv
+    - virtualenv -p python3 venv
+    - source venv/bin/activate
+    - pip install build
+    - python -m build
+    - deactivate
+    - rm -rf venv
+  artifacts:
+    name: "$CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA"
+    expire_in: 3 days
+    paths:
+    - $CI_PROJECT_DIR/dist
+    when: on_success
+
 .smoke_test:
   tags:
     - ga
