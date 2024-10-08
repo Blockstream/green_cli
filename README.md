@@ -22,6 +22,18 @@ green-cli is a command line interface for the Blockstream Green wallet
 
 ## Getting Started
 
+### Install from PyPI
+
+To install the current release using pip:
+
+`pip install green-cli`
+
+We strongly recommend installing using the release hashes to ensure that the correct
+package is installed. To do this, use the `requirements.txt` file from the latest
+release at https://github.com/Blockstream/green_cli/releases, and install with:
+
+`pip install --require-hashes -r requirements.txt`
+
 ### Using docker
 
 Rather than installing green-cli locally you may find it easier to build and run
