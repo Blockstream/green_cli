@@ -125,11 +125,6 @@ Install green-cli itself:
 $ pip install .
 ```
 
-Optional: enable bash completion
-```
-$ eval "$(_GREEN_CLI_COMPLETE=source green-cli)"
-```
-
 ### Installing Blockstream Jade support
 
 To enable support for the [Blockstream Jade](https://blockstream.com/jade/)
