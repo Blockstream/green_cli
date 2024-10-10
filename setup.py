@@ -45,4 +45,12 @@ setup(
         [console_scripts]
         green-cli=green_cli.green_cli:main
     ''',
+    extras_require={
+        'jade': [
+            'jade_client>=1.0.32',
+        ],
+        'hwi': [
+            'HWI @ git+ssh://git@github.com/bitcoin-core/HWI.git',
+        ]
+    }
 )
