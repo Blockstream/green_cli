@@ -24,7 +24,7 @@ green-cli is a command line interface for the Blockstream Green wallet
 
 ### Install from PyPI
 
-To install the current release using pip:
+To install the current release from [PyPI](https://pypi.org/) using `pip`:
 
 `pip install green-cli`
 
@@ -33,6 +33,16 @@ package is installed. To do this, use the `requirements.txt` file from the lates
 release at https://github.com/Blockstream/green_cli/releases, and install with:
 
 `pip install --require-hashes -r requirements.txt`
+
+The default install supports the internal gdk software wallet and an external software
+wallet which does not share its private keys with gdk (enabled via `--auth wally`).
+
+Two install variants are available with additional hardware wallet support:
+
+ - `green-cli[jade]` to include support for [Blockstream Jade](https://blockstream.com/jade/)
+ - `green-cli[hwi]` to include support for [Bitcoin HWI](https://github.com/bitcoin-core/HWI)
+
+You can also install `green-cli[jade,hwi]` to include both of the above.
 
 ### Using docker
 
@@ -122,9 +132,9 @@ $ eval "$(_GREEN_CLI_COMPLETE=source green-cli)"
 
 ### Installing Blockstream Jade support
 
-To enable support for the Blockstream Jade hardware wallet (via
-the `--auth jade` option) additional dependencies must be installed
-from requirements-jade.txt.
+To enable support for the [Blockstream Jade](https://blockstream.com/jade/)
+hardware wallet (via the `--auth jade` option) additional dependencies must
+be installed from requirements-jade.txt.
 
 1) Install libudev and libusb. This is platform specific but for
 debian-based systems:
