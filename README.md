@@ -37,12 +37,13 @@ release at https://github.com/Blockstream/green_cli/releases, and install with:
 The default install supports the internal gdk software wallet and an external software
 wallet which does not share its private keys with gdk (enabled via `--auth wally`).
 
-Two install variants are available with additional hardware wallet support:
+A `jade` install variant is available with support for
+the [Blockstream Jade](https://blockstream.com/jade/) hardware wallet. This
+can be installed using `pip install green-cli[jade]`
 
- - `green-cli[jade]` to include support for [Blockstream Jade](https://blockstream.com/jade/)
- - `green-cli[hwi]` to include support for [Bitcoin HWI](https://github.com/bitcoin-core/HWI)
-
-You can also install `green-cli[jade,hwi]` to include both of the above.
+For [Bitcoin HWI](https://github.com/bitcoin-core/HWI) support you must manually
+install HWI using `pip install -r requirements-hwi.txt` with `requirements-hwi.txt`
+from this repo, or following the instructions on the HWI repo.
 
 ### Using docker
 
