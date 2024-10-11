@@ -8,8 +8,9 @@ build_release_wheel:
     - apt install -yqq python3-venv
     - virtualenv -p python3 venv
     - source venv/bin/activate
-    - pip install build
+    - pip install build twine
     - python -m build
+    - twine check dist/*.whl
     - deactivate
     - rm -rf venv
   artifacts:
