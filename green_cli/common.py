@@ -481,6 +481,21 @@ def createtransaction(session, details):
 @with_login
 @print_result
 @with_gdk_resolve
+@click.option('--subaccount', type=int, expose_value=False, callback=details_json)
+@click.option('--fee-subaccount', expose_value=False, callback=details_json, help='The subaccount to return any leftover fees too')
+@click.option('--fee-rate', expose_value=False, callback=details_json, help='The fee rate to use in sat per 1000 vbytes')
+def createredeposittransaction(session, details):
+    """Create a redeposit transaction for a subaccounts expired UTXOs"""
+    # Get the unspend outputs, sorted by oldest first
+    utxo_details = {'subaccount': details['subaccount'], 'num_confs': 1}
+    utxos = gdk_resolve(gdk.get_unspent_outputs(session.session_obj, json.dumps(utxo_details)))
+    details['utxos'] = utxos['unspent_outputs']
+    return gdk.create_redeposit_transaction(session.session_obj, json.dumps(details))
+
+@green.command()
+@with_login
+@print_result
+@with_gdk_resolve
 @click.argument('details', type=click.File('rb'))
 def blindtransaction(session, details):
     """Blind a transaction.
