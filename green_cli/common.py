@@ -385,6 +385,7 @@ def getfeeestimates(session):
 @click.option('--num-confs', default=0, expose_value=False, callback=details_json)
 @click.option('--all-coins', is_flag=True, expose_value=False, callback=details_json)
 @click.option('--expired-at', type=int, expose_value=False, callback=details_json)
+@click.option('--expires-in', type=int, expose_value=False, callback=details_json)
 @click.option('--dust-limit', type=int, expose_value=False, callback=details_json)
 def getbalance(session, details):
     """Get balance."""
@@ -401,6 +402,7 @@ _UTXO_SORT_TYPES = ['oldest', 'newest', 'largest', 'smallest']
 @click.option('--address-type', default='', expose_value=False, callback=details_json)
 @click.option('--all-coins', is_flag=True, expose_value=False, callback=details_json)
 @click.option('--expired-at', type=int, expose_value=False, callback=details_json)
+@click.option('--expires-in', type=int, expose_value=False, callback=details_json)
 @click.option('--dust-limit', type=int, expose_value=False, callback=details_json)
 @click.option('--sort-by', type=click.Choice(_UTXO_SORT_TYPES), expose_value=False, callback=details_json)
 def getunspentoutputs(session, details):
@@ -482,6 +484,8 @@ def createtransaction(session, details):
 @print_result
 @with_gdk_resolve
 @click.option('--subaccount', type=int, expose_value=False, callback=details_json)
+@click.option('--expired-at', type=int, expose_value=False, callback=details_json)
+@click.option('--expires-in', type=int, expose_value=False, callback=details_json)
 @click.option('--fee-subaccount', expose_value=False, callback=details_json, help='The subaccount to return any leftover fees too')
 @click.option('--fee-rate', expose_value=False, callback=details_json, help='The fee rate to use in sat per 1000 vbytes')
 def createredeposittransaction(session, details):
