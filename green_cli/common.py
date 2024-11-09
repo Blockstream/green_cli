@@ -687,6 +687,23 @@ def mnemonic(file_, mnemonic):
         mnemonic = fileinput.input(mnemonic).readline()
     DefaultAuthenticator(context.options).set_mnemonic(mnemonic)
 
+@green.command()
+@with_session
+@print_result
+@with_gdk_resolve
+@click.argument('pem', type=click.File('r'))
+@click.argument('challenge', type=click.File('rb'))
+@click.argument('signature', type=click.File('rb'))
+def rsaverify(session, pem, challenge, signature):
+    """Verify an RSA challenge."""
+    details = {
+        'pem': pem.read(),
+        'challenge': challenge.read().hex(),
+        'signature': signature.read().hex(),
+    }
+    return gdk.rsa_verify(session.session_obj, json.dumps(details))
+
+
 def main():
     register_repl(green)
     green()
