@@ -50,5 +50,8 @@ smoke_test_fedora:
 
 smoke_test_osx:
   extends: .smoke_test
+  parallel:
+    matrix:
+      - RUNNER: [ia, m1]
   tags:
-    - osx
+    - osx-$RUNNER
