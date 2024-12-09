@@ -183,7 +183,7 @@ def convertamount(session, amount, unit):
     amount = int(amount) if unit == 'satoshi' else amount
     return session.convert_amount({unit: amount})
 
-_SUBACCOUNT_TYPES = ['2of2', '2of3', 'p2pkh', 'p2sh-p2wpkh', 'p2wpkh']
+_SUBACCOUNT_TYPES = ['2of2', '2of3', 'p2pkh', 'p2sh-p2wpkh', 'p2wpkh', 'p2tr']
 
 @green.command()
 @with_login
