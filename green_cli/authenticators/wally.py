@@ -98,19 +98,53 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
         result['signature'] = wally.ec_sig_to_der(signature).hex()
         return result
 
-    def _get_signature_hash(self, wally_tx, index: int, txin: Dict, sighash: int, flags: int) -> bytes:
-        # Only SIGHASH_ALL is currently allowed for BTC signing
-        assert sighash == wally.WALLY_SIGHASH_ALL
-        prevout_script = wally.hex_to_bytes(txin['prevout_script'])
+    def _get_signature_hash(self, wally_tx, index: int, txin: Dict,
+                            sighash: int, flags: int,
+                            scripts: Optional[object], values: List[int]) -> bytes:
+        is_p2tr = txin['address_type'] == 'p2tr'
+        # Verify the sighash is allowed
+        allowed_sighashes = [wally.WALLY_SIGHASH_ALL]
+        if is_p2tr:
+            allowed_sighashes.append(wally.WALLY_SIGHASH_DEFAULT)
+        assert sighash in allowed_sighashes, f'unsupported sighash {sighash}'
+
+        if is_p2tr:
+            # Taproot Schnorr signature
+            key_version, codesep_pos, flags = 0, wally.WALLY_NO_CODESEPARATOR, 0
+            return wally.tx_get_btc_taproot_signature_hash(
+                wally_tx, index, scripts, values, None, key_version,
+                codesep_pos, None, sighash, flags)
+
+        # ECDSA segwit/pre-segwit signature
+        script_code = bytes.fromhex(txin['prevout_script'])
         return wally.tx_get_btc_signature_hash(
-            wally_tx, index, prevout_script, txin['satoshi'], sighash, flags)
+            wally_tx, index, script_code, txin['satoshi'], sighash, flags)
 
     def _sign_tx(self, details, wally_tx):
+
+        def _is_p2tr(txin):
+            return txin.get('address_type', '') == 'p2tr' and not txin.get('skip_signing', False)
+
+        transaction_inputs = details['transaction_inputs']
+        are_signing_p2tr = any([_is_p2tr(txin) for txin in transaction_inputs])
         use_ae_protocol = details['use_ae_protocol']
+
+        scripts, values = None, []  # scriptpubkeys for signing
+        if are_signing_p2tr:
+            # At least one taproot input: we need scriptpubkeys and values
+            scripts = wally.map_init(len(transaction_inputs), None)
+            for index, txin in enumerate(transaction_inputs):
+                # Fetch the scriptpubkey from the provided signing UTXO
+                utxo_hex = details['signing_transactions'][txin['txhash']]
+                tx_flags = wally.WALLY_TX_FLAG_USE_WITNESS
+                utxo_tx = wally.tx_from_hex(utxo_hex, tx_flags)
+                scriptpubkey = wally.tx_get_output_script(utxo_tx, txin['pt_idx'])
+                wally.map_add_integer(scripts, index, scriptpubkey)
+                values.append(txin['satoshi'])
 
         signatures = []
         signer_commitments = []
-        for index, txin in enumerate(details['transaction_inputs']):
+        for index, txin in enumerate(transaction_inputs):
             if txin.get('skip_signing', False):
                 # Not signing this input (may not belong to this signer)
                 logging.debug(f'Not signing input {index}: skip_signing=True')
@@ -119,30 +153,53 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
                 signatures.append('')
                 continue
 
+            is_p2tr = txin['address_type'] == 'p2tr'
             is_segwit = txin['address_type'] in ['p2wsh', 'csv', 'p2wpkh', 'p2sh-p2wpkh']
             flags = wally.WALLY_TX_FLAG_USE_WITNESS if is_segwit else 0
 
-            sighash = txin.get('user_sighash', wally.WALLY_SIGHASH_ALL)
-            txhash = self._get_signature_hash(wally_tx, index, txin, sighash, flags)
-            path = txin['user_path']
-            privkey = self.get_privkey(path)
-            logging.debug('Processing input %s, path %s', index, path)
+            def_sighash = wally.WALLY_SIGHASH_DEFAULT if is_p2tr else wally.WALLY_SIGHASH_ALL
+            sighash = txin.get('user_sighash', def_sighash)
+            txhash = self._get_signature_hash(wally_tx, index, txin, sighash, flags, scripts, values)
+
+            # Derive the key to sign with. In a real HWW implementation
+            # this would verify the path belongs to the wallet
+            privkey = self.get_privkey(txin['user_path'])
+            logging.debug('Processing input %s, path %s', index, txin['user_path'])
+
+            # Sign the transaction
+            signer_commitment = bytes()
+            if is_p2tr or not use_ae_protocol:
+                # Standard or Taproot signature
+                sig_flags = wally.EC_FLAG_ECDSA | wally.EC_FLAG_GRIND_R
+                if is_p2tr:
+                    # Taproot Schnorr signature, low-R grinding does not apply
+                    sig_flags = wally.EC_FLAG_SCHNORR
+                    # Tweak the private key according to BIP-0341 (No script path)
+                    privkey = wally.ec_private_key_bip341_tweak(privkey, None, 0)
+
+                signature = wally.ec_sig_from_bytes(privkey, txhash, sig_flags)
+            else:
+                # Anti-Exfil signing
+                signer_commitment, signature = self._make_ae_signature(privkey, txhash, txin)
+                logging.debug('Signer commitment: %s', signer_commitment.hex())
 
             if use_ae_protocol:
-                signer_commitment, signature = self._make_ae_signature(privkey, txhash, txin)
+                # Add the signer commitment (or blank for taproot)
+                signer_commitments.append(signer_commitment.hex())
 
-                signer_commitment = signer_commitment.hex()
-                logging.debug('Signer commitment: %s', signer_commitment)
-                signer_commitments.append(signer_commitment)
+            if is_p2tr:
+                # Taproot: Return a 64 byte Schnorr signature, or a
+                # 64 byte Schnorr signature plus non-default sighash type
+                if sighash != wally.WALLY_SIGHASH_DEFAULT:
+                    signature.append(sighash)
             else:
-                signature = wally.ec_sig_from_bytes(privkey, txhash,
-                                                    wally.EC_FLAG_ECDSA | wally.EC_FLAG_GRIND_R)
+                # ECDSA: Return a DER encoded signature plus sighash
+                signature = wally.ec_sig_to_der(signature)
+                signature.append(sighash)
 
-            signature = wally.ec_sig_to_der(signature)
-            signature.append(sighash)
-            signature = signature.hex()
-            logging.debug('Signature (der): %s', signature)
-            signatures.append(signature)
+            logging.debug('%s signature: %s',
+                          'Schnorr' if is_p2tr else 'ECDSA', signature.hex())
+            signatures.append(signature.hex())
 
         result = {'signer_commitments': signer_commitments} if use_ae_protocol else {}
         result['signatures'] = signatures
@@ -190,10 +247,20 @@ class WallyAuthenticatorLiquid(WallyAuthenticator):
     def get_blinding_factor(self, hash_prevouts: bytes, output_index: int) -> bytes:
         return wally.asset_blinding_key_to_abf_vbf(self.master_blinding_key, hash_prevouts, output_index)
 
-    def _get_signature_hash(self, wally_tx, index: int, txin: Dict, sighash: int, flags: int) -> bytes:
-        # Allowed sighash types are limited; check that here
-        assert sighash in [wally.WALLY_SIGHASH_ALL,
-                           wally.WALLY_SIGHASH_SINGLE | wally.WALLY_SIGHASH_ANYONECANPAY]
+    def _get_signature_hash(self, wally_tx, index: int, txin: Dict,
+                            sighash: int, flags: int,
+                            scripts: Optional[object], values: List[int]) -> bytes:
+        is_p2tr = txin['address_type'] == 'p2tr'
+        # Verify the sighash is allowed
+        allowed_sighashes = [
+            wally.WALLY_SIGHASH_ALL, wally.WALLY_SIGHASH_SINGLE | wally.WALLY_SIGHASH_ANYONECANPAY
+        ]
+        if is_p2tr:
+            allowed_sighashes.append(wally.WALLY_SIGHASH_DEFAULT)
+        assert sighash in allowed_sighashes, f'unsupported sighash {sighash}'
+
+        # FIXME: TAPROOT: Implement Liquid taproot
+        assert not is_p2tr, 'Liquid taproot is not yet supported'
         prevout_script = wally.hex_to_bytes(txin['prevout_script'])
         if txin['is_blinded']:
             value = bytes.fromhex(txin['commitment'])
@@ -211,5 +278,4 @@ class WallyAuthenticatorLiquid(WallyAuthenticator):
 def get_authenticator(options: Dict):
     if 'liquid' in options['network']:
         return WallyAuthenticatorLiquid(options)
-    else:
-        return WallyAuthenticator(options)
+    return WallyAuthenticator(options)
