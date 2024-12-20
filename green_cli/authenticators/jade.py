@@ -238,18 +238,8 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
                 mapped['ae_host_commitment'] = bytes.fromhex(input['ae_host_commitment'])
                 mapped['ae_host_entropy'] = bytes.fromhex(input['ae_host_entropy'])
 
-            # Jade has an optimisation for txns with only a single segwit input
-            # where we can skip passing in the entire prior tx and instead pass
-            # just the utxo amount (in sats).  In all other cases we pass the
-            # input tx so the hw can verify the utxo amount from the output.
-            # NOTE: this is optional, and we should get the same signature if
-            # passed in the full input txn.
-            if is_segwit and len(transaction_inputs) == 1:
-                mapped['satoshi'] = input['satoshi']
-            else:
-                input_txhex = signing_transactions[input['txhash']]
-                mapped['input_tx'] = bytes.fromhex(input_txhex)
-
+            input_txhex = signing_transactions[input['txhash']]
+            mapped['input_tx'] = bytes.fromhex(input_txhex)
             return mapped
 
         # Get inputs and change outputs in form Jade expects
@@ -457,5 +447,4 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
 def get_authenticator(options: Dict):
     if 'liquid' in options['network']:
         return JadeAuthenticatorLiquid(options)
-    else:
-        return JadeAuthenticator(options)
+    return JadeAuthenticator(options)
