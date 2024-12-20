@@ -23,6 +23,7 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
     """Uses Jade device to authenticate"""
 
     # Minimum supported fw version - liquid swaps and explicit blinding step
+    # FIXME: TAPROOT: update to FW with p2tr support
     MIN_SUPPORTED_VERSION = (0, 1, 48)
 
     @staticmethod
@@ -30,7 +31,8 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
         return {
             'p2pkh': 'pkh(k)',
             'p2sh-p2wpkh': 'sh(wpkh(k))',
-            'p2wpkh': 'wpkh(k)'
+            'p2wpkh': 'wpkh(k)',
+            'p2tr': 'tr(k)'
         }.get(addr_type)
 
     @staticmethod
@@ -69,10 +71,11 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
         return {
             'device': {
                 'name': self.name,
-                'supports_low_r': False,
-                'supports_liquid': 0,
                 'supports_ae_protocol': 1,
-                'supports_arbitrary_scripts': True
+                'supports_arbitrary_scripts': True,
+                'supports_liquid': 0,
+                'supports_low_r': False,
+                'supports_p2tr': True
             }
         }
 
@@ -225,12 +228,17 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
                 logging.debug(f'Not signing input: skip_signing=True')
                 return dict()
 
-            is_segwit = input['address_type'] in ['p2wsh', 'csv', 'p2sh-p2wpkh', 'p2wpkh']
+            is_segwit = input['address_type'] in ['p2wsh', 'csv', 'p2sh-p2wpkh', 'p2wpkh', 'p2tr']
+            is_p2tr = input['address_type'] == 'p2tr'
+            if is_p2tr and not use_ae_protocol:
+                raise click.ClickException("Taproot inputs can only be signed with Anti-Exfil enabled")
+
+            def_sighash = wally.WALLY_SIGHASH_DEFAULT if is_p2tr else wally.WALLY_SIGHASH_ALL
             mapped = {
                 'is_witness': is_segwit,
                 'path': input['user_path'],
                 'script': bytes.fromhex(input['prevout_script']),
-                'sighash': input.get('user_sighash', wally.WALLY_SIGHASH_ALL)
+                'sighash': input.get('user_sighash', def_sighash)
             }
 
             # Additional fields to pass through if using the Anti-Exfil protocol
