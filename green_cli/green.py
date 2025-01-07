@@ -55,7 +55,7 @@ def _resolve_network_options(options):
     options['network'] = '-'.join(elems)
 
 @click.group()
-@click.option('--log-level', type=click.Choice(['error', 'warn', 'info', 'debug']))
+@click.option('--log-level', type=click.Choice(['error', 'warn', 'info', 'debug', 'none']))
 @click.option('--gdk-log', default='none', type=click.Choice(['none', 'debug', 'warn', 'info', 'error']))
 @click.option('--network', default=None, help='gdk network option')
 @click.option('--liquid', '-L', is_flag=True, help='Use liquid network')
@@ -92,6 +92,7 @@ def green(**options):
             'warn': logging.WARNING,
             'info': logging.INFO,
             'debug': logging.DEBUG,
+            'none': logging.CRITICAL,
         }[options['log_level']]
 
         logging.basicConfig(level=py_log_level)
