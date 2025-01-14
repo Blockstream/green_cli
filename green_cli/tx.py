@@ -151,6 +151,23 @@ def dump():
     click.echo(format_output(_load_tx(allow_errors=True)))
 
 @tx.command()
+@with_login
+@click.option('--version', type=click.Choice(['0', '2']), default='0', help="PSBT version")
+def dumppsbt(session, version):
+    """Dump the full transaction representation as a PSBT/PSET."""
+    details = _load_tx(allow_errors=False)
+    details = gdk_resolve(gdk.psbt_from_json(session.session_obj, json.dumps(details)))
+    if details.get('error', ''):
+        raise click.ClickException(details['error'])
+    psbt = details['psbt']
+    if version == '0':
+        # User wants a v0 PSBT, convert it
+        psbt = wally.psbt_from_base64(psbt, 0)
+        wally.psbt_set_version(psbt, 0, int(version))
+        psbt = wally.psbt_to_base64(psbt, 0)
+    click.echo(psbt)
+
+@tx.command()
 @click.argument('tx_json', type=click.File('r'))
 @with_login
 def load(session, tx_json):
