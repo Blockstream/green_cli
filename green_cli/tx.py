@@ -20,6 +20,7 @@ from green_cli.utils import (
 from green_cli.decorators import (
     confs_str,
     details_json,
+    format_output,
     with_login,
 )
 from green_cli.param_types import (
@@ -147,7 +148,7 @@ def raw():
 @tx.command()
 def dump():
     """Dump the full transaction json representation."""
-    click.echo(json.dumps(_load_tx(allow_errors=True)))
+    click.echo(format_output(_load_tx(allow_errors=True)))
 
 @tx.command()
 @click.argument('tx_json', type=click.File('r'))
