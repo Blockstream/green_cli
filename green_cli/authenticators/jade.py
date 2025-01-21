@@ -242,9 +242,8 @@ class JadeAuthenticator(MnemonicOnDisk, HardwareDevice):
             }
 
             # Additional fields to pass through if using the Anti-Exfil protocol
-            if use_ae_protocol:
-                mapped['ae_host_commitment'] = bytes.fromhex(input['ae_host_commitment'])
-                mapped['ae_host_entropy'] = bytes.fromhex(input['ae_host_entropy'])
+            for k in ['ae_host_commitment', 'ae_host_entropy'] if use_ae_protocol else []:
+                mapped[k] = bytes.fromhex(input.get(k, ''))
 
             input_txhex = signing_transactions[input['txhash']]
             mapped['input_tx'] = bytes.fromhex(input_txhex)
@@ -364,9 +363,8 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
                 # value_commitment sent in any case
 
             # Additional fields to pass through if using the Anti-Exfil protocol
-            if use_ae_protocol:
-                mapped['ae_host_commitment'] = bytes.fromhex(input['ae_host_commitment'])
-                mapped['ae_host_entropy'] = bytes.fromhex(input['ae_host_entropy'])
+            for k in ['ae_host_commitment', 'ae_host_entropy'] if use_ae_protocol else []:
+                mapped[k] = bytes.fromhex(input.get(k, ''))
 
             return mapped
 
