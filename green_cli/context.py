@@ -31,7 +31,6 @@ class Context:
             }
 
             optional_keys = [
-                'discount_fees',  # FIXME: remove once discount is enabled on all envs
                 'blob_server_url',
                 'cert_expiry_threshold',
                 'electrum_onion_url',
