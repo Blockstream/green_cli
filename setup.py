@@ -37,7 +37,7 @@ setup(
         'green_cli/authenticators',
     ],
     install_requires=[
-        'wallycore>=1.3.1',
+        'wallycore>=1.4.0',
         'green_gdk>=0.74.0',
         'click>=8.1.7',
         'click-repl>=0.3.0',
