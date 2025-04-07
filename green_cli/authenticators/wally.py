@@ -12,6 +12,10 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
     gdk at all.
     """
 
+    def __init__(self, options):
+        super().__init__(options)
+        self.is_liquid = 'liquid' in options['network']
+
     @property
     def name(self):
         return 'libwally software signer'
@@ -24,11 +28,13 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
             'device': {
                 'name': self.name,
                 'supports_low_r': False,
-                'supports_liquid': 0,
-                'supports_host_unblinding': False,
-                'supports_external_blinding': False,
+                'supports_liquid': 1,
+                'supports_host_unblinding': True,
+                'supports_external_blinding': True,
                 'supports_ae_protocol': 1,
-                'supports_arbitrary_scripts': True
+                'supports_arbitrary_scripts': True,
+                'supports_p2tr': True,
+                'supports_liquid_p2tr': True,
             }
         }
 
@@ -66,6 +72,24 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
     def get_privkey(self, path: List[int]) -> bytearray:
         return wally.bip32_key_get_priv_key(self.derive_key(path))
 
+    @property
+    def master_blinding_key(self) -> bytes:
+        return wally.asset_blinding_key_from_seed(self.seed)
+
+    def get_private_blinding_key(self, script: bytes) -> bytes:
+        return wally.asset_blinding_key_to_ec_private_key(self.master_blinding_key, script)
+
+    def get_public_blinding_key(self, script: bytes) -> bytes:
+        private_key = self.get_private_blinding_key(script)
+        return wally.ec_public_key_from_private_key(private_key)
+
+    def get_shared_nonce(self, pubkey: bytes, script: bytes) -> bytes:
+        our_private_key = self.get_private_blinding_key(script)
+        return wally.ecdh_nonce_hash(pubkey, our_private_key)
+
+    def get_blinding_factor(self, hash_prevouts: bytes, output_index: int) -> bytes:
+        return wally.asset_blinding_key_to_abf_vbf(self.master_blinding_key, hash_prevouts, output_index)
+
     def _make_ae_signature(self, privkey, signing_hash, details):
         # NOTE: with actual hw these two steps would be separate calls to the hww, as the host does
         #       not reveal 'host_entropy' to the signer until it has received the 'signer_commitment'.
@@ -98,7 +122,7 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
         result['signature'] = wally.ec_sig_to_der(signature).hex()
         return result
 
-    def _get_signature_hash(self, wally_tx, index: int, txin: Dict,
+    def _get_signature_hash(self, tx, index: int, txin: Dict,
                             sighash: int, flags: int,
                             scripts: Optional[object], values: List[int]) -> bytes:
         is_p2tr = txin['address_type'] == 'p2tr'
@@ -106,21 +130,31 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
         allowed_sighashes = [wally.WALLY_SIGHASH_ALL]
         if is_p2tr:
             allowed_sighashes.append(wally.WALLY_SIGHASH_DEFAULT)
+        if self._is_liquid:
+            allowed_sighashes.append(wally.WALLY_SIGHASH_SINGLE | wally.WALLY_SIGHASH_ANYONECANPAY)
         assert sighash in allowed_sighashes, f'unsupported sighash {sighash}'
 
         if is_p2tr:
             # Taproot Schnorr signature
             key_version, codesep_pos, flags = 0, wally.WALLY_NO_CODESEPARATOR, 0
             return wally.tx_get_btc_taproot_signature_hash(
-                wally_tx, index, scripts, values, None, key_version,
+                tx, index, scripts, values, None, key_version,
                 codesep_pos, None, sighash, flags)
 
         # ECDSA segwit/pre-segwit signature
-        script_code = bytes.fromhex(txin['prevout_script'])
-        return wally.tx_get_btc_signature_hash(
-            wally_tx, index, script_code, txin['satoshi'], sighash, flags)
+        prevout_script = bytes.fromhex(txin['prevout_script'])
+        if not self.is_liquid:
+            return wally.tx_get_btc_signature_hash(
+                tx, index, prevout_script, txin['satoshi'], sighash, flags)
 
-    def _sign_tx(self, details, wally_tx):
+        if txin['is_blinded']:
+            value = bytes.fromhex(txin['commitment'])
+        else:
+            value = wally.tx_confidential_value_from_satoshi(txin['satoshi'])
+        return wally.tx_get_elements_signature_hash(
+            tx, index, prevout_script, value, sighash, flags)
+
+    def _sign_tx(self, details, tx):
 
         def _is_p2tr(txin):
             return txin.get('address_type', '') == 'p2tr' and not txin.get('skip_signing', False)
@@ -159,7 +193,7 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
 
             def_sighash = wally.WALLY_SIGHASH_DEFAULT if is_p2tr else wally.WALLY_SIGHASH_ALL
             sighash = txin.get('user_sighash', def_sighash)
-            txhash = self._get_signature_hash(wally_tx, index, txin, sighash, flags, scripts, values)
+            txhash = self._get_signature_hash(tx, index, txin, sighash, flags, scripts, values)
 
             # Derive the key to sign with. In a real HWW implementation
             # this would verify the path belongs to the wallet
@@ -207,75 +241,11 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
 
     def sign_tx(self, details: Dict) -> Dict:
         tx_flags = wally.WALLY_TX_FLAG_USE_WITNESS
-        wally_tx = wally.tx_from_hex(details['transaction'], tx_flags)
-        return json.dumps(self._sign_tx(details, wally_tx))
-
-
-class WallyAuthenticatorLiquid(WallyAuthenticator):
-
-    # By default prefer to use Anti-Exfil signatures
-    # (sacrifices low-r guarantee)
-    @property
-    def default_hw_device_info(self):
-        return {
-            'device': {
-                'name': self.name,
-                'supports_low_r': False,
-                'supports_liquid': 1,
-                'supports_host_unblinding': True,
-                'supports_external_blinding': True,
-                'supports_ae_protocol': 1,
-                'supports_arbitrary_scripts': True
-            }
-        }
-
-    @property
-    def master_blinding_key(self) -> bytes:
-        return wally.asset_blinding_key_from_seed(self.seed)
-
-    def get_private_blinding_key(self, script: bytes) -> bytes:
-        return wally.asset_blinding_key_to_ec_private_key(self.master_blinding_key, script)
-
-    def get_public_blinding_key(self, script: bytes) -> bytes:
-        private_key = self.get_private_blinding_key(script)
-        return wally.ec_public_key_from_private_key(private_key)
-
-    def get_shared_nonce(self, pubkey: bytes, script: bytes) -> bytes:
-        our_private_key = self.get_private_blinding_key(script)
-        return wally.ecdh_nonce_hash(pubkey, our_private_key)
-
-    def get_blinding_factor(self, hash_prevouts: bytes, output_index: int) -> bytes:
-        return wally.asset_blinding_key_to_abf_vbf(self.master_blinding_key, hash_prevouts, output_index)
-
-    def _get_signature_hash(self, wally_tx, index: int, txin: Dict,
-                            sighash: int, flags: int,
-                            scripts: Optional[object], values: List[int]) -> bytes:
-        is_p2tr = txin['address_type'] == 'p2tr'
-        # Verify the sighash is allowed
-        allowed_sighashes = [
-            wally.WALLY_SIGHASH_ALL, wally.WALLY_SIGHASH_SINGLE | wally.WALLY_SIGHASH_ANYONECANPAY
-        ]
-        if is_p2tr:
-            allowed_sighashes.append(wally.WALLY_SIGHASH_DEFAULT)
-        assert sighash in allowed_sighashes, f'unsupported sighash {sighash}'
-
-        # FIXME: TAPROOT: Implement Liquid taproot
-        assert not is_p2tr, 'Liquid taproot is not yet supported'
-        prevout_script = wally.hex_to_bytes(txin['prevout_script'])
-        if txin['is_blinded']:
-            value = bytes.fromhex(txin['commitment'])
-        else:
-            value = wally.tx_confidential_value_from_satoshi(txin['satoshi'])
-        return wally.tx_get_elements_signature_hash(
-            wally_tx, index, prevout_script, value, sighash, flags)
-
-    def sign_tx(self, details: Dict) -> Dict:
-        tx_flags = wally.WALLY_TX_FLAG_USE_WITNESS | wally.WALLY_TX_FLAG_USE_ELEMENTS
-        wally_tx = wally.tx_from_hex(details['transaction'], tx_flags)
-        return json.dumps(self._sign_tx(details, wally_tx))
+        if self.is_liquid:
+            tx_flags |= wally.WALLY_TX_FLAG_USE_ELEMENTS
+        tx = wally.tx_from_hex(details['transaction'], tx_flags)
+        return json.dumps(self._sign_tx(details, tx))
 
 
 def get_authenticator(options: Dict):
-    if 'liquid' in options['network']:
-        return WallyAuthenticatorLiquid(options)
     return WallyAuthenticator(options)
