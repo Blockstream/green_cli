@@ -1,8 +1,10 @@
 import wallycore as wally
 
 from green_cli.authenticators import *
+from typing import Tuple
 
 import secrets
+import sys
 
 class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
     """Stores mnemonic on disk but does not pass it to the gdk
@@ -122,59 +124,76 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
         result['signature'] = wally.ec_sig_to_der(signature).hex()
         return result
 
-    def _get_signature_hash(self, tx, index: int, txin: Dict,
-                            sighash: int, flags: int,
-                            scripts: Optional[object], values: List[int]) -> bytes:
-        is_p2tr = txin['address_type'] == 'p2tr'
-        # Verify the sighash is allowed
-        allowed_sighashes = [wally.WALLY_SIGHASH_ALL]
-        if is_p2tr:
-            allowed_sighashes.append(wally.WALLY_SIGHASH_DEFAULT)
-        if self._is_liquid:
-            allowed_sighashes.append(wally.WALLY_SIGHASH_SINGLE | wally.WALLY_SIGHASH_ANYONECANPAY)
-        assert sighash in allowed_sighashes, f'unsupported sighash {sighash}'
+    def _get_tx_parsing_flags(self) -> int:
+        flags = wally.WALLY_TX_FLAG_USE_WITNESS
+        if self.is_liquid:
+            flags |= wally.WALLY_TX_FLAG_USE_ELEMENTS
+        return flags
 
-        if is_p2tr:
-            # Taproot Schnorr signature
-            key_version, codesep_pos, flags = 0, wally.WALLY_NO_CODESEPARATOR, 0
-            return wally.tx_get_btc_taproot_signature_hash(
-                tx, index, scripts, values, None, key_version,
-                codesep_pos, None, sighash, flags)
+    def _validate_sighash(self, txin: Dict) -> Tuple[int, int]:
+        def_sighash = wally.WALLY_SIGHASH_ALL
+        allowed = [wally.WALLY_SIGHASH_ALL]
+        if self.is_liquid:
+            allowed.append(wally.WALLY_SIGHASH_SINGLE | wally.WALLY_SIGHASH_ANYONECANPAY)
 
-        # ECDSA segwit/pre-segwit signature
-        prevout_script = bytes.fromhex(txin['prevout_script'])
-        if not self.is_liquid:
-            return wally.tx_get_btc_signature_hash(
-                tx, index, prevout_script, txin['satoshi'], sighash, flags)
-
-        if txin['is_blinded']:
-            value = bytes.fromhex(txin['commitment'])
+        if txin['address_type'] == 'p2tr':
+            sighash_type = wally.WALLY_SIGTYPE_SW_V1
+            def_sighash = wally.WALLY_SIGHASH_DEFAULT
+            allowed.append(wally.WALLY_SIGHASH_DEFAULT)
+        elif txin['address_type'] in ['p2wsh', 'csv', 'p2wpkh', 'p2sh-p2wpkh']:
+            sighash_type = wally.WALLY_SIGTYPE_SW_V0
         else:
-            value = wally.tx_confidential_value_from_satoshi(txin['satoshi'])
-        return wally.tx_get_elements_signature_hash(
-            tx, index, prevout_script, value, sighash, flags)
+            sighash_type = wally.WALLY_SIGTYPE_PRE_SW
+
+        sighash = txin.get('user_sighash', def_sighash)
+        assert sighash in allowed, f'unsupported sighash {sighash}'
+        return sighash, sighash_type
+
+    def _get_signature_hash(self, tx: object, index: int, txin: Dict,
+                            sighash: int, sighash_type: int,
+                            scripts: Optional[object],
+                            assets: Optional[object],
+                            values: Optional[object]) -> bytes:
+
+        key_version, codesep_pos, annex = 0, wally.WALLY_NO_CODESEPARATOR, None
+        genesis = None
+        if self.is_liquid:
+            genesis = bytes.fromhex(self.default_net_params['genesis_hash'])[::-1]
+        script = None
+        if sighash_type != wally.WALLY_SIGTYPE_SW_V1:
+            script = bytes.fromhex(txin['prevout_script'])
+
+        cache = None  # TODO: Support caching
+        return wally.tx_get_input_signature_hash(
+            tx, index, scripts, assets, values, script, key_version,
+            codesep_pos, annex, genesis, sighash, sighash_type, cache)
 
     def _sign_tx(self, details, tx):
 
-        def _is_p2tr(txin):
-            return txin.get('address_type', '') == 'p2tr' and not txin.get('skip_signing', False)
-
         transaction_inputs = details['transaction_inputs']
-        are_signing_p2tr = any([_is_p2tr(txin) for txin in transaction_inputs])
+        num_inputs = len(transaction_inputs)
         use_ae_protocol = details['use_ae_protocol']
 
-        scripts, values = None, []  # scriptpubkeys for signing
-        if are_signing_p2tr:
-            # At least one taproot input: we need scriptpubkeys and values
-            scripts = wally.map_init(len(transaction_inputs), None)
-            for index, txin in enumerate(transaction_inputs):
-                # Fetch the scriptpubkey from the provided signing UTXO
-                utxo_hex = details['signing_transactions'][txin['txhash']]
-                tx_flags = wally.WALLY_TX_FLAG_USE_WITNESS
-                utxo_tx = wally.tx_from_hex(utxo_hex, tx_flags)
-                scriptpubkey = wally.tx_get_output_script(utxo_tx, txin['pt_idx'])
+        # Fetch signing data from each inputs UTXO
+        scripts = wally.map_init(num_inputs, None)
+        assets = wally.map_init(num_inputs, None) if self.is_liquid else None
+        values = wally.map_init(num_inputs, None)
+
+        for index, txin in enumerate(transaction_inputs):
+            scriptpubkey = bytes.fromhex(txin.get('scriptpubkey', ''))
+            if scriptpubkey:
                 wally.map_add_integer(scripts, index, scriptpubkey)
-                values.append(txin['satoshi'])
+            if self.is_liquid:
+                asset_commitment = bytes.fromhex(txin.get('asset_tag', ''))
+                if asset_commitment:
+                    wally.map_add_integer(assets, index, asset_commitment)
+                value = bytes.fromhex(txin.get('commitment', ''))
+                if not value:
+                    value = wally.tx_confidential_value_from_satoshi(txin['satoshi'])
+            else:
+                # Satoshi value (as uint64 native-endian bytes)
+                value = txin['satoshi'].to_bytes(8, byteorder=sys.byteorder)
+            wally.map_add_integer(values, index, value)
 
         signatures = []
         signer_commitments = []
@@ -187,13 +206,10 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
                 signatures.append('')
                 continue
 
-            is_p2tr = txin['address_type'] == 'p2tr'
-            is_segwit = txin['address_type'] in ['p2wsh', 'csv', 'p2wpkh', 'p2sh-p2wpkh']
-            flags = wally.WALLY_TX_FLAG_USE_WITNESS if is_segwit else 0
-
-            def_sighash = wally.WALLY_SIGHASH_DEFAULT if is_p2tr else wally.WALLY_SIGHASH_ALL
-            sighash = txin.get('user_sighash', def_sighash)
-            txhash = self._get_signature_hash(tx, index, txin, sighash, flags, scripts, values)
+            # Compute the signature hash to sign
+            sighash, sighash_type = self._validate_sighash(txin)
+            signature_hash = self._get_signature_hash(
+                tx, index, txin, sighash, sighash_type, scripts, assets, values)
 
             # Derive the key to sign with. In a real HWW implementation
             # this would verify the path belongs to the wallet
@@ -202,6 +218,7 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
 
             # Sign the transaction
             signer_commitment = bytes()
+            is_p2tr = sighash_type == wally.WALLY_SIGTYPE_SW_V1
             if is_p2tr or not use_ae_protocol:
                 # Standard or Taproot signature
                 sig_flags = wally.EC_FLAG_ECDSA | wally.EC_FLAG_GRIND_R
@@ -209,12 +226,13 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
                     # Taproot Schnorr signature, low-R grinding does not apply
                     sig_flags = wally.EC_FLAG_SCHNORR
                     # Tweak the private key according to BIP-0341 (No script path)
-                    privkey = wally.ec_private_key_bip341_tweak(privkey, None, 0)
+                    tweak_flags = wally.EC_FLAG_ELEMENTS if self.is_liquid else 0
+                    privkey = wally.ec_private_key_bip341_tweak(privkey, None, tweak_flags)
 
-                signature = wally.ec_sig_from_bytes(privkey, txhash, sig_flags)
+                signature = wally.ec_sig_from_bytes(privkey, signature_hash, sig_flags)
             else:
                 # Anti-Exfil signing
-                signer_commitment, signature = self._make_ae_signature(privkey, txhash, txin)
+                signer_commitment, signature = self._make_ae_signature(privkey, signature_hash, txin)
                 logging.debug('Signer commitment: %s', signer_commitment.hex())
 
             if use_ae_protocol:
@@ -240,10 +258,8 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
         return result
 
     def sign_tx(self, details: Dict) -> Dict:
-        tx_flags = wally.WALLY_TX_FLAG_USE_WITNESS
-        if self.is_liquid:
-            tx_flags |= wally.WALLY_TX_FLAG_USE_ELEMENTS
-        tx = wally.tx_from_hex(details['transaction'], tx_flags)
+        flags = self._get_tx_parsing_flags()
+        tx = wally.tx_from_hex(details['transaction'], flags)
         return json.dumps(self._sign_tx(details, tx))
 
 

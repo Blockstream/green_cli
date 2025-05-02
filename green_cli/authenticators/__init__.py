@@ -21,6 +21,7 @@ class Authenticator:
     # safely call super().__init__(options)
     def __init__(self, options):
         super().__init__()
+        self.default_net_params = gdk.get_networks()[options['network']]
 
     def get_credentials(self):
         if self.hw_device == '{}':
