@@ -153,7 +153,8 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
                             sighash: int, sighash_type: int,
                             scripts: Optional[object],
                             assets: Optional[object],
-                            values: Optional[object]) -> bytes:
+                            values: Optional[object],
+                            cache: object) -> bytes:
 
         key_version, codesep_pos, annex = 0, wally.WALLY_NO_CODESEPARATOR, None
         genesis = None
@@ -163,7 +164,6 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
         if sighash_type != wally.WALLY_SIGTYPE_SW_V1:
             script = bytes.fromhex(txin['prevout_script'])
 
-        cache = None  # TODO: Support caching
         return wally.tx_get_input_signature_hash(
             tx, index, scripts, assets, values, script, key_version,
             codesep_pos, annex, genesis, sighash, sighash_type, cache)
@@ -175,6 +175,7 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
         use_ae_protocol = details['use_ae_protocol']
 
         # Fetch signing data from each inputs UTXO
+        cache = wally.map_init(16, None)
         scripts = wally.map_init(num_inputs, None)
         assets = wally.map_init(num_inputs, None) if self.is_liquid else None
         values = wally.map_init(num_inputs, None)
@@ -209,7 +210,7 @@ class WallyAuthenticator(MnemonicOnDisk, HardwareDevice):
             # Compute the signature hash to sign
             sighash, sighash_type = self._validate_sighash(txin)
             signature_hash = self._get_signature_hash(
-                tx, index, txin, sighash, sighash_type, scripts, assets, values)
+                tx, index, txin, sighash, sighash_type, scripts, assets, values, cache)
 
             # Derive the key to sign with. In a real HWW implementation
             # this would verify the path belongs to the wallet
