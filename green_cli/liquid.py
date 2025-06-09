@@ -148,7 +148,7 @@ green_cli.common.getbalance.params.append(confidential_option)
 green_cli.common.getunspentoutputs.params.append(confidential_option)
 
 def _print_tx_summary(tx):
-    click.echo(f"utxo strategy: {tx['utxo_strategy']}")
+    click.echo(f"utxo strategy: {tx.get('utxo_strategy', 'default')}")
 
     available_per_asset = defaultdict(int)
     used_per_asset = defaultdict(int)
@@ -158,7 +158,7 @@ def _print_tx_summary(tx):
         available_per_asset[_asset_name(asset)] += available
     for tx_input in tx['transaction_inputs']:
         used_per_asset[_asset_name(tx_input['asset_id'])] += tx_input['satoshi']
-    for asset in tx['change_amount']:
+    for asset in tx.get('change_amount', {}):
         change_per_asset[_asset_name(asset)] += tx['change_amount'][asset]
 
     for asset in available_per_asset:
@@ -167,10 +167,10 @@ def _print_tx_summary(tx):
         click.echo(f"\tused: {used_per_asset[asset]}")
         click.echo(f"\tchange: {change_per_asset[asset]}")
 
-    click.echo(f"vsize: {tx['transaction_vsize']}")
-    click.echo(f"weight: {tx['transaction_weight']}")
-    click.echo(f"fee: {tx['fee']}")
-    click.echo(f"fee rate: {tx['calculated_fee_rate']} lsat/kb")
+    click.echo(f"vsize: {tx.get('transaction_vsize', 0)}")
+    click.echo(f"weight: {tx.get('transaction_weight', 0)}")
+    click.echo(f"fee: {tx.get('fee', 0)}")
+    click.echo(f"fee rate: {tx.get('calculated_fee_rate', 0)} lsat/kb")
 
 green_cli.tx._print_tx_summary = _print_tx_summary
 
