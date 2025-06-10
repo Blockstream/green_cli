@@ -288,6 +288,7 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
                 'supports_external_blinding': True,
                 'supports_arbitrary_scripts': True,
                 'supports_ae_protocol': 1,
+                'supports_liquid_p2tr': True,
             }
         }
 
@@ -311,6 +312,8 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
 
     def sign_tx(self, details: Dict) -> Dict:
         txhex = details['transaction']
+        tx_flags = wally.WALLY_TX_FLAG_USE_WITNESS | wally.WALLY_TX_FLAG_USE_ELEMENTS
+        wally_tx = wally.tx_from_hex(txhex, tx_flags)
         transaction_inputs = details['transaction_inputs']
         use_ae_protocol = details['use_ae_protocol']
         is_partial = details['is_partial']
@@ -327,27 +330,42 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
         signing_input_amounts = defaultdict(lambda: 0)
 
         def _map_input(input: Dict) -> Dict:
+            mapped = {}
+            if 'scriptpubkey' in input:
+                # Include the scriptpubkey if it was provided (for example
+                # if this is a non-wallet input but a taproot signature is
+                # required).
+                # We need this for Liquid since we don't pass the UTXO txs.
+                mapped['scriptpubkey'] = bytes.fromhex(input['scriptpubkey'])
+            if 'asset_tag' in input:
+                # As per the scriptpubkey above, add the asset if provided.
+                mapped['asset_generator'] = bytes.fromhex(input['asset_tag'])
+
             if input.get('skip_signing', False):
                 # Not signing this input (may not belong to this signer)
                 logging.debug(f'Not signing input: skip_signing=True')
-                return dict()
+                return mapped
 
             # Collate wallet inputs totals, per asset
             signing_input_amounts[input.get('asset_id')] += input['satoshi']
 
-            is_segwit = input['address_type'] in ['p2wsh', 'csv', 'p2sh-p2wpkh', 'p2wpkh']
-            mapped = {
+            is_segwit = input['address_type'] in ['p2wsh', 'csv', 'p2sh-p2wpkh', 'p2wpkh', 'p2tr']
+            is_p2tr = input['address_type'] == 'p2tr'
+            if is_p2tr and not use_ae_protocol:
+                raise click.ClickException("Taproot inputs can only be signed with Anti-Exfil enabled")
+
+            def_sighash = wally.WALLY_SIGHASH_DEFAULT if is_p2tr else wally.WALLY_SIGHASH_ALL
+            mapped.update({
                 'is_witness': is_segwit,
                 'path': input['user_path'],
                 'value_commitment': bytes.fromhex(input['commitment']),
                 'script': bytes.fromhex(input['prevout_script']),
-                'sighash': input.get('user_sighash', wally.WALLY_SIGHASH_ALL)
-            }
+                'sighash': input.get('user_sighash', def_sighash)
+            })
 
             # If non-trivial tx, also send any blinding information per input
             if txtype != tx.TxType.SEND_PAYMENT and input.get('is_blinded'):
                 mapped['asset_id'] = bytes.fromhex(input['asset_id'])
-                mapped['asset_generator'] = bytes.fromhex(input['asset_tag'])
 
                 if 'assetblinder' in input:
                     mapped['abf'] = bytes.fromhex(input['assetblinder'])[::-1]
@@ -375,7 +393,7 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
         # Get the output blinding info
         wallet_output_amounts = defaultdict(lambda: 0)
 
-        def _map_commitments_info(output):
+        def _map_commitments_info(wally_tx, i, output):
             # Collate wallet output totals, per asset
             # NOTE: 'is_change' outputs are reversed from the inputs amount, so these
             #       totals represent net movements in and out of the wallet
@@ -406,10 +424,15 @@ class JadeAuthenticatorLiquid(JadeAuthenticator):
             if 'value_blind_proof' in output:
                 mapped['value_blind_proof'] = bytes.fromhex(output['value_blind_proof'])
 
+            # Value and asset commitments are taken from the transaction
+            mapped['value_commitment'] = wally.tx_get_output_value(wally_tx, i)
+            mapped['asset_generator'] = wally.tx_get_output_asset(wally_tx, i)
             return mapped
 
         # Get inputs and change outputs in form Jade expects
-        commitments = list(map(_map_commitments_info, transaction_outputs))
+        commitments = []
+        for i, output in enumerate(transaction_outputs):
+            commitments.append(_map_commitments_info(wally_tx, i, output))
 
         # Get the asset-registry entries for any assets in the tx outputs
         # NOTE: must contain sufficient data for jade to be able to verify (ie. contract, issuance)
