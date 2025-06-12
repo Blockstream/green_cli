@@ -363,10 +363,11 @@ def auto(session):
 @inputs.command()
 @with_login
 @click.argument('utxo_filter')
-@click.option('--sighash', type=click.Choice(['ALL', 'S_ACP']), default='ALL', help="SIGHASH type")
+@click.option('--sighash', type=click.Choice(['DEFAULT', 'ALL', 'S_ACP']), default='DEFAULT', help="SIGHASH type")
 def add(session, utxo_filter, sighash):
     """Add transaction inputs."""
     user_sighash = {
+        'DEFAULT': wally.WALLY_SIGHASH_DEFAULT,
         'ALL': wally.WALLY_SIGHASH_ALL,
         'S_ACP': wally.WALLY_SIGHASH_SINGLE | wally.WALLY_SIGHASH_ANYONECANPAY
     }[sighash]
@@ -380,8 +381,13 @@ def add(session, utxo_filter, sighash):
         to_add = [utxo for utxo in filtered if not _filter_utxos(f"{utxo['txhash']}:{utxo['pt_idx']}", tx['transaction_inputs'])]
         if not to_add:
             raise click.ClickException("Inputs already selected")
+        for utxo in to_add:
+            utxo_sighash = user_sighash
+            if utxo_sighash == wally.WALLY_SIGHASH_DEFAULT and utxo['address_type'] != 'p2tr':
+                # The default sighash for non-taproot inputs is SIGHASH_ALL
+                utxo_sighash = wally.WALLY_SIGHASH_ALL
+            utxo['user_sighash'] = utxo_sighash
         tx['transaction_inputs'].extend(to_add)
-        tx['transaction_inputs'][-1]['user_sighash'] = user_sighash
 
 @inputs.command()
 @with_login
