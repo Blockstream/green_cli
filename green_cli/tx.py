@@ -292,12 +292,20 @@ def add_outputs(session, details, **options):
 
 @outputs.command()
 @with_login
-@click.argument('address', type=str)
-def rm(session, address):
-    """Remove transaction outputs."""
+@click.argument('address-or-index', type=str)
+def rm(session, address_or_index):
+    """Remove transaction outputs matching an address or from a zero-based index."""
     with Tx(allow_errors=True) as tx:
         addressees = tx.get('addressees', [])
-        addressees = [a for a in addressees if a['address'] != address]
+        if addressees:
+            try:
+                # If address is an index, remove it
+                addressees.pop(int(address_or_index))
+            except IndexError as e:
+                pass  # Ignore any index beyond the end
+            except ValueError as e:
+                # Otherwise, remove matching address string (if any)
+                addressees = [a for a in addressees if a['address'] != address_or_index]
         tx['addressees'] = addressees
 
 @outputs.command()
