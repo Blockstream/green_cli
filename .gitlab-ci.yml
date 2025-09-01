@@ -1,4 +1,4 @@
-image: greenaddress/ci@sha256:ba2a76bb933f1da6573631597f947b1ff2f47e772674ab38c4e87e0eac6861b2
+image: blockstream/gdk-debian-ci@sha256:5fdb5c1b450e391d0ca7b5f8ebae326ebd6fbd443c0a573d88f9e6c382b272c9
 
 build_release_wheel:
   tags:
