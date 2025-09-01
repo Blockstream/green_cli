@@ -6,7 +6,7 @@ build_release_wheel:
   script:
     - cd $CI_PROJECT_DIR
     - apt install -yqq python3-venv
-    - virtualenv -p python3 venv
+    - python3 -m virtualenv venv
     - source venv/bin/activate
     - pip install build twine
     - python -m build
@@ -25,7 +25,7 @@ build_release_wheel:
     - ga
   script:
     - cd $CI_PROJECT_DIR
-    - virtualenv -p python3 venv
+    - python3 -m virtualenv venv
     - source venv/bin/activate
     - pip install -r requirements.txt
     - pip install .
