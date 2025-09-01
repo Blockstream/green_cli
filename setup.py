@@ -1,9 +1,8 @@
 from setuptools import setup
-import green_cli
 
 setup(
     name='green_cli',
-    version=green_cli.version,
+    version=open('green_cli/__init__.py').read().split()[-1].strip("'"),
     description='Blockstream Green Command Line Interface',
     long_description='green-cli is a command line interface to Blockstream Green multisig and singlesig Bitcoin and Liquid wallets, based on the Green gdk library.',
     url='https://github.com/Blockstream/green_cli',
