@@ -41,6 +41,12 @@ smoke_test_bullseye:
     - pip install pycodestyle
     - pycodestyle */*.py */*/*.py --ignore=E501,E731,E302,E305
 
+smoke_test_trixie:
+  image: python:3.13-slim-trixie@sha256:27f90d79cc85e9b7b2560063ef44fa0e9eaae7a7c3f5a9f74563065c5477cc24
+  extends: .smoke_test
+  before_script:
+    - python3 -m pip install virtualenv
+
 smoke_test_fedora:
   image: fedora:34@sha256:55a74d948c47bb002edff3c7a9a7e864152c686d7c2dc8e3df1ac4d611a20898
   extends: .smoke_test
