@@ -147,32 +147,29 @@ confidential_option = click.Option(
 green_cli.common.getbalance.params.append(confidential_option)
 green_cli.common.getunspentoutputs.params.append(confidential_option)
 
-def _print_tx_summary(tx):
-    click.echo(f"utxo strategy: {tx.get('utxo_strategy', 'default')}")
-
-    available_per_asset = defaultdict(int)
-    used_per_asset = defaultdict(int)
-    change_per_asset = defaultdict(int)
-    for asset in tx['utxos']:
-        available = sum([utxo['satoshi'] for utxo in tx['utxos'][asset]])
-        available_per_asset[_asset_name(asset)] += available
-    for tx_input in tx['transaction_inputs']:
-        used_per_asset[_asset_name(tx_input['asset_id'])] += tx_input['satoshi']
+def _print_tx_summary_impl(tx):
+    click.echo(f"blinded: {'yes' if tx.get('is_blinded') else 'no'}")
+    available, used, change = defaultdict(int), defaultdict(int), defaultdict(int)
+    if tx.get('utxos', {}):
+        for asset in tx.get('utxos', {}):
+            satoshi = sum([utxo['satoshi'] for utxo in tx['utxos'][asset]])
+            available[_asset_name(asset)] += satoshi
+    else:
+        click.echo(f'no utxos present')
+    for tx_input in tx.get('transaction_inputs', {}):
+        asset_name = _asset_name(tx_input['asset_id'])
+        available[asset_name] += 0  # Ensure available
+        used[asset_name] += tx_input['satoshi']
     for asset in tx.get('change_amount', {}):
-        change_per_asset[_asset_name(asset)] += tx['change_amount'][asset]
+        change[_asset_name(asset)] += tx['change_amount'][asset]
 
-    for asset in available_per_asset:
-        click.echo(f"{asset}:")
-        click.echo(f"\tavailable: {available_per_asset[asset]}")
-        click.echo(f"\tused: {used_per_asset[asset]}")
-        click.echo(f"\tchange: {change_per_asset[asset]}")
+    for asset in available:
+        click.echo(f'{asset}:')
+        click.echo(f'\tavailable: {available[asset]}')
+        click.echo(f'\tused: {used[asset]}')
+        click.echo(f'\tchange: {change[asset]}')
 
-    click.echo(f"vsize: {tx.get('transaction_vsize', 0)}")
-    click.echo(f"weight: {tx.get('transaction_weight', 0)}")
-    click.echo(f"fee: {tx.get('fee', 0)}")
-    click.echo(f"fee rate: {tx.get('calculated_fee_rate', 0)} lsat/kb")
-
-green_cli.tx._print_tx_summary = _print_tx_summary
+green_cli.tx._print_tx_summary_impl = _print_tx_summary_impl
 
 def _print_tx_output(options, output):
     fg = None

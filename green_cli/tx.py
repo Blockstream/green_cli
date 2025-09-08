@@ -110,19 +110,32 @@ def _create_tx(tx):
     tx = gdk_resolve(gdk.create_transaction(context.session.session_obj, json.dumps(tx)))
     return tx
 
+def _print_tx_summary_impl(tx):
+    if tx.get('utxos', {}):
+        available_inputs_sum = sum([utxo['satoshi'] for utxo in tx['utxos']['btc']])
+        click.echo(f'available inputs: {available_inputs_sum}')
+    else:
+        click.echo(f'no utxos present')
+    tx_inputs = tx.get('transaction_inputs', {})
+    input_sum = sum([tx_input['satoshi'] for tx_input in tx_inputs])
+    click.echo(f'selected inputs: {input_sum}')
+    click.echo(f"total outputs: {tx.get('satoshi', {}).get('btc', 0)}")
+    click.echo(f"change: {tx.get('change_amount', {}).get('btc', 0)}")
+
 def _print_tx_summary(tx):
-    click.echo(f"utxo strategy: {tx['utxo_strategy']}")
-    click.echo(f"is_partial: {tx.get('is_partial', False)}")
-    click.echo(f"randomize_inputs: {tx['randomize_inputs']}")
-    click.echo(f"available inputs: {tx['available_total']}")
-    input_sum = sum([utxo['satoshi'] for tx_input in tx['transaction_inputs']])
-    click.echo(f"selected inputs: {input_sum}")
-    click.echo(f"total outputs: {tx['satoshi']['btc']}")
-    click.echo(f"change: {tx['change_amount']['btc']}")
-    click.echo(f"vsize: {tx['transaction_vsize']}")
-    click.echo(f"weight: {tx['transaction_weight']}")
-    click.echo(f"fee: {tx['fee']}")
-    click.echo(f"fee rate: {tx['calculated_fee_rate']} sat/kb")
+    try:
+        click.echo(f"utxo strategy: {tx.get('utxo_strategy', 'default')}")
+        click.echo(f"randomized inputs: {'yes' if tx.get('randomize_inputs') else 'no'}")
+        click.echo(f"partial: {'yes' if tx.get('is_partial') else 'no'}")
+        _print_tx_summary_impl(tx)
+        click.echo(f"vsize: {tx.get('transaction_vsize', 0)}")
+        click.echo(f"weight: {tx.get('transaction_weight', 0)}")
+        click.echo(f"fee: {tx.get('fee', 0)}")
+        click.echo(f"fee rate: {tx.get('calculated_fee_rate', 0)} sat/kb")
+    except Exception as e:
+        click.echo(f'Exception: {e.__reduce__()}')
+        click.echo(f'Raw transaction JSON:')
+        click.echo(f'{json.dumps(tx, indent=2)}')
 
 @green.group(invoke_without_command=True)
 @click.pass_context
