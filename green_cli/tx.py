@@ -199,8 +199,8 @@ class Tx:
 
 @tx.command()
 @with_login
-@click.option('--subaccount', default=0, expose_value=False, callback=details_json)
-def new(session, details):
+@click.option('--subaccount', type=int, required=True, expose_value=False, callback=details_json)
+def new(session, details=None):
     """Create a new transaction.
 
     Deletes any current transaction."""
