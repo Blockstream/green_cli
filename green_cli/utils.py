@@ -46,3 +46,27 @@ def get_txhash_with_sync(session, details, timeout, txhash=None):
                     raise click.ClickException(f'Timed out waiting for tx {txhash}')
                 time.sleep(0.1)
     return txhash
+
+def normalize_array_input(value):
+    """
+    Normalize various string representations of a list of strings.
+    Supports inputs like:
+      foo,bar
+      "foo","bar"
+      'foo','bar'
+      ["foo","bar"]
+      ['foo','bar']
+      "foo,bar"
+      'foo,bar'
+    Always returns a string like: foo,bar
+    """
+    value = value.strip()
+    if value.startswith('[') and value.endswith(']'):
+        value = value[1:-1].strip()
+    items = []
+    for item in value.split(','):
+        item = item.lstrip().rstrip()  # leading/trailing whitespaces
+        item = item.replace('"', '')
+        items.append(item)
+   # Return as a comma separated string excluding empty items
+    return ','.join(f'{i}' for i in items if i)

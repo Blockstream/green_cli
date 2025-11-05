@@ -1,4 +1,5 @@
 import click
+from green_cli.utils import normalize_array_input
 
 class Address(click.ParamType):
     name = 'address'
@@ -36,6 +37,17 @@ class Amount(click.ParamType):
             value = self.value2sat(value)
 
         ctx.params['details']['addressees'][-1]['satoshi'] = value
+        return value
+
+class AssetIds(click.ParamType):
+    name = 'assets'
+
+    def convert(self, value, param, ctx):
+        # Convert a string representation of a list of asset ids into a list of asset ids
+        value = normalize_array_input(value).split(',')
+        ctx.params.setdefault("details", {})
+        if value:
+            ctx.params['details'].setdefault("assets", value)
         return value
 
 class UtxoUserStatus(click.ParamType):

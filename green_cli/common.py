@@ -31,6 +31,7 @@ from green_cli.authenticators.watchonly import WatchOnlyAuthenticator
 from green_cli.param_types import (
     Address,
     Amount,
+    AssetIds,
     UtxoUserStatus,
 )
 from green_cli.utils import (
@@ -459,6 +460,9 @@ def gettransactiondetails(session, txid):
 @click.option('--subaccount', type=int, default=0, expose_value=False, callback=details_json)
 @click.option('--first', type=int, default=0, expose_value=False, callback=details_json)
 @click.option('--count', type=int, default=30, expose_value=False, callback=details_json)
+@click.option('--assets', type=AssetIds(), default=None, expose_value=False, callback=details_json,
+              help='Only include results containing the given asset IDs')
+@click.option('--policy-asset-only', is_flag=True, default=None, expose_value=False, callback=details_json)
 @click.option('--summary', is_flag=True, help='Print human-readable summary')
 def gettransactions(session, summary, details):
     """Get transactions associated with the wallet."""
