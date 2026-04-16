@@ -71,19 +71,34 @@ def with_login(fn):
         return fn(session, *args, **kwargs)
     return with_session(inner)
 
-def details_json(ctx, param, value):
-    """Add an option/parameter to details json
+def details_json(ctx=None, param=None, value=None, key=None):
+    """Add an option/parameter to details json.
 
     For many commands options translate directly into elements in a json 'details' input parameter
     to the gdk method. Adding this method as a click.argument callback appends a details json to
     make this convenient.
+
+    If key is passed, the parameter is stored in details[key] instead of at the top level. This
+    allows callbacks such as details_json(key='asset_info') while preserving direct callback usage.
     """
+    if isinstance(ctx, str) and param is None and value is None and key is None:
+        key = ctx
+        ctx = None
+
+    if ctx is None and param is None and value is None:
+        return functools.partial(details_json, key=key)
+
     if value is not None:
         details = ctx.params.setdefault('details', collections.OrderedDict())
+        target = details
+
+        if key is not None:
+            target = details.setdefault(key, collections.OrderedDict())
+
         # hyphens are idiomatic for command line args, so allow some_option to be passed as
         # some-option
         name = param.name.replace("-", "_")
-        details[name] = value
+        target[name] = value
     return value
 
 def confs_str(txn_block_height):

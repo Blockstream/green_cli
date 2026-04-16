@@ -176,13 +176,19 @@ def listen(session, ignore):
 @green.command()
 @with_login
 @print_result
-@click.argument('amount', type=str)
-@click.argument('unit', type=click.Choice(['bits', 'btc', 'mbtc', 'ubtc', 'satoshi', 'sats']))
-def convertamount(session, amount, unit):
+@click.argument('unit', type=click.Choice(['bits', 'btc', 'mbtc', 'ubtc', 'satoshi', 'sats', 'fiat']))
+@click.argument('value', type=str)
+@click.option('--asset-id', type=str, default=None, expose_value=False, callback=details_json('asset_info'))
+@click.option('--precision', type=int, default=8, expose_value=False, callback=details_json('asset_info'))
+@click.option('--currency', type=str, default=None, expose_value=False, callback=details_json('pricing'))
+@click.option('--exchange', type=str, default=None, expose_value=False, callback=details_json('pricing'))
+@click.option('--fiat-currency', type=str, default=None, expose_value=False, callback=details_json)
+@click.option('--fiat-rate', type=str, default=None, expose_value=False, callback=details_json)
+def convertamount(session, unit, value, details):
     """Show an amount in different units."""
-    # satoshi is unfortunately different from the others as it is an int, not a str
-    amount = int(amount) if unit == 'satoshi' else amount
-    return session.convert_amount({unit: amount})
+    details = details or collections.OrderedDict()
+    details[unit] = int(value) if unit == 'satoshi' else value
+    return session.convert_amount(details)
 
 _SUBACCOUNT_TYPES = ['2of2', '2of3', 'p2pkh', 'p2sh-p2wpkh', 'p2wpkh', 'p2tr']
 
