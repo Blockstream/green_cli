@@ -68,5 +68,5 @@ def normalize_array_input(value):
         item = item.lstrip().rstrip()  # leading/trailing whitespaces
         item = item.replace('"', '')
         items.append(item)
-   # Return as a comma separated string excluding empty items
+    # Return as a comma separated string excluding empty items
     return ','.join(f'{i}' for i in items if i)
