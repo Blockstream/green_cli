@@ -1,4 +1,4 @@
-image: blockstream/gdk-debian-ci@sha256:5fdb5c1b450e391d0ca7b5f8ebae326ebd6fbd443c0a573d88f9e6c382b272c9
+image: blockstream/gdk-debian-ci@sha256:8c6e5eb5f164e45f09ef3f5374730e2b5488dbfc125f8a1fe96f15d6cbec7e30
 
 build_release_wheel:
   tags:
