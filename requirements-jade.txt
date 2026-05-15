@@ -1,6 +1,6 @@
-jade-client==1.0.37 \
-    --hash=sha256:cb3e324ba2db07317dbaebcee0fe66a81dd9b1efca72124d64c2e849e815f2c1 \
-    --hash=sha256:cc759c37fb755ea33eea5f2643876357740b4d31c705f041abccdc7f0c47e240
+jade-client==1.0.40 \
+    --hash=sha256:27570117edace2df3b2c33683f68433691823f637d116abaa1c6c5b7b43896e8 \
+    --hash=sha256:56bdf26946de90e30abbee7691e45bdb231835d63a55c516366164e316059de1
 
 pyserial==3.5 \
     --hash=sha256:c4451db6ba391ca6ca299fb3ec7bae67a5c55dde170964c7a14ceefec02f2cf0 \
@@ -50,9 +50,6 @@ cbor2==5.9.0 \
     --hash=sha256:fb7afe77f8d269e42d7c4b515c6fd14f1ccc0625379fb6829b269f493d16eddd \
     --hash=sha256:fbb06f34aa645b4deca66643bba3d400d20c15312d1fe88d429be60c1ab50f27 \
     --hash=sha256:fbdcf4d74acbeb7672e6413e81cd2c1ced1a4a8cf949484ac54e9af5265c3c72
-pycodestyle==2.8.0 \
-    --hash=sha256:720f8b39dde8b293825e7ff02c475f3077124006db4f440dcbc9a20b76548a20 \
-    --hash=sha256:eddd5847ef438ea1c7870ca7eb78a9d47ce0cdb4851a5523949f2601d0cbbe7f
 wallycore==1.5.3 \
     --hash=sha256:01fd8497bd005c4222ef628742eacb5325d47f647763ce6bdd4f189da11503b1 \
     --hash=sha256:042aaf0c24da8fec6e479a37f17855fcc9ce866ce4aeb76da82cee9c46cc157d \
