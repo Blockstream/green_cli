@@ -1,4 +1,4 @@
-image: blockstream/gdk-debian-ci@sha256:8c6e5eb5f164e45f09ef3f5374730e2b5488dbfc125f8a1fe96f15d6cbec7e30
+image: python:3.13-slim-trixie@sha256:27f90d79cc85e9b7b2560063ef44fa0e9eaae7a7c3f5a9f74563065c5477cc24
 
 build_release_wheel:
   tags:
@@ -40,7 +40,25 @@ build_release_wheel:
   variables:
     PYTHON_EXE: python3.9
 
+# debian oldoldstable
 smoke_test_bullseye:
+  image: python:3.9-slim-bullseye@sha256:b9e06687fbfc57f6fe563e94e4c8751e39513dde89afc120dc6f56afe5ffc761
+  extends: .smoke_test
+  before_script:
+    - apt-get update -qq
+    - apt-get install -yqq python3-venv
+
+# debian oldstable
+smoke_test_bookworm:
+  image: python:3.11-slim-bookworm@sha256:8dca233de9f3d9bb410665f00a4da6dd06f331083137e0e98ccf227236fcc438
+  extends: .smoke_test
+  before_script:
+    - apt-get update -qq
+    - apt-get install -yqq python3-venv
+
+# debian stable
+smoke_test_trixie:
+  image: python:3.13-slim-trixie@sha256:27f90d79cc85e9b7b2560063ef44fa0e9eaae7a7c3f5a9f74563065c5477cc24
   extends: .smoke_test
   before_script:
     - apt-get update -qq
@@ -48,13 +66,6 @@ smoke_test_bullseye:
     - if git grep '@click.option' | cut -d '(' -f 2 | cut -d ',' -f 1 | grep _; then echo 'ERROR - found disallowed underscored option(s)'; /bin/false; fi
     - pip install pycodestyle
     - pycodestyle */*.py */*/*.py --ignore=E501,E731,E302,E305
-
-smoke_test_trixie:
-  image: python:3.13-slim-trixie@sha256:27f90d79cc85e9b7b2560063ef44fa0e9eaae7a7c3f5a9f74563065c5477cc24
-  extends: .smoke_test
-  before_script:
-    - apt-get update -qq
-    - apt-get install -yqq python3-venv
 
 smoke_test_fedora:
   image: fedora:34@sha256:55a74d948c47bb002edff3c7a9a7e864152c686d7c2dc8e3df1ac4d611a20898
