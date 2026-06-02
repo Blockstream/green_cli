@@ -1,10 +1,14 @@
 from setuptools import setup
+from pathlib import Path
+
+_this_dir = Path(__file__).parent
 
 setup(
     name='green_cli',
-    version=open('green_cli/__init__.py').read().split()[-1].strip("'"),
+    version=(_this_dir / 'green_cli' / '__init__.py').read_text().split()[-1].strip("'"),
     description='Blockstream Green Command Line Interface',
-    long_description='green-cli is a command line interface to Blockstream Green multisig and singlesig Bitcoin and Liquid wallets, based on the Green gdk library.',
+    long_description=(_this_dir / 'README.md').read_text(),
+    long_description_content_type="text/markdown",
     url='https://github.com/Blockstream/green_cli',
     author='Blockstream',
     author_email='inquiries@blockstream.com',

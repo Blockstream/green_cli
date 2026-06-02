@@ -1,6 +1,10 @@
 # Command line interface for Blockstream Green wallet (GDK)
 
-green-cli is a command line interface for the Blockstream Green wallet
+green-cli is a command line interface for Blockstream Green.
+
+Supports Bitcoin and Liquid environments, singlesig and multisig wallets, with software or hardware signers.
+
+NOTE: green-cli is currently Alpha software. You should only use it for testing at present.
 
 * [Getting Started](#getting-started)
     * [Using docker](#using-docker)
