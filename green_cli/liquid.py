@@ -196,7 +196,7 @@ green_cli.tx._print_tx_output = _print_tx_output
 
 # Default the version option of dumppsbt to 2 for Liquid, since
 # PSET does not support v0
-green_cli.tx.dumppsbt.params[-1].default = '2'
+green_cli.tx.dumppsbt.params[0].default = '2'
 
 @green.command()
 @with_login
