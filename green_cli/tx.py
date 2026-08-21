@@ -166,10 +166,11 @@ def dump():
 @tx.command()
 @with_login
 @click.option('--version', type=click.Choice(['0', '2']), default='0', help="PSBT version")
-def dumppsbt(session, version):
+@click.option('--as-json', is_flag=True, help='Dump PSBT signing JSON as used by gdk')
+def dumppsbt(session, version, as_json):
     """Dump the full transaction representation as a PSBT/PSET."""
-    details = _load_tx(allow_errors=False)
-    details = gdk_resolve(gdk.psbt_from_json(session.session_obj, json.dumps(details)))
+    tx_details = _load_tx(allow_errors=False)
+    details = gdk_resolve(gdk.psbt_from_json(session.session_obj, json.dumps(tx_details)))
     if details.get('error', ''):
         raise click.ClickException(details['error'])
     psbt = details['psbt']
@@ -178,7 +179,18 @@ def dumppsbt(session, version):
         psbt = wally.psbt_from_base64(psbt, 0)
         wally.psbt_set_version(psbt, 0, int(version))
         psbt = wally.psbt_to_base64(psbt, 0)
-    click.echo(psbt)
+
+    if not as_json:
+        click.echo(psbt)
+        return
+
+    # Return as gdk JSON for the psbt_sign call
+    details['psbt'] = psbt  # Update in case the version was changed
+    details['utxos'] = tx_details['utxos'] # Add utxos
+    # FIXME: we don't support converting bump transactions yet
+    # (need to add old utxos from tx inputs that may not be in utxos)
+    assert 'previous_transaction' not in tx_details
+    click.echo(format_output(details))
 
 @tx.command()
 @click.argument('tx_json', type=click.File('r'))
