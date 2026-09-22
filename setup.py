@@ -42,8 +42,8 @@ setup(
     install_requires=[
         'wallycore>=1.4.0',
         'green_gdk>=0.77.0',
-        'click>=8.1.8',
-        'click-repl>=0.3.0',
+        'click>=8.5.0',
+        'click-repl>=0.4.0',
     ],
     entry_points='''
         [console_scripts]
