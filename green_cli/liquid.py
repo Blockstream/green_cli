@@ -40,7 +40,8 @@ params['network'].default = 'localtest-liquid'
 
 # Add 2of2_no_recovery as a subaccount type to createsubaccount
 params = {p.name: p for p in green_cli.common.createsubaccount.params}
-params['type'].type.choices.append('2of2_no_recovery')
+_type_choices = list(params['type'].type.choices) + ['2of2_no_recovery']
+params['type'].type.choices = tuple(_type_choices)
 
 @functools.lru_cache(maxsize=None)
 def _get_assets(session):
